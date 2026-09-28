@@ -15,6 +15,7 @@ export default class niveau1 extends Phaser.Scene {
     });
   }
   preload() {
+    this.load.image("sprite_laser", "./assets/character/fire/laser_bleu.png");
   }
 
   create() {
@@ -49,6 +50,8 @@ export default class niveau1 extends Phaser.Scene {
     this.player.stamina = STAMINA_MAX;
 
     this.physics.add.collider(this.player, calque_murs);
+    this.projectiles = this.physics.add.group();
+    this.physics.add.collider(this.projectiles, calque_murs, (projectile) => projectile.destroy());
 
     /****************************
      *  MONDE ET CAMERA         *
@@ -65,6 +68,7 @@ export default class niveau1 extends Phaser.Scene {
 
     this.clavier = this.input.keyboard.createCursorKeys();
     this.touche_sprint = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.G);
+    this.touche_tir = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
   }
 
   update(time, delta) {
@@ -102,7 +106,29 @@ export default class niveau1 extends Phaser.Scene {
     const etat = bouge ? "run" : "idle";
     this.player.anims.play("anim_joueur_" + etat + "_" + this.direction, true);
 
+    if (Phaser.Input.Keyboard.JustDown(this.touche_tir)) this.tirer();
+
     fct.majBarre(this.barre_vie, this.player.pv, PV_MAX);
     fct.majBarre(this.barre_stamina, this.player.stamina, STAMINA_MAX);
+  }
+
+  tirer() {
+    const directions = {
+      down: { x: 0, y: 1, angle: Math.PI / 2 },
+      left: { x: -1, y: 0, angle: Math.PI },
+      right: { x: 1, y: 0, angle: 0 },
+      up: { x: 0, y: -1, angle: -Math.PI / 2 }
+    };
+    const direction = directions[this.direction];
+    const projectile = this.projectiles.create(
+      this.player.x + direction.x * 24,
+      this.player.y + direction.y * 24,
+      "sprite_laser"
+    );
+
+    projectile.setRotation(direction.angle);
+    projectile.body.setAllowGravity(false);
+    projectile.setVelocity(direction.x * 500, direction.y * 500);
+    this.time.delayedCall(1200, () => projectile.destroy());
   }
 }
