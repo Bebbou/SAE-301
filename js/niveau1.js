@@ -1,5 +1,12 @@
 import * as fct from "./fonctions.js";
 
+const VITESSE_JOUEUR = 160; // px/s
+const VITESSE_SPRINT = 260; // px/s
+const PV_MAX = 100;
+const STAMINA_MAX = 100;
+const STAMINA_CONSO = 35; // stamina perdue par seconde de sprint
+const STAMINA_RECUP = 20; // stamina regagnée par seconde sans sprinter
+
 export default class niveau1 extends Phaser.Scene {
   // constructeur de la classe
   constructor() {
@@ -11,48 +18,91 @@ export default class niveau1 extends Phaser.Scene {
   }
 
   create() {
-    fct.doNothing();
-    fct.doAlsoNothing();
+    /*************************************
+     *  CREATION DE LA MAP               *
+     *************************************/
+    const map = this.make.tilemap({ key: "map_test" });
 
-    this.add.image(400, 300, "img_ciel");
-    this.groupe_plateformes = this.physics.add.staticGroup();
-    this.groupe_plateformes.create(200, 584, "img_plateforme");
-    this.groupe_plateformes.create(600, 584, "img_plateforme");
-    // ajout d'un texte distintcif  du niveau
-    this.add.text(400, 100, "Vous êtes dans le niveau 1", {
-      fontFamily: 'Georgia, "Goudy Bookletter 1911", Times, serif',
-      fontSize: "22pt"
-    });
+    // premier parametre : nom du tileset dans Tiled / second : clé de l'image chargée dans selection
+    const tilesets = [
+      map.addTilesetImage("decorative_cracks_floor", "tiles_decorative_cracks_floor"),
+      map.addTilesetImage("decorative_cracks_walls", "tiles_decorative_cracks_walls"),
+      map.addTilesetImage("walls_floor", "tiles_walls_floor")
+    ];
 
-    this.porte_retour = this.physics.add.staticSprite(100, 550, "img_porte1");
+    // les noms des calques doivent etre identiques à ceux de Tiled
+    map.createLayer("sol", tilesets);
+    const calque_murs = map.createLayer("murs", tilesets);
+    calque_murs.setCollisionByExclusion([-1]); // toutes les tuiles non vides du calque "murs" sont solides
 
-    this.player = this.physics.add.sprite(100, 450, "img_perso");
-    this.player.refreshBody();
-    this.player.setBounce(0.2);
+    /****************************
+     *  CREATION DU PERSONNAGE  *
+     ****************************/
+    this.player = this.physics.add.sprite(map.widthInPixels / 2, map.heightInPixels / 2, "sprite_joueur_idle_down");
+    // hitbox réduite aux pieds du personnage (le sprite fait 96x80 mais le perso est bien plus petit)
+    this.player.setSize(16, 10);
+    this.player.setOffset(40, 48);
     this.player.setCollideWorldBounds(true);
+    this.player.anims.play("anim_joueur_idle_down");
+    this.direction = "down"; // dernière direction, pour l'animation idle
+    this.player.pv = PV_MAX;
+    this.player.stamina = STAMINA_MAX;
+
+    this.physics.add.collider(this.player, calque_murs);
+
+    /****************************
+     *  MONDE ET CAMERA         *
+     ****************************/
+    this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+    this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+    this.cameras.main.startFollow(this.player);
+
+    /****************************
+     *  HUD                     *
+     ****************************/
+    this.barre_vie = fct.creerBarre(this, 20, 20, "sprite_barre_vie");
+    this.barre_stamina = fct.creerBarre(this, 20, 76, "sprite_barre_stamina");
+
     this.clavier = this.input.keyboard.createCursorKeys();
-    this.physics.add.collider(this.player, this.groupe_plateformes);
+    this.touche_sprint = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.G);
   }
 
-  update() {
-    if (this.clavier.left.isDown) {
-      this.player.setVelocityX(-160);
-      this.player.anims.play("anim_tourne_gauche", true);
-    } else if (this.clavier.right.isDown) {
-      this.player.setVelocityX(160);
-      this.player.anims.play("anim_tourne_droite", true);
+  update(time, delta) {
+    const secondes = delta / 1000;
+
+    let vx = 0;
+    let vy = 0;
+    if (this.clavier.left.isDown) vx = -1;
+    else if (this.clavier.right.isDown) vx = 1;
+    if (this.clavier.up.isDown) vy = -1;
+    else if (this.clavier.down.isDown) vy = 1;
+    const bouge = vx !== 0 || vy !== 0;
+
+    // stamina vide : il faut relâcher la touche avant de pouvoir re-sprinter
+    if (this.touche_sprint.isUp) this.player.essouffle = false;
+
+    // sprint : seulement si on bouge et qu'il reste de la stamina
+    const sprint = this.touche_sprint.isDown && bouge && !this.player.essouffle;
+    if (sprint) {
+      this.player.stamina = Math.max(this.player.stamina - STAMINA_CONSO * secondes, 0);
+      if (this.player.stamina === 0) this.player.essouffle = true;
     } else {
-      this.player.setVelocityX(0);
-      this.player.anims.play("anim_face");
-    }
-    if (this.clavier.up.isDown && this.player.body.touching.down) {
-      this.player.setVelocityY(-330);
+      this.player.stamina = Math.min(this.player.stamina + STAMINA_RECUP * secondes, STAMINA_MAX);
     }
 
-    if (Phaser.Input.Keyboard.JustDown(this.clavier.space) == true) {
-      if (this.physics.overlap(this.player, this.porte_retour)) {
-        this.scene.switch("selection");
-      }
-    }
+    // normalisation : on ne va pas plus vite en diagonale
+    this.player.body.velocity.set(vx, vy).normalize().scale(sprint ? VITESSE_SPRINT : VITESSE_JOUEUR);
+
+    // en diagonale, l'animation gauche/droite est prioritaire
+    if (vx < 0) this.direction = "left";
+    else if (vx > 0) this.direction = "right";
+    else if (vy < 0) this.direction = "up";
+    else if (vy > 0) this.direction = "down";
+
+    const etat = bouge ? "run" : "idle";
+    this.player.anims.play("anim_joueur_" + etat + "_" + this.direction, true);
+
+    fct.majBarre(this.barre_vie, this.player.pv, PV_MAX);
+    fct.majBarre(this.barre_stamina, this.player.stamina, STAMINA_MAX);
   }
 }

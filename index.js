@@ -9,6 +9,7 @@ var config = {
   width: 1280, // largeur en pixels
   height: 720, // hauteur en pixels
    type: Phaser.AUTO,
+  pixelArt: true, // pas de flou quand on agrandit les sprites
   scale: {
     mode: Phaser.Scale.FIT,
     parent: 'game-container',
@@ -21,7 +22,7 @@ var config = {
     arcade: {
       // parametres du mode arcade
       gravity: {
-        y: 300 // gravité verticale : acceleration ddes corps en pixels par seconde
+        y: 0 // jeu vu de dessus : pas de gravité
       },
       debug: true // permet de voir les hitbox et les vecteurs d'acceleration quand mis à true
     }

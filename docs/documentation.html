@@ -565,7 +565,7 @@ git push -u origin feature/torche
           <thead><tr><th>Problème</th><th>Où</th><th>Correction</th></tr></thead>
           <tbody>
             <tr><td><s>Noms avec majuscules / accents</s> <b style="color:var(--ok)">✓ corrigé</b></td><td class="small">Assets renommés en minuscules (<code>commandes.png</code>, <code>credits.png</code>, <code>character/mc/idle/</code> …)</td><td class="small">Garder la règle pour tout nouvel asset</td></tr>
-            <tr><td>Gravité activée alors que le jeu est vu de dessus</td><td><code>index.js</code> : <code>gravity: { y: 300 }</code></td><td>Passer à <code>y: 0</code></td></tr>
+            <tr><td><s>Gravité activée alors que le jeu est vu de dessus</s> <b style="color:var(--ok)">✓ corrigé</b></td><td><code>index.js</code></td><td class="small"><code>gravity: { y: 0 }</code></td></tr>
             <tr><td>Description coupée</td><td><code>game.json</code></td><td>Terminer la phrase</td></tr>
             <tr><td><code>authors</code> = une seule chaîne</td><td><code>game.json</code></td><td>Un nom par élément du tableau</td></tr>
             <tr><td>Scènes encore celles du template</td><td><code>js/niveau1.js</code> … <code>niveau3.js</code></td><td>Remplacer par nos scènes (plateformes, saut, portes)</td></tr>
