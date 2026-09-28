@@ -1,4 +1,11 @@
+import * as fct from "./fonctions.js";
+
 const VITESSE_JOUEUR = 160; // px/s
+const VITESSE_SPRINT = 260; // px/s
+const PV_MAX = 100;
+const STAMINA_MAX = 100;
+const STAMINA_CONSO = 35; // stamina perdue par seconde de sprint
+const STAMINA_RECUP = 20; // stamina regagnée par seconde sans sprinter
 
 export default class niveau1 extends Phaser.Scene {
   // constructeur de la classe
@@ -38,6 +45,8 @@ export default class niveau1 extends Phaser.Scene {
     this.player.setCollideWorldBounds(true);
     this.player.anims.play("anim_joueur_idle_down");
     this.direction = "down"; // dernière direction, pour l'animation idle
+    this.player.pv = PV_MAX;
+    this.player.stamina = STAMINA_MAX;
 
     this.physics.add.collider(this.player, calque_murs);
 
@@ -48,19 +57,41 @@ export default class niveau1 extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.cameras.main.startFollow(this.player);
 
+    /****************************
+     *  HUD                     *
+     ****************************/
+    this.barre_vie = fct.creerBarre(this, 20, 20, "sprite_barre_vie");
+    this.barre_stamina = fct.creerBarre(this, 20, 76, "sprite_barre_stamina");
+
     this.clavier = this.input.keyboard.createCursorKeys();
+    this.touche_sprint = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.G);
   }
 
-  update() {
+  update(time, delta) {
+    const secondes = delta / 1000;
+
     let vx = 0;
     let vy = 0;
     if (this.clavier.left.isDown) vx = -1;
     else if (this.clavier.right.isDown) vx = 1;
     if (this.clavier.up.isDown) vy = -1;
     else if (this.clavier.down.isDown) vy = 1;
+    const bouge = vx !== 0 || vy !== 0;
+
+    // stamina vide : il faut relâcher la touche avant de pouvoir re-sprinter
+    if (this.touche_sprint.isUp) this.player.essouffle = false;
+
+    // sprint : seulement si on bouge et qu'il reste de la stamina
+    const sprint = this.touche_sprint.isDown && bouge && !this.player.essouffle;
+    if (sprint) {
+      this.player.stamina = Math.max(this.player.stamina - STAMINA_CONSO * secondes, 0);
+      if (this.player.stamina === 0) this.player.essouffle = true;
+    } else {
+      this.player.stamina = Math.min(this.player.stamina + STAMINA_RECUP * secondes, STAMINA_MAX);
+    }
 
     // normalisation : on ne va pas plus vite en diagonale
-    this.player.body.velocity.set(vx, vy).normalize().scale(VITESSE_JOUEUR);
+    this.player.body.velocity.set(vx, vy).normalize().scale(sprint ? VITESSE_SPRINT : VITESSE_JOUEUR);
 
     // en diagonale, l'animation gauche/droite est prioritaire
     if (vx < 0) this.direction = "left";
@@ -68,7 +99,10 @@ export default class niveau1 extends Phaser.Scene {
     else if (vy < 0) this.direction = "up";
     else if (vy > 0) this.direction = "down";
 
-    const etat = vx !== 0 || vy !== 0 ? "run" : "idle";
+    const etat = bouge ? "run" : "idle";
     this.player.anims.play("anim_joueur_" + etat + "_" + this.direction, true);
+
+    fct.majBarre(this.barre_vie, this.player.pv, PV_MAX);
+    fct.majBarre(this.barre_stamina, this.player.stamina, STAMINA_MAX);
   }
 }

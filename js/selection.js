@@ -31,6 +31,10 @@ export default class selection extends Phaser.Scene {
     this.load.image("tiles_decorative_cracks_walls", "./assets/map/decorative_cracks_walls.png");
     this.load.image("tiles_walls_floor", "./assets/map/walls_floor.png");
 
+    // HUD : 10 frames de 96x16 (de 1 à 10 segments remplis)
+    this.load.spritesheet("sprite_barre_vie", "./assets/life.png", { frameWidth: 96, frameHeight: 16 });
+    this.load.spritesheet("sprite_barre_stamina", "./assets/stamina.png", { frameWidth: 96, frameHeight: 16 });
+
     // joueur : 8 frames de 96x80 par spritesheet
     DIRECTIONS.forEach((direction) => {
       this.load.spritesheet("sprite_joueur_idle_" + direction, "./assets/character/mc/idle/idle_" + direction + ".png", {

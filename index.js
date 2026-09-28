@@ -9,6 +9,7 @@ var config = {
   width: 1280, // largeur en pixels
   height: 720, // hauteur en pixels
    type: Phaser.AUTO,
+  pixelArt: true, // pas de flou quand on agrandit les sprites
   scale: {
     mode: Phaser.Scale.FIT,
     parent: 'game-container',
