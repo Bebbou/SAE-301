@@ -1,11 +1,683 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artemis · Documentation</title>
+  <style>
+    :root {
+      /* Palette de la DA Artemis (cf. brainstorm) */
+      --fond-profond: #080D1C;
+      --fond-secondaire: #111A32;
+      --ombres: #20283A;
+      --sol-sombre: #3A4050;
+      --sol: #777C87;
+      --lumiere-lunaire: #BFC3CC;
+      --lumiere-forte: #E8EBF0;
+      --lumiere-speciale: #9DD9FF;
+      --energie: #4FC3F7;
+      --ombre-surnat: #493A68;
+      --etoiles: #DDEAFF;
+      --rose: #EC8697;
+      --orange: #FFAC80;
+
+      --bg: var(--fond-profond);
+      --surface: var(--fond-secondaire);
+      --surface-2: var(--ombres);
+      --border: #2A3350;
+      --text: var(--lumiere-forte);
+      --text-muted: #9AA0AE;
+      --accent: var(--lumiere-speciale);
+      --danger: var(--rose);
+      --warn: var(--orange);
+      --ok: #8FE3B0;
+      --radius: 10px;
+      --mono: ui-monospace, "Cascadia Code", Consolas, "SF Mono", monospace;
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(1200px 600px at 85% -10%, rgba(236,134,151,.10), transparent 60%),
+        radial-gradient(900px 500px at -10% 20%, rgba(255,172,128,.07), transparent 60%),
+        var(--bg);
+      background-attachment: fixed;
+      color: var(--text);
+      font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 250px minmax(0, 1fr);
+      max-width: 1200px;
+      margin: 0 auto;
+      gap: 40px;
+      padding: 0 24px;
+    }
+
+    /* ---------- Navigation ---------- */
+    nav {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 32px 0;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+    .moon {
+      width: 38px; height: 38px; border-radius: 50%; flex: none;
+      background: radial-gradient(circle at 35% 35%, var(--lumiere-forte), var(--sol) 70%);
+      box-shadow: 0 0 24px rgba(236,134,151,.45), inset -6px -4px 0 rgba(8,13,28,.35);
+    }
+    .brand b { display: block; font-size: 1.15rem; letter-spacing: .08em; }
+    .brand small { color: var(--text-muted); font-size: .8rem; }
+    nav ol { list-style: none; margin: 0; padding: 0; counter-reset: s; }
+    nav li { counter-increment: s; }
+    nav a {
+      display: flex; gap: 10px; padding: 6px 10px; border-radius: 6px;
+      color: var(--text-muted); text-decoration: none; font-size: .92rem;
+    }
+    nav a::before { content: counter(s, decimal-leading-zero); font-family: var(--mono); font-size: .75rem; opacity: .6; padding-top: 2px; }
+    nav a:hover, nav a.active { color: var(--text); background: var(--surface); }
+    nav a.active::before { color: var(--rose); opacity: 1; }
+
+    /* ---------- Contenu ---------- */
+    main { padding: 40px 0 96px; min-width: 0; }
+    header.hero { padding: 24px 0 32px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+    .eyebrow { color: var(--rose); font-family: var(--mono); font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; margin: 8px 0 12px; letter-spacing: .02em; }
+    h1 span { background: linear-gradient(90deg, var(--rose), var(--orange)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hero p { color: var(--text-muted); max-width: 62ch; margin: 0; }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 999px; font-size: .82rem;
+      background: var(--surface); border: 1px solid var(--border); color: var(--text-muted);
+    }
+    .chip b { color: var(--text); font-weight: 600; }
+
+    section { padding-top: 40px; }
+    h2 { font-size: 1.5rem; margin: 0 0 6px; display: flex; align-items: baseline; gap: 12px; }
+    h2 .num { font-family: var(--mono); font-size: .85rem; color: var(--rose); }
+    .lead { color: var(--text-muted); margin: 0 0 20px; }
+    h3 { font-size: 1.05rem; margin: 28px 0 10px; color: var(--lumiere-lunaire); }
+    p { margin: 0 0 12px; }
+    a { color: var(--accent); }
+    code {
+      font-family: var(--mono); font-size: .86em;
+      background: var(--surface-2); padding: 1px 6px; border-radius: 4px; color: var(--etoiles);
+    }
+    pre {
+      font-family: var(--mono); font-size: .85rem; line-height: 1.55;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px 18px; overflow-x: auto; margin: 0 0 16px;
+    }
+    pre code { background: none; padding: 0; }
+    .c { color: #6C7590; } /* commentaire */
+    .k { color: var(--rose); } /* mot-clé */
+    .s { color: var(--orange); } /* chaîne */
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 20px; margin-bottom: 16px;
+    }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); margin-bottom: 16px; }
+    .grid .card { margin: 0; }
+    .card h4 { margin: 0 0 6px; font-size: .95rem; }
+    .card p, .card ul { color: var(--text-muted); font-size: .92rem; margin: 0; }
+    .card ul { padding-left: 18px; }
+
+    .callout {
+      border-left: 3px solid var(--accent); background: rgba(157,217,255,.06);
+      padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 0 0 16px; font-size: .94rem;
+    }
+    .callout.danger { border-color: var(--danger); background: rgba(236,134,151,.07); }
+    .callout.warn { border-color: var(--warn); background: rgba(255,172,128,.07); }
+    .callout strong:first-child { display: block; margin-bottom: 2px; }
+
+    .table-wrap { overflow-x: auto; margin-bottom: 16px; border: 1px solid var(--border); border-radius: var(--radius); }
+    table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+    th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { background: var(--surface); color: var(--text-muted); font-weight: 600; font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; }
+    tr:last-child td { border-bottom: 0; }
+    td.yes { color: var(--ok); }
+    td.no { color: var(--danger); }
+
+    /* Frise des échéances */
+    .timeline { list-style: none; padding: 0; margin: 0 0 16px; position: relative; }
+    .timeline::before { content: ""; position: absolute; left: 7px; top: 8px; bottom: 8px; width: 2px; background: var(--border); }
+    .timeline li { position: relative; padding: 0 0 18px 32px; }
+    .timeline li::before {
+      content: ""; position: absolute; left: 0; top: 6px; width: 16px; height: 16px; border-radius: 50%;
+      background: var(--bg); border: 2px solid var(--sol);
+    }
+    .timeline li.hot::before { border-color: var(--rose); background: var(--rose); box-shadow: 0 0 12px var(--rose); }
+    .timeline .when { font-family: var(--mono); font-size: .8rem; color: var(--rose); }
+    .timeline .what { font-weight: 600; }
+    .timeline .who { color: var(--text-muted); font-size: .9rem; }
+
+    /* Palette */
+    .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .swatch {
+      border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+      background: var(--surface); cursor: pointer; text-align: left; color: inherit; font: inherit; padding: 0;
+    }
+    .swatch .color { height: 64px; border-bottom: 1px solid var(--border); }
+    .swatch .info { padding: 8px 10px; }
+    .swatch .name { font-size: .85rem; font-weight: 600; display: block; }
+    .swatch .hex { font-family: var(--mono); font-size: .78rem; color: var(--text-muted); }
+    .swatch:hover { border-color: var(--sol); }
+    .swatch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* Commandes arcade */
+    .pad { display: flex; flex-wrap: wrap; gap: 28px; align-items: center; margin-bottom: 16px; }
+    .stick {
+      width: 90px; height: 90px; border-radius: 50%; flex: none;
+      background: radial-gradient(circle at 50% 50%, var(--rose) 0 18px, var(--surface-2) 19px);
+      border: 2px solid var(--border); display: grid; place-items: end center;
+      font-size: .7rem; color: var(--text-muted); padding-bottom: 4px;
+    }
+    .buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .btn {
+      width: 132px; min-height: 76px; border-radius: 12px; padding: 8px 10px;
+      background: var(--surface); border: 1px solid var(--border);
+    }
+    .btn kbd {
+      display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
+      font-family: var(--mono); font-weight: 700; font-size: .85rem; color: var(--fond-profond);
+      background: var(--orange);
+    }
+    .btn span { display: block; font-size: .82rem; color: var(--text-muted); margin-top: 4px; line-height: 1.3; }
+
+    /* Checklist */
+    .checklist { list-style: none; padding: 0; margin: 0 0 12px; }
+    .checklist li { border-bottom: 1px solid var(--border); }
+    .checklist label { display: flex; gap: 12px; padding: 10px 4px; cursor: pointer; align-items: flex-start; }
+    .checklist input { margin-top: 5px; accent-color: var(--rose); width: 16px; height: 16px; flex: none; }
+    .checklist input:checked + span { color: var(--text-muted); text-decoration: line-through; }
+    .progress { height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; margin: 0 0 8px; }
+    .progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--rose), var(--orange)); transition: width .25s; }
+    .small { font-size: .85rem; color: var(--text-muted); }
+    .reset { background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; padding: 4px 10px; font: inherit; font-size: .82rem; cursor: pointer; }
+    .reset:hover { color: var(--text); border-color: var(--sol); }
+
+    .toast {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--surface-2); border: 1px solid var(--border); padding: 8px 14px; border-radius: 8px;
+      font-size: .85rem; opacity: 0; pointer-events: none; transition: .2s;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%); }
+
+    footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: .85rem; }
+
+    /* ---------- Mobile ---------- */
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; gap: 0; padding: 0 16px; }
+      nav { position: static; height: auto; padding: 20px 0 0; }
+      nav ol { display: flex; flex-wrap: wrap; gap: 4px; }
+      nav a { padding: 4px 8px; font-size: .85rem; }
+      main { padding-top: 8px; }
+      .btn { width: auto; }
+      .buttons { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  </style>
 </head>
 <body>
-    
+<div class="layout">
+
+  <nav aria-label="Sommaire">
+    <div class="brand">
+      <div><b>ARTEMIS</b><small>SAÉ 301</small></div>
+    </div>
+    <ol>
+      <li><a href="#jeu">Le jeu en bref</a></li>
+      <li><a href="#equipe">Équipe &amp; rôles</a></li>
+      <li><a href="#echeances">Échéances</a></li>
+      <li><a href="#regles">Règles imposées</a></li>
+      <li><a href="#structure">Structure du projet</a></li>
+      <li><a href="#nommage">Conventions de nommage</a></li>
+      <li><a href="#code">Conventions de code</a></li>
+      <li><a href="#commandes">Commandes (borne)</a></li>
+      <li><a href="#da">Direction artistique</a></li>
+      <li><a href="#git">Workflow Git</a></li>
+      <li><a href="#ia">Utilisation de l'IA</a></li>
+      <li><a href="#a-corriger">À corriger</a></li>
+      <li><a href="#checklist">Checklist de rendu</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">Documentation</div>
+      <h1>Artemis, <span>les règles du jeu</span><br></h1>
+      <p>La référence commune de l'équipe : ce qu'on fait, comment on nomme les choses, et ce qu'il faut vérifier avant chaque rendu. En cas de doute, on suit cette page ; si elle a tort, on la corrige (et on prévient les autres).</p>
+      <div class="meta">
+        <span class="chip">Moteur <b>Phaser 3.80</b></span>
+        <span class="chip">Résolution <b>1280 × 720</b></span>
+        <span class="chip">Modes <b>Solo &amp; Duo</b></span>
+        <span class="chip">Cible <b>Borne d'arcade</b></span>
+      </div>
+    </header>
+
+    <!-- 01 -->
+    <section id="jeu">
+      <h2><span class="num">01</span>Le jeu en bref</h2>
+      <p class="lead">Résumé du brainstorm, pour que tout le monde code vers le même jeu.</p>
+      <div class="grid">
+        <div class="card">
+          <h4>Concept</h4>
+          <p>Rogue-like vu de dessus sur la Lune. Les joueurs sautent d'une fusée dans un ravin et descendent niveau après niveau.</p>
+        </div>
+        <div class="card">
+          <h4>Mécanique signature</h4>
+          <p>La lumière : certains ennemis sont mignons dans le noir et effrayants dans la lumière, d'autres ne sont visibles que dans le noir. La torche s'allume et s'éteint.</p>
+        </div>
+        <div class="card">
+          <h4>Progression</h4>
+          <p>Une échelle apparaît pour descendre. Sa probabilité augmente quand les ennemis sont vaincus et qu'on casse des cailloux. Classement au nombre de niveaux atteints.</p>
+        </div>
+        <div class="card">
+          <h4>Zone de repos</h4>
+          <p>Statue d'un dieu grec : on offre des pierres lunaires en échange de vie ou de stamina.</p>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <h4>Équipement</h4>
+          <ul><li>Pioche (frappe, casse les cailloux)</li><li>Fusil laser (tir auto, auto-visée)</li><li>Switch entre les deux</li></ul>
+        </div>
+        <div class="card">
+          <h4>Boosts</h4>
+          <ul><li>Soin · Stamina · Munitions</li><li>Meilleure torche · Bombe</li><li>Vitesse temporaire</li></ul>
+        </div>
+        <div class="card">
+          <h4>HUD</h4>
+          <ul><li>Vie (rose/orange) · Stamina</li><li>Pierres lunaires · Munitions</li><li>Outil équipé · Chrono</li></ul>
+        </div>
+      </div>
+      <div class="callout warn">
+        <strong>Point de design ouvert</strong>
+        L'échelle s'active « quand les deux joueurs sont dessus », mais le jeu doit aussi marcher en <b>solo</b>. Il faut décider de la règle solo (un seul joueur suffit ?).
+      </div>
+    </section>
+
+    <!-- 02 -->
+    <section id="equipe">
+      <h2><span class="num">02</span>Équipe &amp; rôles</h2>
+      <p class="lead">Qui fait quoi, pour éviter de modifier le même fichier en même temps.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Membre</th><th>Rôle</th><th>Fichiers / zones en charge</th></tr></thead>
+          <tbody>
+            <tr><td>Liku Soane Liku o Hihifo Iloai</td><td><b>Chef de projet</b></td><td class="small">À définir</td></tr>
+            <tr><td>Lino Volle</td><td>Développement</td><td class="small">À définir</td></tr>
+            <tr><td>Inas Ouarich</td><td>Développement</td><td class="small">À définir</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout">
+        <strong>Fichiers partagés</strong>
+        <code>index.js</code>, <code>game.json</code>, <code>js/fonctions.js</code> et <code>js/selection.js</code> sont utilisés par tout le monde : on prévient le groupe <b>avant</b> de les modifier.
+      </div>
+    </section>
+
+    <!-- 03 -->
+    <section id="echeances">
+      <h2><span class="num">03</span>Échéances</h2>
+      <p class="lead">Tout se dépose sur Moodle.</p>
+      <ul class="timeline">
+        <li><div class="when">Chaque mardi &amp; jeudi · 20h00</div><div class="what">Rapport de suivi</div><div class="who">Liku uniquement : 3 paragraphes (ce qu'on a fait, ce qu'on va faire, remarques). On lui envoie nos infos avant 19h.</div></li>
+        <li class="hot"><div class="when">Vendredi 2 octobre · 17h00</div><div class="what">Démo jouable (zip ≤ 50 Mo)</div><div class="who">Code source, <code>game.json</code> rempli, <code>presentation.png</code>. Journée de tests sur la borne.</div></li>
+        <li><div class="when">Fin de semaine 1</div><div class="what">Dossier game design (PDF, 5–6 pages) + zip du projet</div><div class="who">Liku : mécanismes, histoire, schémas d'enchaînement des scènes, assets.</div></li>
+        <li><div class="when">Semaine 2</div><div class="what">Questions de code par les profs</div><div class="who">Chacun doit pouvoir expliquer n'importe quelle partie du code.</div></li>
+        <li><div class="when">Fin de semaine 2</div><div class="what">Note technique (PDF, 5–6 pages) + zip final</div><div class="who">Réalisations, points forts, améliorations, technique, <b>prompts IA utilisés</b>. Zip avec <code>demo.mp4</code> (10 s) et <code>presentation.png</code> (800×450).</div></li>
+      </ul>
+    </section>
+
+    <!-- 04 -->
+    <section id="regles">
+      <h2><span class="num">04</span>Règles imposées</h2>
+      <p class="lead">Non négociables : elles viennent des consignes et sont vérifiées au rendu.</p>
+      <div class="callout danger">
+        <strong>Noms de fichiers et de dossiers</strong>
+        Uniquement <b>minuscules</b>, <b>chiffres</b>, <code>_</code> et <code>-</code>. Pas de majuscules, pas d'accents, pas d'espaces.
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Exemple</th><th>OK ?</th><th>Pourquoi</th></tr></thead>
+          <tbody>
+            <tr><td><code>run_down.png</code></td><td class="yes">✓</td><td>—</td></tr>
+            <tr><td><code>rock_1.png</code></td><td class="yes">✓</td><td>—</td></tr>
+            <tr><td><code>Rock1_3.png</code></td><td class="no">✗</td><td>Majuscule</td></tr>
+            <tr><td><code>crédits.png</code></td><td class="no">✗</td><td>Accent</td></tr>
+            <tr><td><code>jouer solo.png</code></td><td class="no">✗</td><td>Espace</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Chemins</h3>
+      <p>Toujours <b>relatifs</b>, jamais absolus :</p>
+<pre><code><span class="c">// OK</span>
+<span class="k">this</span>.load.image(<span class="s">"img_ciel"</span>, <span class="s">"./assets/sky.png"</span>);
+<span class="c">// PAS OK</span>
+<span class="k">this</span>.load.image(<span class="s">"img_ciel"</span>, <span class="s">"/src/assets/sky.png"</span>);</code></pre>
+
+      <h3>Poids des assets</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Type</th><th>Limite</th></tr></thead>
+          <tbody>
+            <tr><td>Image plein écran</td><td>≤ 200 Ko</td></tr>
+            <tr><td>Texture de sprite / une frame de spritesheet</td><td>~ 10–20 Ko</td></tr>
+            <tr><td>Son</td><td>~ 16 Ko par seconde</td></tr>
+            <tr><td>Tout fichier</td><td>&gt; 500 Ko = à justifier</td></tr>
+            <tr><td>Zip de rendu</td><td>≤ 50 Mo</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Autres contraintes</h3>
+      <ul>
+        <li>Le jeu part du <b>template Moodle</b> : on garde son organisation (<code>index.js</code> à la racine = point de départ).</li>
+        <li><code>game.json</code> au format imposé, rempli par nous (pas par une IA), avec des apostrophes droites <code>'</code>, pas courbes <code>’</code>.</li>
+        <li>Résolution 1280 × 720 (16/9).</li>
+        <li>Assets libres de droits uniquement, avec les auteurs crédités. Un seul asset non libre peut coûter cher.</li>
+      </ul>
+<pre><code>{
+  <span class="s">"title"</span>: <span class="s">"Artemis"</span>,
+  <span class="s">"description"</span>: <span class="s">"..."</span>,
+  <span class="s">"genre"</span>: <span class="s">"Rogue-like / Dungeon crawler"</span>,
+  <span class="s">"authors"</span>: [<span class="s">"Lino Volle"</span>, <span class="s">"Inas Ouarich"</span>, <span class="s">"Liku Soane Liku o Hihifo Iloai"</span>]
+}</code></pre>
+    </section>
+
+    <!-- 05 -->
+    <section id="structure">
+      <h2><span class="num">05</span>Structure du projet</h2>
+      <p class="lead">Où ranger quoi. Proposition, à valider ensemble.</p>
+<pre><code>SAE-301/
+├── index.html           <span class="c">// charge Phaser + index.js</span>
+├── index.js             <span class="c">// config du jeu + liste des scènes (partagé)</span>
+├── game.json            <span class="c">// infos du jeu, format imposé (partagé)</span>
+├── presentation.png     <span class="c">// jaquette 800×450</span>
+├── demo.mp4             <span class="c">// 10 s de gameplay (fin S2)</span>
+├── js/
+│   ├── fonctions.js     <span class="c">// fonctions réutilisées par plusieurs scènes (partagé)</span>
+│   ├── selection.js     <span class="c">// menu / chargement des assets (partagé)</span>
+│   └── niveau1.js …     <span class="c">// une scène = un fichier</span>
+├── assets/
+│   ├── joueur/          <span class="c">// idle_down.png, run_down.png …</span>
+│   ├── ennemis/
+│   ├── tilesets/        <span class="c">// images de tuiles</span>
+│   ├── maps/            <span class="c">// .tmj exportés depuis Tiled</span>
+│   ├── decor/           <span class="c">// rochers, statue, fusée …</span>
+│   ├── ui/              <span class="c">// boutons de menu, HUD</span>
+│   └── sons/
+└── docs/
+    └── documentation.html   <span class="c">// cette page</span></code></pre>
+      <p class="small">Le dossier <code>src/</code> est vide pour l'instant : soit on s'en sert, soit on le supprime pour ne pas semer le doute.</p>
+    </section>
+
+    <!-- 06 -->
+    <section id="nommage">
+      <h2><span class="num">06</span>Conventions de nommage</h2>
+      <p class="lead">On garde les préfixes du template, et on les étend.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Quoi</th><th>Convention</th><th>Exemples</th></tr></thead>
+          <tbody>
+            <tr><td>Clé d'image</td><td><code>img_</code> + nom</td><td><code>img_rocher_1</code>, <code>img_statue</code></td></tr>
+            <tr><td>Clé de spritesheet</td><td><code>sprite_</code> + qui + action</td><td><code>sprite_joueur_run_down</code></td></tr>
+            <tr><td>Clé d'animation</td><td><code>anim_</code> + qui + action + direction</td><td><code>anim_joueur_run_down</code>, <code>anim_joueur_idle_up</code></td></tr>
+            <tr><td>Clé de son</td><td><code>snd_</code> + nom</td><td><code>snd_tir_laser</code>, <code>snd_pioche</code></td></tr>
+            <tr><td>Clé de map / tileset</td><td><code>map_</code> / <code>tiles_</code></td><td><code>map_niveau1</code>, <code>tiles_donjon</code></td></tr>
+            <tr><td>Clé de scène</td><td>minuscules, = nom de la classe</td><td><code>selection</code>, <code>niveau1</code>, <code>zone_repos</code></td></tr>
+            <tr><td>Calques Tiled</td><td>minuscules, identiques dans toutes les maps</td><td><code>sol</code>, <code>murs</code>, <code>decor</code>, <code>objets</code></td></tr>
+            <tr><td>Variables &amp; fonctions JS</td><td><code>camelCase</code>, en français</td><td><code>pointsDeVie</code>, <code>allumerTorche()</code></td></tr>
+            <tr><td>Constantes</td><td><code>MAJUSCULES</code></td><td><code>VITESSE_JOUEUR</code>, <code>DUREE_BOOST</code></td></tr>
+            <tr><td>Fichiers</td><td>voir <a href="#regles">règles imposées</a></td><td><code>zone_repos.js</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout">
+        <strong>Une clé = une chose, dans tout le jeu</strong>
+        Les clés Phaser (<code>img_…</code>, <code>anim_…</code>) sont globales. Avant d'en créer une, on vérifie qu'elle n'existe pas déjà (recherche dans le projet).
+      </div>
+    </section>
+
+    <!-- 07 -->
+    <section id="code">
+      <h2><span class="num">07</span>Conventions de code</h2>
+      <p class="lead">La propreté et la compréhension du code sont notées.</p>
+      <div class="grid">
+        <div class="card">
+          <h4>Une scène par fichier</h4>
+          <p>Chaque scène dans <code>js/</code>, déclarée dans la liste <code>scene</code> de <code>index.js</code>. <code>key</code> identique au nom de la classe.</p>
+        </div>
+        <div class="card">
+          <h4>Pas de copier-coller</h4>
+          <p>Si du code sert dans 2 scènes ou plus (créer le joueur, le HUD, un ennemi…), il va dans <code>fonctions.js</code> ou dans son propre fichier.</p>
+        </div>
+        <div class="card">
+          <h4>Pas de nombres magiques</h4>
+          <p>Vitesses, dégâts, durées, probabilités : en constantes nommées en haut du fichier. Ça rend l'équilibrage beaucoup plus simple.</p>
+        </div>
+        <div class="card">
+          <h4>Commentaires en français</h4>
+          <p>On explique le <b>pourquoi</b>, pas le quoi. Chaque fonction a une ligne qui dit ce qu'elle fait.</p>
+        </div>
+        <div class="card">
+          <h4><code>let</code> / <code>const</code></h4>
+          <p>Plutôt que <code>var</code>. Indentation de 2 espaces, points-virgules en fin de ligne.</p>
+        </div>
+        <div class="card">
+          <h4>Debug</h4>
+          <p><code>debug: true</code> dans <code>index.js</code> pendant le dev, à passer à <code>false</code> avant chaque rendu.</p>
+        </div>
+      </div>
+<pre><code><span class="c">// Exemple de constantes en haut d'un fichier</span>
+<span class="k">const</span> VITESSE_JOUEUR = 160;     <span class="c">// px/s</span>
+<span class="k">const</span> VITESSE_SPRINT = 260;     <span class="c">// px/s, consomme de la stamina</span>
+<span class="k">const</span> DUREE_BOOST_VITESSE = 5000; <span class="c">// ms</span></code></pre>
+    </section>
+
+    <!-- 08 -->
+    <section id="commandes">
+      <h2><span class="num">08</span>Commandes (borne d'arcade)</h2>
+      <p class="lead">Un joystick + 6 boutons par joueur. Le mapping ci-dessous vient du brainstorm (touches clavier côté développeur).</p>
+      <div class="pad">
+        <div class="stick">Déplacement</div>
+        <div class="buttons">
+          <div class="btn"><kbd>R</kbd><span>Interagir en face</span></div>
+          <div class="btn"><kbd>T</kbd><span>Interagir avec un objet</span></div>
+          <div class="btn"><kbd>Y</kbd><span>Allumer / éteindre la lampe</span></div>
+          <div class="btn"><kbd>F</kbd><span>Frapper / tirer</span></div>
+          <div class="btn"><kbd>G</kbd><span>Sprint</span></div>
+          <div class="btn"><kbd>H</kbd><span>Changer d'équipement</span></div>
+        </div>
+      </div>
+      <div class="callout warn">
+        <strong>À confirmer</strong>
+        Les touches du joueur 2 et la correspondance exacte avec les boutons A–F de la borne (voir le schéma des consignes). À tester sur la borne le 2 octobre.
+      </div>
+      <p class="small">Rappel des consignes : une borne, ce n'est pas un PC. Pas de souris, pas de texte à taper. Le joueur ne connaît pas le jeu : il faut un écran de commandes et une prise en main guidée.</p>
+    </section>
+
+    <!-- 09 -->
+    <section id="da">
+      <h2><span class="num">09</span>Direction artistique</h2>
+      <p class="lead">La Lune, avec des reflets rose pâle / orange pâle. Cliquez sur une couleur pour copier son code.</p>
+      <div class="swatches" id="swatches"></div>
+      <p class="small">En Phaser, une couleur s'écrit <code>0x9DD9FF</code> (tint, graphics) ou <code>"#9DD9FF"</code> (texte).</p>
+      <h3>Tilesets (placeholders)</h3>
+      <ul>
+        <li><a href="https://craftpix.net/freebies/free-2d-top-down-pixel-dungeon-asset-pack/" target="_blank" rel="noopener">Craftpix · Top-down pixel dungeon</a></li>
+        <li><a href="http://craftpix.net/freebies/free-ruined-temple-top-down-location-pixel-art/" target="_blank" rel="noopener">Craftpix · Ruined temple top-down</a></li>
+      </ul>
+      <p class="small">Vérifier la licence de chaque asset et la noter pour les crédits.</p>
+    </section>
+
+    <!-- 10 -->
+    <section id="git">
+      <h2><span class="num">10</span>Workflow Git</h2>
+      <p class="lead">Le but : ne jamais casser le jeu des autres.</p>
+      <div class="grid">
+        <div class="card"><h4>1 · Avant de coder</h4><p><code>git pull</code>, toujours.</p></div>
+        <div class="card"><h4>2 · Pendant</h4><p>Une branche par fonctionnalité : <code>feature/torche</code>, <code>fix/collision-murs</code>.</p></div>
+        <div class="card"><h4>3 · Commits</h4><p>Petits et fréquents, message clair : <code>ajout du sprint et de la stamina</code>.</p></div>
+        <div class="card"><h4>4 · Avant de fusionner</h4><p>On lance le jeu : si ça plante, ça ne va pas sur <code>main</code>.</p></div>
+      </div>
+<pre><code>git pull
+git checkout -b feature/torche
+<span class="c"># … on code, on teste …</span>
+git add .
+git commit -m <span class="s">"ajout de la torche (allumer / éteindre)"</span>
+git push -u origin feature/torche
+<span class="c"># puis Pull Request sur GitHub vers main</span></code></pre>
+      <div class="callout">
+        <strong>Les maps Tiled</strong>
+        Les fichiers <code>.tmx</code> / <code>.tmj</code> fusionnent très mal. Une seule personne modifie une map à la fois : on prévient le groupe.
+      </div>
+    </section>
+
+    <!-- 11 -->
+    <section id="ia">
+      <h2><span class="num">11</span>Utilisation de l'IA</h2>
+      <p class="lead">Autorisée, mais « intelligente et raisonnée ».</p>
+      <ul>
+        <li><b>Code :</b> on doit comprendre et savoir expliquer tout code généré. Les profs posent des questions en semaine 2.</li>
+        <li><b>Assets</b> (images, sons, vidéos) : libre.</li>
+        <li><b><code>game.json</code> :</b> rédigé par nous.</li>
+        <li><b>Prompts :</b> à lister dans la note technique. On les note au fur et à mesure (date, qui, outil, prompt, à quoi ça a servi) pour ne pas avoir à les retrouver à la fin.</li>
+      </ul>
+    </section>
+
+    <!-- 12 -->
+    <section id="a-corriger">
+      <h2><span class="num">12</span>À corriger dans le repo</h2>
+      <p class="lead">État au 28 septembre.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Problème</th><th>Où</th><th>Correction</th></tr></thead>
+          <tbody>
+            <tr><td>Noms avec majuscules / accents</td><td><code>assets/Commandes.png</code>, <code>Jouer_duo.png</code>, <code>Jouer_solo.png</code>, <code>Rock1_3_no_shadow.png</code>, <code>Rock5_3_no_shadow.png</code>, <code>crédits.png</code>, <code>character/MC/IDLE</code>, <code>character/MC/RUN</code></td><td>Renommer en minuscules sans accent, puis mettre à jour les <code>this.load</code></td></tr>
+            <tr><td>Gravité activée alors que le jeu est vu de dessus</td><td><code>index.js</code> : <code>gravity: { y: 300 }</code></td><td>Passer à <code>y: 0</code></td></tr>
+            <tr><td>Description coupée</td><td><code>game.json</code></td><td>Terminer la phrase</td></tr>
+            <tr><td><code>authors</code> = une seule chaîne</td><td><code>game.json</code></td><td>Un nom par élément du tableau</td></tr>
+            <tr><td>Scènes encore celles du template</td><td><code>js/niveau1.js</code> … <code>niveau3.js</code></td><td>Remplacer par nos scènes (plateformes, saut, portes)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 13 -->
+    <section id="checklist">
+      <h2><span class="num">13</span>Checklist avant rendu</h2>
+      <p class="lead">À cocher avant chaque zip Moodle. Les cases sont mémorisées dans votre navigateur uniquement.</p>
+      <div class="progress" aria-hidden="true"><div id="bar"></div></div>
+      <p class="small" id="count"></p>
+      <ul class="checklist" id="checklist">
+        <li><label><input type="checkbox" data-id="noms"><span>Tous les fichiers et dossiers en minuscules, sans accent ni espace</span></label></li>
+        <li><label><input type="checkbox" data-id="chemins"><span>Tous les chemins sont relatifs (<code>./assets/…</code>)</span></label></li>
+        <li><label><input type="checkbox" data-id="poids"><span>Aucune image plein écran &gt; 200 Ko, aucun fichier &gt; 500 Ko non justifié</span></label></li>
+        <li><label><input type="checkbox" data-id="zip"><span>Zip ≤ 50 Mo, un seul répertoire principal</span></label></li>
+        <li><label><input type="checkbox" data-id="index"><span><code>index.js</code> à la racine, le jeu se lance depuis <code>index.html</code></span></label></li>
+        <li><label><input type="checkbox" data-id="gamejson"><span><code>game.json</code> complet, apostrophes droites, auteurs séparés</span></label></li>
+        <li><label><input type="checkbox" data-id="presentation"><span><code>presentation.png</code> présent (800×450)</span></label></li>
+        <li><label><input type="checkbox" data-id="demo"><span><code>demo.mp4</code> présent, 10 s (rendu final)</span></label></li>
+        <li><label><input type="checkbox" data-id="debug"><span><code>debug: false</code> dans <code>index.js</code></span></label></li>
+        <li><label><input type="checkbox" data-id="console"><span>Aucune erreur dans la console du navigateur</span></label></li>
+        <li><label><input type="checkbox" data-id="modes"><span>Testé en solo <b>et</b> en duo, uniquement avec les touches de la borne</span></label></li>
+        <li><label><input type="checkbox" data-id="credits"><span>Crédits des assets à jour</span></label></li>
+      </ul>
+      <button class="reset" id="reset" type="button">Tout décocher</button>
+    </section>
+
+    <footer>
+      Artemis · SAÉ 301 · IUT de Béziers, MMI. Page maintenue par l'équipe : si une règle change, on la met à jour ici.
+    </footer>
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+  // ---------- Palette ----------
+  const palette = [
+    ["Fond spatial profond", "#080D1C"],
+    ["Fond secondaire", "#111A32"],
+    ["Ombres", "#20283A"],
+    ["Sol lunaire sombre", "#3A4050"],
+    ["Sol lunaire", "#777C87"],
+    ["Lumière lunaire", "#BFC3CC"],
+    ["Lumière forte", "#E8EBF0"],
+    ["Lumière spéciale", "#9DD9FF"],
+    ["Énergie / technologie", "#4FC3F7"],
+    ["Ombre surnaturelle", "#493A68"],
+    ["Étoiles", "#DDEAFF"],
+    ["Reflet rose (vie)", "#EC8697"],
+    ["Reflet orange (vie)", "#FFAC80"]
+  ];
+  const toast = document.getElementById("toast");
+  let toastTimer;
+  function afficherToast(texte) {
+    toast.textContent = texte;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), 1400);
+  }
+  const conteneur = document.getElementById("swatches");
+  palette.forEach(([nom, hex]) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "swatch";
+    b.innerHTML = `<div class="color" style="background:${hex}"></div>
+      <div class="info"><span class="name">${nom}</span><span class="hex">${hex}</span></div>`;
+    b.addEventListener("click", () => {
+      const texte = hex.toUpperCase();
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(texte).then(() => afficherToast(texte + " copié"), () => afficherToast(texte));
+      } else {
+        afficherToast(texte);
+      }
+    });
+    conteneur.appendChild(b);
+  });
+
+  // ---------- Checklist (mémorisée localement) ----------
+  const CLE = "artemis_checklist";
+  const cases = [...document.querySelectorAll("#checklist input")];
+  let etat = {};
+  try { etat = JSON.parse(localStorage.getItem(CLE)) || {}; } catch (e) { etat = {}; }
+  function sauver() { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) {} }
+  function majProgression() {
+    const n = cases.filter(c => c.checked).length;
+    document.getElementById("bar").style.width = (n / cases.length * 100) + "%";
+    document.getElementById("count").textContent = n + " / " + cases.length + " vérifiés";
+  }
+  cases.forEach(c => {
+    c.checked = !!etat[c.dataset.id];
+    c.addEventListener("change", () => { etat[c.dataset.id] = c.checked; sauver(); majProgression(); });
+  });
+  document.getElementById("reset").addEventListener("click", () => {
+    cases.forEach(c => c.checked = false); etat = {}; sauver(); majProgression();
+  });
+  majProgression();
+
+  // ---------- Sommaire actif ----------
+  const liens = [...document.querySelectorAll("nav a")];
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        liens.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + e.target.id));
+      }
+    });
+  }, { rootMargin: "-30% 0px -60% 0px" });
+  document.querySelectorAll("main section").forEach(s => observer.observe(s));
+</script>
 </body>
 </html>
