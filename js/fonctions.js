@@ -11,6 +11,29 @@ export function doAlsoNothing() {
 
 
 /***********************************************************************/
+/** COMMANDES (cf. docs/documentation.html, section Commandes)
+/***********************************************************************/
+
+// touches clavier du joueur 1 (le joystick = les flèches)
+// R (interagir en face) et T (interagir avec un objet) seront ajoutées avec leurs mécaniques
+export const TOUCHES_J1 = {
+    haut: "UP",
+    bas: "DOWN",
+    gauche: "LEFT",
+    droite: "RIGHT",
+    frapper_tirer: "F",
+    sprint: "G",
+    torche: "Y",
+    changer_equipement: "H"
+};
+
+// crée les objets Phaser.Key à partir d'une table de touches : { haut: Key, bas: Key, ... }
+export function creerTouches(scene, touches) {
+    return scene.input.keyboard.addKeys(touches);
+}
+
+
+/***********************************************************************/
 /** HUD : BARRES DE VIE / STAMINA
 /***********************************************************************/
 

@@ -35,7 +35,18 @@ export default class selection extends Phaser.Scene {
     this.load.spritesheet("sprite_barre_vie", "./assets/life.png", { frameWidth: 96, frameHeight: 16 });
     this.load.spritesheet("sprite_barre_stamina", "./assets/stamina.png", { frameWidth: 96, frameHeight: 16 });
 
+<<<<<<< Updated upstream
     // joueur : 8 frames de 96x80 par spritesheet
+=======
+    // cailloux (32x32)
+    this.load.image("img_caillou_1", "./assets/rock1_3_no_shadow.png");
+    this.load.image("img_caillou_2", "./assets/rock5_3_no_shadow.png");
+
+    // tir du joueur : 4 frames de 16x16
+    this.load.spritesheet("sprite_laser_bleu", "./assets/character/fire/laser_bleu.png", { frameWidth: 16, frameHeight: 16 });
+
+    // joueur : 4 frames de 32x32 par spritesheet
+>>>>>>> Stashed changes
     DIRECTIONS.forEach((direction) => {
       this.load.spritesheet("sprite_joueur_idle_" + direction, "./assets/character/mc/idle/idle_" + direction + ".png", {
         frameWidth: 96,
@@ -71,6 +82,25 @@ export default class selection extends Phaser.Scene {
       });
     });
 
+<<<<<<< Updated upstream
+=======
+    this.anims.create({
+      key: "anim_laser_bleu",
+      frames: this.anims.generateFrameNumbers("sprite_laser_bleu"),
+      frameRate: 16,
+      repeat: -1
+    });
+
+    // échelle placeholder dessinée en code (pas encore d'asset)
+    const g = this.add.graphics();
+    g.fillStyle(0x9dd9ff);
+    g.fillRect(6, 0, 4, 32); // montant gauche
+    g.fillRect(22, 0, 4, 32); // montant droit
+    for (let y = 3; y < 32; y += 7) g.fillRect(6, y, 20, 3); // barreaux
+    g.generateTexture("img_echelle", 32, 32);
+    g.destroy();
+
+>>>>>>> Stashed changes
     // pas encore de menu : on lance directement le niveau de test
     this.scene.start("niveau1");
   }
