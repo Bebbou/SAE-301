@@ -36,6 +36,10 @@ export default class selection extends Phaser.Scene {
     this.load.spritesheet("sprite_barre_vie", "./assets/life.png", { frameWidth: 96, frameHeight: 16 });
     this.load.spritesheet("sprite_barre_stamina", "./assets/stamina.png", { frameWidth: 96, frameHeight: 16 });
 
+    // cailloux (32x32)
+    this.load.image("img_caillou_1", "./assets/rock1_3_no_shadow.png");
+    this.load.image("img_caillou_2", "./assets/rock5_3_no_shadow.png");
+
     // joueur : 4 frames de 32x32 par spritesheet
     DIRECTIONS.forEach((direction) => {
       this.load.spritesheet("sprite_joueur_walk_" + direction, "./assets/character/mc/walk_" + direction + ".png", {
