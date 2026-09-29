@@ -43,6 +43,8 @@ const VITESSE_LASER = 500; // px/s
 const DUREE_VIE_LASER = 1200; // ms : le laser disparait s'il ne touche rien
 const DEPART_LASER = 16; // px : le laser part un peu devant le joueur
 const EQUIPEMENTS = ["pioche", "laser"]; // H passe de l'un à l'autre
+// variante des sprites du joueur selon l'équipement (cf. VARIANTES_JOUEUR dans selection.js)
+const VARIANTE_SPRITE = { pioche: "", laser: "_gun" };
 
 // scene de jeu : elle est relancée à chaque descente, avec le numéro du niveau suivant
 export default class niveau1 extends Phaser.Scene {
@@ -87,7 +89,8 @@ export default class niveau1 extends Phaser.Scene {
      ****************************/
     // départ sur une case de sol au hasard
     const depart = Phaser.Utils.Array.GetRandom(calque_sol.filterTiles((tuile) => tuile.index !== -1));
-    this.player = this.physics.add.sprite(depart.getCenterX(), depart.getCenterY(), "sprite_joueur_walk_down");
+    this.player = this.physics.add.sprite(depart.getCenterX(), depart.getCenterY(), "sprite_joueur_walk_down" + VARIANTE_SPRITE[this.equipement_depart]);
+    this.sprite_direction = "down"; // dernière direction de marche : sert aussi à l'arrêt, quand on change d'équipement
     // hitbox réduite aux pieds du personnage
     this.player.setSize(12, 6);
     this.player.setOffset(10, 25);
@@ -406,18 +409,18 @@ export default class niveau1 extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(this.touches.torche)) this.torche_allumee = !this.torche_allumee;
     this.majLumieres(secondes);
 
-    // animation : la gauche est la droite retournée
+    // animation : la gauche est la droite retournée ; le joueur tient le fusil ou non selon l'équipement
+    const variante = VARIANTE_SPRITE[this.player.equipement];
     if (bouge) {
-      let anim;
-      if (vx === 0) anim = vy < 0 ? "up" : "down";
-      else if (vy === 0) anim = "right";
-      else anim = vy < 0 ? "up_diagonal" : "down_diagonal";
+      if (vx === 0) this.sprite_direction = vy < 0 ? "up" : "down";
+      else if (vy === 0) this.sprite_direction = "right";
+      else this.sprite_direction = vy < 0 ? "up_diagonal" : "down_diagonal";
       this.player.setFlipX(vx < 0);
-      this.player.anims.play("anim_joueur_walk_" + anim, true);
+      this.player.anims.play("anim_joueur_walk_" + this.sprite_direction + variante, true);
     } else {
-      // pas d'animation idle : on s'arrête sur la première frame
+      // pas d'animation idle : on s'arrête sur la première frame (de la bonne variante si l'équipement vient de changer)
       this.player.anims.stop();
-      this.player.setFrame(0);
+      this.player.setTexture("sprite_joueur_walk_" + this.sprite_direction + variante, 0);
     }
     this.player.setDepth(this.player.y); // même tri d'affichage que les cailloux
 
