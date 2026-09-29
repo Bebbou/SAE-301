@@ -4,6 +4,7 @@ import * as generation from "./generation.js";
 const LARGEUR_NIVEAU = 50; // cases de 32 px
 const HAUTEUR_NIVEAU = 34;
 
+const ECHELLE_JOUEUR = 1.25; // taille du joueur (sa hitbox suit) ; 1 = sprite d'origine de 32 px
 const VITESSE_JOUEUR = 160; // px/s
 const VITESSE_SPRINT = 260; // px/s
 const PV_MAX = 100;
@@ -91,9 +92,10 @@ export default class niveau1 extends Phaser.Scene {
     const depart = Phaser.Utils.Array.GetRandom(calque_sol.filterTiles((tuile) => tuile.index !== -1));
     this.player = this.physics.add.sprite(depart.getCenterX(), depart.getCenterY(), "sprite_joueur_walk_down" + VARIANTE_SPRITE[this.equipement_depart]);
     this.sprite_direction = "down"; // dernière direction de marche : sert aussi à l'arrêt, quand on change d'équipement
-    // hitbox réduite aux pieds du personnage
+    // hitbox réduite aux pieds du personnage (en pixels du sprite d'origine : elle suit l'échelle)
     this.player.setSize(12, 6);
     this.player.setOffset(10, 25);
+    this.player.setScale(ECHELLE_JOUEUR);
     this.player.setCollideWorldBounds(true);
     this.player.pv = this.pv_depart;
     this.player.stamina = this.stamina_depart;
