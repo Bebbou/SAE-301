@@ -142,10 +142,8 @@ export default class niveau1 extends Phaser.Scene {
       .setOrigin(1, 0)
       .setScrollFactor(0)
       .setDepth(fct.PROFONDEUR.hud);
-    this.texte_equipement = this.add.text(20, 100, "", { fontSize: "22px", color: "#E8EBF0" })
-      .setScrollFactor(0)
-      .setDepth(fct.PROFONDEUR.hud);
-    this.majTexteEquipement();
+    // équipement actuel en grand, suivant en petit (juste sous les barres, alignées à gauche avec elles)
+    this.bulles_equipement = fct.creerBullesEquipement(this, 56, 138, EQUIPEMENTS, this.player.equipement);
 
     /****************************
      *  COMMANDES               *
@@ -299,15 +297,11 @@ export default class niveau1 extends Phaser.Scene {
     this.echelle.setVisible(false);
   }
 
-  majTexteEquipement() {
-    this.texte_equipement.setText("Outil : " + this.player.equipement + " (H)");
-  }
-
   // passe à l'équipement suivant de la liste EQUIPEMENTS
   changerEquipement() {
     const suivant = (EQUIPEMENTS.indexOf(this.player.equipement) + 1) % EQUIPEMENTS.length;
     this.player.equipement = EQUIPEMENTS[suivant];
-    this.majTexteEquipement();
+    this.bulles_equipement.changer(this.player.equipement);
   }
 
   // tir de laser dans la direction du regard (8 directions)
