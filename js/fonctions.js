@@ -23,7 +23,7 @@ export function creerBarre(scene, x, y, cle) {
         .setOrigin(0, 0)
         .setScale(ECHELLE_BARRE)
         .setScrollFactor(0)
-        .setDepth(100);
+        .setDepth(1000); // au-dessus du jeu (tri par y)
 }
 
 // affiche la frame correspondant à valeur / max
