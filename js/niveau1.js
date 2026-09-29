@@ -137,12 +137,12 @@ export default class niveau1 extends Phaser.Scene {
      *  HUD                     *
      ****************************/
     this.barre_vie = fct.creerBarre(this, 20, 20, "sprite_barre_vie");
-    this.barre_stamina = fct.creerBarre(this, 20, 76, "sprite_barre_stamina");
+    this.barre_stamina = fct.creerBarre(this, 20, 60, "sprite_barre_stamina");
     this.add.text(1260, 20, "Niveau " + this.niveau, { fontSize: "28px", color: "#E8EBF0" })
       .setOrigin(1, 0)
       .setScrollFactor(0)
       .setDepth(fct.PROFONDEUR.hud);
-    this.texte_equipement = this.add.text(20, 132, "", { fontSize: "22px", color: "#E8EBF0" })
+    this.texte_equipement = this.add.text(20, 100, "", { fontSize: "22px", color: "#E8EBF0" })
       .setScrollFactor(0)
       .setDepth(fct.PROFONDEUR.hud);
     this.majTexteEquipement();
