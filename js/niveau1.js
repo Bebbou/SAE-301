@@ -49,7 +49,8 @@ const EQUIPEMENTS = ["pioche", "laser"]; // H passe de l'un à l'autre
 // variante des sprites du joueur selon l'équipement (cf. VARIANTES_JOUEUR dans selection.js)
 const VARIANTE_SPRITE = { pioche: "", laser: "_gun" };
 
-// scene de jeu : elle est relancée à chaque descente, avec le numéro du niveau suivant
+// scene de jeu : elle est relancée à chaque changement de niveau (descente ou montée), avec le numéro du niveau voulu
+// l'état de chaque niveau visité est gardé dans this.registry ("niveaux") : on retrouve un niveau tel qu'on l'a laissé
 export default class niveau1 extends Phaser.Scene {
   // constructeur de la classe
   constructor() {
@@ -61,6 +62,8 @@ export default class niveau1 extends Phaser.Scene {
   // données transmises par scene.start / scene.restart
   init(data) {
     this.niveau = data.niveau || 1;
+    // "haut" : on arrive par l'échelle de montée (on vient de descendre) ; "bas" : on arrive à côté du trou (on vient de remonter)
+    this.arrivee = data.arrivee || "haut";
     this.pv_depart = data.pv ?? PV_MAX;
     this.stamina_depart = data.stamina ?? STAMINA_MAX;
     this.equipement_depart = data.equipement || "pioche";
@@ -70,13 +73,27 @@ export default class niveau1 extends Phaser.Scene {
   }
 
   create() {
-    this.descente = false; // true pendant le fondu vers le niveau suivant
+    this.changement_niveau = false; // true pendant le fondu vers un autre niveau
 
     /*************************************
      *  CREATION DE LA MAP (procédurale) *
      *************************************/
+    // état du niveau : plan de la grotte, cailloux, trou, échelle de montée (cf. sauvegarderEtat)
+    // un niveau déjà visité est reconstruit à l'identique ; un nouveau est généré au hasard
+    const niveaux = this.registry.get("niveaux");
+    const nouveau = !niveaux[this.niveau];
+    if (nouveau) {
+      niveaux[this.niveau] = {
+        grille: generation.genererGrille(LARGEUR_NIVEAU, HAUTEUR_NIVEAU),
+        cailloux: null, // liste { x, y, image, coups_restants, cache_le_trou }, tirée au hasard plus bas
+        trou: null, // { x, y } : la descente, sous l'un des cailloux
+        trou_revele: false,
+        montee: null // { x, y } : l'échelle vers le niveau précédent (aucune au niveau 1)
+      };
+    }
+    this.etat = niveaux[this.niveau];
     // grille[y][x] = true si mur (cf. generation.js), puis on la traduit en tuiles
-    const grille = generation.genererGrille(LARGEUR_NIVEAU, HAUTEUR_NIVEAU);
+    const grille = this.etat.grille;
     const map = this.make.tilemap({ tileWidth: 32, tileHeight: 32, width: LARGEUR_NIVEAU, height: HAUTEUR_NIVEAU });
     const tileset = map.addTilesetImage("walls_floor", "tiles_walls_floor");
     const calque_sol = map.createBlankLayer("sol", tileset);
@@ -90,9 +107,8 @@ export default class niveau1 extends Phaser.Scene {
     /****************************
      *  CREATION DU PERSONNAGE  *
      ****************************/
-    // départ sur une case de sol au hasard
-    const depart = Phaser.Utils.Array.GetRandom(calque_sol.filterTiles((tuile) => tuile.index !== -1));
-    this.player = this.physics.add.sprite(depart.getCenterX(), depart.getCenterY(), "sprite_joueur_walk_down" + VARIANTE_SPRITE[this.equipement_depart]);
+    const depart = this.choisirDepart(calque_sol, nouveau);
+    this.player = this.physics.add.sprite(depart.x, depart.y, "sprite_joueur_walk_down" + VARIANTE_SPRITE[this.equipement_depart]);
     this.sprite_direction = "down"; // dernière direction de marche : sert aussi à l'arrêt, quand on change d'équipement
     this.sprite_retourne = false; // le joueur regarde-t-il à gauche (sprite de droite retourné) ?
     this.frappe = null; // coup de pioche en cours : { regard, touche }
@@ -115,13 +131,14 @@ export default class niveau1 extends Phaser.Scene {
     this.physics.add.collider(this.projectiles, calque_murs, (projectile) => this.impactLaser(projectile));
 
     /****************************
-     *  CAILLOUX + ECHELLE      *
+     *  CAILLOUX + ECHELLES     *
      ****************************/
-    this.placerCailloux(calque_sol, calque_murs);
+    if (!this.etat.cailloux) this.tirerCailloux(calque_sol, calque_murs); // nouveau niveau : positions au hasard
+    this.creerCailloux();
     this.physics.add.collider(this.player, this.cailloux);
     // le laser s'arrête sur les cailloux (seule la pioche les casse)
     this.physics.add.collider(this.projectiles, this.cailloux, (projectile) => this.impactLaser(projectile));
-    this.cacherEchelle();
+    this.creerEchelles();
 
     /****************************
      *  MONDE ET CAMERA         *
@@ -279,36 +296,77 @@ export default class niveau1 extends Phaser.Scene {
     return distances;
   }
 
-  // pose NB_CAILLOUX cailloux sur des cases de sol libres (sans mur), tirées au hasard
-  placerCailloux(calque_sol, calque_murs) {
+  // point de départ du joueur, en coordonnées du monde
+  // - tout premier niveau : une case de sol au hasard
+  // - sinon : à côté (pas dessus : on ne repart pas aussitôt) de l'échelle par laquelle on arrive,
+  //   c'est-à-dire l'échelle de montée si on descend, ou le trou si on remonte
+  choisirDepart(calque_sol, nouveau) {
+    const cases_sol = calque_sol.filterTiles((tuile) => tuile.index !== -1);
+    const centre = (tuile) => ({ x: tuile.getCenterX(), y: tuile.getCenterY() });
+    if (nouveau && this.niveau === 1) return centre(Phaser.Utils.Array.GetRandom(cases_sol));
+
+    if (nouveau) this.etat.montee = centre(Phaser.Utils.Array.GetRandom(cases_sol)); // l'échelle de montée est là où on arrive
+    const origine = this.arrivee === "bas" ? this.etat.trou : this.etat.montee;
+    const distance = (a, b) => Phaser.Math.Distance.Between(a.x, a.y, b.x, b.y);
+    const cailloux = this.etat.cailloux || []; // vide dans un niveau tout neuf : ils sont tirés après le départ
+    const candidats = cases_sol.map(centre)
+      .filter((case_sol) => distance(case_sol, origine) >= 32 && distance(case_sol, origine) <= 100)
+      .filter((case_sol) => cailloux.every((caillou) => distance(case_sol, caillou) >= 40))
+      .sort((a, b) => distance(a, origine) - distance(b, origine));
+    return candidats[0] || origine; // la case voisine libre la plus proche
+  }
+
+  // tire NB_CAILLOUX cailloux sur des cases de sol libres (sans mur), et choisit celui qui cache le trou
+  tirerCailloux(calque_sol, calque_murs) {
     const cases_libres = calque_sol.filterTiles((tuile) =>
       !calque_murs.hasTileAt(tuile.x, tuile.y) &&
       Phaser.Math.Distance.Between(tuile.getCenterX(), tuile.getCenterY(), this.player.x, this.player.y) >= DISTANCE_MIN_CAILLOU
     );
     Phaser.Utils.Array.Shuffle(cases_libres);
+    this.etat.cailloux = cases_libres.slice(0, NB_CAILLOUX).map((tuile) => ({
+      x: tuile.getCenterX(),
+      y: tuile.getCenterY(),
+      image: Phaser.Utils.Array.GetRandom(["img_caillou_1", "img_caillou_2"]),
+      coups_restants: COUPS_CAILLOU,
+      cache_le_trou: false
+    }));
 
+    // le trou est caché sous l'un des cailloux, loin du joueur si possible
+    const loin = this.etat.cailloux.filter((caillou) =>
+      Phaser.Math.Distance.Between(caillou.x, caillou.y, this.player.x, this.player.y) >= DISTANCE_MIN_ECHELLE
+    );
+    const choisi = Phaser.Utils.Array.GetRandom(loin.length > 0 ? loin : this.etat.cailloux);
+    choisi.cache_le_trou = true;
+    this.etat.trou = { x: choisi.x, y: choisi.y };
+  }
+
+  // crée les cailloux à partir de l'état du niveau
+  creerCailloux() {
     this.cailloux = this.physics.add.staticGroup();
-    cases_libres.slice(0, NB_CAILLOUX).forEach((tuile) => {
-      const image = Phaser.Utils.Array.GetRandom(["img_caillou_1", "img_caillou_2"]);
-      const caillou = this.cailloux.create(tuile.getCenterX(), tuile.getCenterY(), image);
+    this.etat.cailloux.forEach((donnees) => {
+      const caillou = this.cailloux.create(donnees.x, donnees.y, donnees.image);
       // hitbox sur le bas du caillou : le joueur peut passer derrière le haut
       caillou.body.setSize(24, 14);
       caillou.body.setOffset(4, 16);
       caillou.setDepth(caillou.y); // tri d'affichage vue de dessus : plus bas = devant
-      caillou.coups_restants = COUPS_CAILLOU;
+      caillou.coups_restants = donnees.coups_restants;
+      if (donnees.cache_le_trou) this.caillou_trou = caillou;
     });
   }
 
-  // l'échelle est posée sous un caillou (loin du joueur si possible) et reste invisible tant qu'il n'est pas cassé
-  cacherEchelle() {
-    const loin = this.cailloux.getChildren().filter((caillou) =>
-      Phaser.Math.Distance.Between(caillou.x, caillou.y, this.player.x, this.player.y) >= DISTANCE_MIN_ECHELLE
-    );
-    this.caillou_echelle = Phaser.Utils.Array.GetRandom(loin.length > 0 ? loin : this.cailloux.getChildren());
+  // le trou (descente) est sous son caillou, invisible tant que celui-ci n'est pas cassé ;
+  // l'échelle de montée existe à partir du niveau 2
+  creerEchelles() {
+    // objets posés au sol : au-dessus de la carte, sous le joueur et les cailloux (dont la profondeur est leur y)
+    this.trou = this.physics.add.staticSprite(this.etat.trou.x, this.etat.trou.y, "img_trou").setDepth(1);
+    this.trou.body.setSize(16, 16); // il faut vraiment marcher dessus, pas juste la frôler
+    this.trou.setVisible(this.etat.trou_revele);
 
-    this.echelle = this.physics.add.staticSprite(this.caillou_echelle.x, this.caillou_echelle.y, "img_echelle");
-    this.echelle.body.setSize(16, 16); // il faut vraiment marcher dessus, pas juste la frôler
-    this.echelle.setVisible(false);
+    this.echelle_montee = null;
+    if (this.etat.montee) {
+      this.echelle_montee = this.physics.add.staticSprite(this.etat.montee.x, this.etat.montee.y, "img_echelle").setDepth(1);
+      this.echelle_montee.body.setSize(16, 16);
+    }
   }
 
   // passe à l'équipement suivant de la liste EQUIPEMENTS
@@ -374,19 +432,34 @@ export default class niveau1 extends Phaser.Scene {
       return;
     }
 
-    if (caillou === this.caillou_echelle) this.echelle.setVisible(true);
+    if (caillou === this.caillou_trou) this.trou.setVisible(true);
     caillou.destroy();
   }
 
-  // fondu au noir puis relance de la scene avec le niveau suivant
-  descendre() {
-    this.descente = true;
+  // recopie dans l'état du niveau ce qui a changé depuis qu'on y est : cailloux restants (et leurs coups), trou révélé
+  sauvegarderEtat() {
+    this.etat.cailloux = this.cailloux.getChildren().map((caillou) => ({
+      x: caillou.x,
+      y: caillou.y,
+      image: caillou.texture.key,
+      coups_restants: caillou.coups_restants,
+      cache_le_trou: caillou === this.caillou_trou
+    }));
+    this.etat.trou_revele = this.trou.visible;
+  }
+
+  // fondu au noir, sauvegarde du niveau, puis relance de la scene sur le niveau voulu
+  // arrivee : "haut" quand on descend, "bas" quand on remonte (cf. init)
+  changerDeNiveau(niveau, arrivee) {
+    this.changement_niveau = true;
     this.player.setVelocity(0, 0);
     this.player.anims.stop();
+    this.sauvegarderEtat();
     this.cameras.main.fadeOut(DUREE_FONDU);
     this.cameras.main.once("camerafadeoutcomplete", () => {
       this.scene.restart({
-        niveau: this.niveau + 1,
+        niveau: niveau,
+        arrivee: arrivee,
         pv: this.player.pv,
         stamina: this.player.stamina,
         equipement: this.player.equipement
@@ -395,7 +468,7 @@ export default class niveau1 extends Phaser.Scene {
   }
 
   update(time, delta) {
-    if (this.descente) return;
+    if (this.changement_niveau) return;
 
     const secondes = delta / 1000;
 
@@ -461,6 +534,7 @@ export default class niveau1 extends Phaser.Scene {
     fct.majBarre(this.barre_stamina, this.player.stamina, STAMINA_MAX);
 
     // un seul joueur pour l'instant : en duo, il faudra que les deux soient sur l'échelle
-    if (this.echelle.visible && this.physics.overlap(this.player, this.echelle)) this.descendre();
+    if (this.trou.visible && this.physics.overlap(this.player, this.trou)) this.changerDeNiveau(this.niveau + 1, "haut");
+    else if (this.echelle_montee && this.physics.overlap(this.player, this.echelle_montee)) this.changerDeNiveau(this.niveau - 1, "bas");
   }
 }

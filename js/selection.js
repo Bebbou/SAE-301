@@ -49,6 +49,10 @@ export default class selection extends Phaser.Scene {
     this.load.image("img_caillou_1", "./assets/rock1_3_no_shadow.png");
     this.load.image("img_caillou_2", "./assets/rock5_3_no_shadow.png");
 
+    // passages entre les niveaux (32x32) : le trou avec son échelle pour descendre, l'échelle pour remonter
+    this.load.image("img_trou", "./assets/map/hole_ladder.png");
+    this.load.image("img_echelle", "./assets/map/ladder.png");
+
     // tir du joueur : 4 frames de 16x16
     this.load.spritesheet("sprite_laser_bleu", "./assets/character/fire/laser_bleu.png", { frameWidth: 16, frameHeight: 16 });
 
@@ -106,14 +110,8 @@ export default class selection extends Phaser.Scene {
       repeat: -1
     });
 
-    // échelle placeholder dessinée en code (pas encore d'asset)
-    const g = this.add.graphics();
-    g.fillStyle(0x9dd9ff);
-    g.fillRect(6, 0, 4, 32); // montant gauche
-    g.fillRect(22, 0, 4, 32); // montant droit
-    for (let y = 3; y < 32; y += 7) g.fillRect(6, y, 20, 3); // barreaux
-    g.generateTexture("img_echelle", 32, 32);
-    g.destroy();
+    // nouvelle partie : on oublie les niveaux visités (le jeu garde en mémoire l'état de chaque niveau pour pouvoir y revenir)
+    this.registry.set("niveaux", {});
 
     // pas encore de menu : on lance directement le niveau de test
     this.scene.start("niveau1", { niveau: 1 });
