@@ -1,4 +1,8 @@
 import * as fct from "./fonctions.js";
+import * as generation from "./generation.js";
+
+const LARGEUR_NIVEAU = 50; // cases de 32 px
+const HAUTEUR_NIVEAU = 34;
 
 const VITESSE_JOUEUR = 160; // px/s
 const VITESSE_SPRINT = 260; // px/s
@@ -8,7 +12,7 @@ const STAMINA_CONSO = 35; // stamina perdue par seconde de sprint
 const STAMINA_RECUP = 20; // stamina regagnée par seconde sans sprinter
 const DISTANCE_MIN_ECHELLE = 200; // px : l'échelle n'est pas cachée juste à coté du joueur
 const DUREE_FONDU = 400; // ms
-const NB_CAILLOUX = 8;
+const NB_CAILLOUX = 14;
 const DISTANCE_MIN_CAILLOU = 64; // px : pas de caillou sur le joueur à son arrivée
 const COUPS_CAILLOU = 3; // coups de pioche pour casser un caillou
 const PORTEE_FRAPPE = 12; // px : distance entre les pieds du joueur et le centre de la zone de frappe
@@ -53,26 +57,26 @@ export default class niveau1 extends Phaser.Scene {
     this.descente = false; // true pendant le fondu vers le niveau suivant
 
     /*************************************
-     *  CREATION DE LA MAP               *
+     *  CREATION DE LA MAP (procédurale) *
      *************************************/
-    const map = this.make.tilemap({ key: "map_test" });
-
-    // premier parametre : nom du tileset dans Tiled / second : clé de l'image chargée dans selection
-    const tilesets = [
-      map.addTilesetImage("decorative_cracks_floor", "tiles_decorative_cracks_floor"),
-      map.addTilesetImage("decorative_cracks_walls", "tiles_decorative_cracks_walls"),
-      map.addTilesetImage("walls_floor", "tiles_walls_floor")
-    ];
-
-    // les noms des calques doivent etre identiques à ceux de Tiled
-    const calque_sol = map.createLayer("sol", tilesets);
-    const calque_murs = map.createLayer("murs", tilesets);
+    // grille[y][x] = true si mur (cf. generation.js), puis on la traduit en tuiles
+    const grille = generation.genererGrille(LARGEUR_NIVEAU, HAUTEUR_NIVEAU);
+    const map = this.make.tilemap({ tileWidth: 32, tileHeight: 32, width: LARGEUR_NIVEAU, height: HAUTEUR_NIVEAU });
+    const tileset = map.addTilesetImage("walls_floor", "tiles_walls_floor");
+    const calque_sol = map.createBlankLayer("sol", tileset);
+    const calque_murs = map.createBlankLayer("murs", tileset);
+    grille.forEach((ligne, y) => ligne.forEach((mur, x) => {
+      if (mur) calque_murs.putTileAt(generation.tuileMur(grille, x, y), x, y);
+      else calque_sol.putTileAt(generation.TUILES.sol, x, y);
+    }));
     calque_murs.setCollisionByExclusion([-1]); // toutes les tuiles non vides du calque "murs" sont solides
 
     /****************************
      *  CREATION DU PERSONNAGE  *
      ****************************/
-    this.player = this.physics.add.sprite(map.widthInPixels / 2, map.heightInPixels / 2, "sprite_joueur_walk_down");
+    // départ sur une case de sol au hasard
+    const depart = Phaser.Utils.Array.GetRandom(calque_sol.filterTiles((tuile) => tuile.index !== -1));
+    this.player = this.physics.add.sprite(depart.getCenterX(), depart.getCenterY(), "sprite_joueur_walk_down");
     // hitbox réduite aux pieds du personnage
     this.player.setSize(12, 6);
     this.player.setOffset(10, 25);
@@ -111,7 +115,7 @@ export default class niveau1 extends Phaser.Scene {
     this.obscurite = this.add.renderTexture(0, 0, this.scale.width, this.scale.height)
       .setOrigin(0, 0)
       .setScrollFactor(0)
-      .setDepth(900);
+      .setDepth(fct.PROFONDEUR.obscurite);
     this.forme_lumiere = this.make.graphics({}, false); // pas affiché : sert seulement de gomme
     this.torche_allumee = true;
     this.angle_torche = this.regard.angle(); // angle affiché, qui rattrape le regard en douceur
@@ -125,10 +129,10 @@ export default class niveau1 extends Phaser.Scene {
     this.add.text(1260, 20, "Niveau " + this.niveau, { fontSize: "28px", color: "#E8EBF0" })
       .setOrigin(1, 0)
       .setScrollFactor(0)
-      .setDepth(1000);
+      .setDepth(fct.PROFONDEUR.hud);
     this.texte_equipement = this.add.text(20, 132, "", { fontSize: "22px", color: "#E8EBF0" })
       .setScrollFactor(0)
-      .setDepth(1000);
+      .setDepth(fct.PROFONDEUR.hud);
     this.majTexteEquipement();
 
     /****************************
@@ -265,7 +269,7 @@ export default class niveau1 extends Phaser.Scene {
     projectile.setRotation(this.regard.angle()); // l'image pointe vers la droite (angle 0)
     // la hitbox ne tourne pas avec l'image : on prend un petit carré centré, valable dans toutes les directions
     projectile.body.setSize(8, 8);
-    projectile.setDepth(800); // au-dessus du décor, sous l'obscurité
+    projectile.setDepth(fct.PROFONDEUR.projectiles); // au-dessus du décor, sous l'obscurité
     projectile.setVelocity(this.regard.x * VITESSE_LASER, this.regard.y * VITESSE_LASER);
     this.time.delayedCall(DUREE_VIE_LASER, () => projectile.destroy());
   }

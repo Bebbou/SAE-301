@@ -34,6 +34,19 @@ export function creerTouches(scene, touches) {
 
 
 /***********************************************************************/
+/** PROFONDEURS D'AFFICHAGE
+/***********************************************************************/
+
+// le joueur et les cailloux utilisent leur y comme profondeur (tri vue de dessus) : de 0 à la hauteur du niveau en px
+// tout ce qui doit passer devant eux a donc une profondeur bien plus grande que n'importe quel y
+export const PROFONDEUR = {
+    projectiles: 5000,
+    obscurite: 10000,
+    hud: 10001
+};
+
+
+/***********************************************************************/
 /** HUD : BARRES DE VIE / STAMINA
 /***********************************************************************/
 
@@ -46,7 +59,7 @@ export function creerBarre(scene, x, y, cle) {
         .setOrigin(0, 0)
         .setScale(ECHELLE_BARRE)
         .setScrollFactor(0)
-        .setDepth(1000); // au-dessus du jeu (tri par y)
+        .setDepth(PROFONDEUR.hud);
 }
 
 // affiche la frame correspondant à valeur / max
