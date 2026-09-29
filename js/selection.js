@@ -36,6 +36,11 @@ export default class selection extends Phaser.Scene {
     this.load.spritesheet("sprite_barre_vie", "./assets/ui/life.png", { frameWidth: 96, frameHeight: 16 });
     this.load.spritesheet("sprite_barre_stamina", "./assets/ui/stamina.png", { frameWidth: 96, frameHeight: 16 });
 
+    // icônes des équipements (bulles du HUD) : nom = "icone_" + nom de l'équipement, clé = "img_icone_" + nom
+    // tant qu'un fichier est absent, le HUD affiche un dessin de remplacement (cf. fonctions.js)
+    this.load.image("img_icone_pioche", "./assets/ui/icone_pioche.png");
+    this.load.image("img_icone_laser", "./assets/ui/icone_laser.png");
+
     // cailloux (32x32)
     this.load.image("img_caillou_1", "./assets/rock1_3_no_shadow.png");
     this.load.image("img_caillou_2", "./assets/rock5_3_no_shadow.png");

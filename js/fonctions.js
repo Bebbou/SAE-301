@@ -80,8 +80,10 @@ const DECALAGE_PETITE_BULLE = { x: 40, y: 30 }; // px : position de la petite pa
 const OPACITE_PETITE_BULLE = 0.85;
 const DUREE_ECHANGE_BULLES = 180; // ms
 
-// dessin de chaque icône, centré sur (0, 0), dans un carré d'environ 44 px
-// (placeholders dessinés en code : à remplacer par de vrais sprites)
+const TAILLE_ICONE = 48; // px : carré dans lequel une icône en image doit tenir (dans la bulle de 72 px)
+
+// icône d'un équipement : si l'image "img_icone_<nom>" est chargée (cf. selection.js, dossier assets/ui/), on l'utilise ;
+// sinon on dessine le placeholder ci-dessous, centré sur (0, 0), dans un carré d'environ 44 px
 const DESSIN_ICONES = {
     pioche: (g) => {
         // manche en bois, du bas gauche vers le haut droit (contour sombre puis bois)
@@ -123,15 +125,26 @@ function creerBulle(scene) {
     fond.fillCircle(0, 0, RAYON_BULLE);
     fond.lineStyle(3, 0xec8697);
     fond.strokeCircle(0, 0, RAYON_BULLE);
-    const icone = scene.add.graphics().setScrollFactor(0);
-    const bulle = scene.add.container(0, 0, [fond, icone]).setScrollFactor(0);
-    bulle.icone = icone;
+    const dessin = scene.add.graphics().setScrollFactor(0); // placeholder dessiné en code
+    const image = scene.add.image(0, 0, "__DEFAULT").setScrollFactor(0).setVisible(false); // vrai sprite
+    const bulle = scene.add.container(0, 0, [fond, dessin, image]).setScrollFactor(0);
+    bulle.dessin = dessin;
+    bulle.image = image;
     return bulle;
 }
 
 function dessinerIcone(bulle, nom) {
-    bulle.icone.clear();
-    DESSIN_ICONES[nom](bulle.icone);
+    const cle = "img_icone_" + nom;
+    bulle.dessin.clear();
+    if (bulle.scene.textures.exists(cle)) {
+        // agrandissement entier (x1, x2, x3...) pour que le pixel art reste net
+        const source = bulle.scene.textures.get(cle).getSourceImage();
+        const echelle = Math.max(1, Math.floor(TAILLE_ICONE / Math.max(source.width, source.height)));
+        bulle.image.setTexture(cle).setScale(echelle).setVisible(true);
+    } else {
+        bulle.image.setVisible(false);
+        DESSIN_ICONES[nom](bulle.dessin);
+    }
 }
 
 // crée les deux bulles : l'équipement actuel en grand, le suivant en petit, en dessous et derrière
