@@ -80,7 +80,7 @@ const DECALAGE_PETITE_BULLE = { x: 40, y: 30 }; // px : position de la petite pa
 const OPACITE_PETITE_BULLE = 0.85;
 const DUREE_ECHANGE_BULLES = 180; // ms
 
-const TAILLE_ICONE = 48; // px : carré dans lequel une icône en image doit tenir (dans la bulle de 72 px)
+const TAILLE_ICONE = 64; // px : carré dans lequel une icône en image doit tenir (dans la bulle de 72 px) : 32x32 -> x2
 
 // icône d'un équipement : si l'image "img_icone_<nom>" est chargée (cf. selection.js, dossier assets/ui/), on l'utilise ;
 // sinon on dessine le placeholder ci-dessous, centré sur (0, 0), dans un carré d'environ 44 px
@@ -118,16 +118,18 @@ const DESSIN_ICONES = {
     }
 };
 
-// une bulle = un cercle sombre à contour rose + une icône, fixée à l'écran
+// une bulle = un cercle sombre + une icône + un contour rose par-dessus, fixée à l'écran
+// le contour est dessiné en dernier : il cache le bord de l'icône si elle touche l'anneau
 function creerBulle(scene) {
     const fond = scene.add.graphics().setScrollFactor(0);
     fond.fillStyle(0x111a32, 0.9);
     fond.fillCircle(0, 0, RAYON_BULLE);
-    fond.lineStyle(3, 0xec8697);
-    fond.strokeCircle(0, 0, RAYON_BULLE);
+    const anneau = scene.add.graphics().setScrollFactor(0);
+    anneau.lineStyle(3, 0xec8697);
+    anneau.strokeCircle(0, 0, RAYON_BULLE);
     const dessin = scene.add.graphics().setScrollFactor(0); // placeholder dessiné en code
     const image = scene.add.image(0, 0, "__DEFAULT").setScrollFactor(0).setVisible(false); // vrai sprite
-    const bulle = scene.add.container(0, 0, [fond, dessin, image]).setScrollFactor(0);
+    const bulle = scene.add.container(0, 0, [fond, dessin, image, anneau]).setScrollFactor(0);
     bulle.dessin = dessin;
     bulle.image = image;
     return bulle;

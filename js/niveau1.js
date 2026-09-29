@@ -136,14 +136,16 @@ export default class niveau1 extends Phaser.Scene {
     /****************************
      *  HUD                     *
      ****************************/
-    this.barre_vie = fct.creerBarre(this, 20, 20, "sprite_barre_vie");
-    this.barre_stamina = fct.creerBarre(this, 20, 60, "sprite_barre_stamina");
+    // coin haut gauche : la bulle d'équipement, puis les deux barres à sa droite
+    // la grande bulle (72 px) a la même hauteur que les deux barres empilées (32 + 8 + 32 px)
+    this.barre_vie = fct.creerBarre(this, 132, 20, "sprite_barre_vie");
+    this.barre_stamina = fct.creerBarre(this, 132, 60, "sprite_barre_stamina");
     this.add.text(1260, 20, "Niveau " + this.niveau, { fontSize: "28px", color: "#E8EBF0" })
       .setOrigin(1, 0)
       .setScrollFactor(0)
       .setDepth(fct.PROFONDEUR.hud);
-    // équipement actuel en grand, suivant en petit (juste sous les barres, alignées à gauche avec elles)
-    this.bulles_equipement = fct.creerBullesEquipement(this, 56, 138, EQUIPEMENTS, this.player.equipement);
+    // équipement actuel en grand, suivant en petit (en bas à droite de la grande, il s'arrête avant les barres)
+    this.bulles_equipement = fct.creerBullesEquipement(this, 56, 56, EQUIPEMENTS, this.player.equipement);
 
     /****************************
      *  COMMANDES               *
