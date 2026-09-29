@@ -7,6 +7,8 @@
 const DIRECTIONS = ["down", "up", "right", "down_diagonal", "up_diagonal"];
 // chaque direction existe en deux variantes : mains vides (pioche) et avec le fusil ("_gun")
 const VARIANTES_JOUEUR = ["", "_gun"];
+// coup de pioche : 3 directions seulement (les diagonales et la gauche réutilisent ces sprites, cf. niveau1.js)
+const DIRECTIONS_PIOCHE = ["down", "up", "right"];
 
 // définition de la classe "selection"
 export default class selection extends Phaser.Scene {
@@ -59,6 +61,14 @@ export default class selection extends Phaser.Scene {
         });
       });
     });
+
+    // coup de pioche : 4 frames de 32x32 (pioche levée, levée, impact, retour)
+    DIRECTIONS_PIOCHE.forEach((direction) => {
+      this.load.spritesheet("sprite_joueur_pioche_" + direction, "./assets/character/mc/" + direction + "_pickaxe.png", {
+        frameWidth: 32,
+        frameHeight: 32
+      });
+    });
   }
 
   /***********************************************************************/
@@ -77,6 +87,15 @@ export default class selection extends Phaser.Scene {
           frameRate: 8,
           repeat: -1 // -1 = infini
         });
+      });
+    });
+
+    DIRECTIONS_PIOCHE.forEach((direction) => {
+      this.anims.create({
+        key: "anim_joueur_pioche_" + direction,
+        frames: this.anims.generateFrameNumbers("sprite_joueur_pioche_" + direction),
+        frameRate: 14, // 4 frames : le coup dure environ 0,3 s
+        repeat: 0 // une seule fois
       });
     });
 
