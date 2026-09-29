@@ -102,20 +102,7 @@ const DESSIN_ICONES = {
         g.lineStyle(5, 0xbfc3cc);
         g.strokePoints(tete);
     },
-    laser: (g) => {
-        g.fillStyle(0x3a4050); // crosse
-        g.fillRect(-17, 2, 10, 13);
-        g.fillStyle(0x777c87); // corps
-        g.fillRect(-22, -12, 32, 14);
-        g.fillStyle(0xbfc3cc); // reflet
-        g.fillRect(-22, -12, 32, 4);
-        g.fillStyle(0x3a4050); // canon
-        g.fillRect(10, -9, 9, 8);
-        g.fillStyle(0x4fc3f7); // bande d'énergie
-        g.fillRect(-14, -4, 14, 3);
-        g.fillStyle(0x9dd9ff); // bout du canon
-        g.fillRect(19, -8, 3, 6);
-    }
+
 };
 
 // une bulle = un cercle sombre + une icône + un contour rose par-dessus, fixée à l'écran

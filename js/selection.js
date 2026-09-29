@@ -5,6 +5,8 @@
 // directions du joueur : une spritesheet de marche par direction
 // la gauche n'a pas d'image : on retourne la droite (flipX) dans la scene
 const DIRECTIONS = ["down", "up", "right", "down_diagonal", "up_diagonal"];
+// chaque direction existe en deux variantes : mains vides (pioche) et avec le fusil ("_gun")
+const VARIANTES_JOUEUR = ["", "_gun"];
 
 // définition de la classe "selection"
 export default class selection extends Phaser.Scene {
@@ -50,9 +52,11 @@ export default class selection extends Phaser.Scene {
 
     // joueur : 4 frames de 32x32 par spritesheet
     DIRECTIONS.forEach((direction) => {
-      this.load.spritesheet("sprite_joueur_walk_" + direction, "./assets/character/mc/walk_" + direction + ".png", {
-        frameWidth: 32,
-        frameHeight: 32
+      VARIANTES_JOUEUR.forEach((variante) => {
+        this.load.spritesheet("sprite_joueur_walk_" + direction + variante, "./assets/character/mc/walk_" + direction + variante + ".png", {
+          frameWidth: 32,
+          frameHeight: 32
+        });
       });
     });
   }
@@ -66,11 +70,13 @@ export default class selection extends Phaser.Scene {
    */
   create() {
     DIRECTIONS.forEach((direction) => {
-      this.anims.create({
-        key: "anim_joueur_walk_" + direction,
-        frames: this.anims.generateFrameNumbers("sprite_joueur_walk_" + direction),
-        frameRate: 8,
-        repeat: -1 // -1 = infini
+      VARIANTES_JOUEUR.forEach((variante) => {
+        this.anims.create({
+          key: "anim_joueur_walk_" + direction + variante,
+          frames: this.anims.generateFrameNumbers("sprite_joueur_walk_" + direction + variante),
+          frameRate: 8,
+          repeat: -1 // -1 = infini
+        });
       });
     });
 
