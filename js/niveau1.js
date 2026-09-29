@@ -6,8 +6,6 @@ const PV_MAX = 100;
 const STAMINA_MAX = 100;
 const STAMINA_CONSO = 35; // stamina perdue par seconde de sprint
 const STAMINA_RECUP = 20; // stamina regagnée par seconde sans sprinter
-<<<<<<< Updated upstream
-=======
 const DISTANCE_MIN_ECHELLE = 200; // px : l'échelle n'est pas cachée juste à coté du joueur
 const DUREE_FONDU = 400; // ms
 const NB_CAILLOUX = 8;
@@ -22,8 +20,8 @@ const VITESSE_LASER = 500; // px/s
 const DUREE_VIE_LASER = 1200; // ms : le laser disparait s'il ne touche rien
 const DEPART_LASER = 16; // px : le laser part un peu devant le joueur
 const EQUIPEMENTS = ["pioche", "laser"]; // H passe de l'un à l'autre
->>>>>>> Stashed changes
 
+// scene de jeu : elle est relancée à chaque descente, avec le numéro du niveau suivant
 export default class niveau1 extends Phaser.Scene {
   // constructeur de la classe
   constructor() {
@@ -31,8 +29,6 @@ export default class niveau1 extends Phaser.Scene {
       key: "niveau1" //  ici on précise le nom de la classe en tant qu'identifiant
     });
   }
-<<<<<<< Updated upstream
-=======
 
   // données transmises par scene.start / scene.restart
   init(data) {
@@ -42,11 +38,12 @@ export default class niveau1 extends Phaser.Scene {
     this.equipement_depart = data.equipement || "pioche";
   }
 
->>>>>>> Stashed changes
   preload() {
   }
 
   create() {
+    this.descente = false; // true pendant le fondu vers le niveau suivant
+
     /*************************************
      *  CREATION DE LA MAP               *
      *************************************/
@@ -60,26 +57,18 @@ export default class niveau1 extends Phaser.Scene {
     ];
 
     // les noms des calques doivent etre identiques à ceux de Tiled
-    map.createLayer("sol", tilesets);
+    const calque_sol = map.createLayer("sol", tilesets);
     const calque_murs = map.createLayer("murs", tilesets);
     calque_murs.setCollisionByExclusion([-1]); // toutes les tuiles non vides du calque "murs" sont solides
 
     /****************************
      *  CREATION DU PERSONNAGE  *
      ****************************/
-    this.player = this.physics.add.sprite(map.widthInPixels / 2, map.heightInPixels / 2, "sprite_joueur_idle_down");
-    // hitbox réduite aux pieds du personnage (le sprite fait 96x80 mais le perso est bien plus petit)
-    this.player.setSize(16, 10);
-    this.player.setOffset(40, 48);
+    this.player = this.physics.add.sprite(map.widthInPixels / 2, map.heightInPixels / 2, "sprite_joueur_walk_down");
+    // hitbox réduite aux pieds du personnage
+    this.player.setSize(12, 6);
+    this.player.setOffset(10, 25);
     this.player.setCollideWorldBounds(true);
-<<<<<<< Updated upstream
-    this.player.anims.play("anim_joueur_idle_down");
-    this.direction = "down"; // dernière direction, pour l'animation idle
-    this.player.pv = PV_MAX;
-    this.player.stamina = STAMINA_MAX;
-
-    this.physics.add.collider(this.player, calque_murs);
-=======
     this.player.pv = this.pv_depart;
     this.player.stamina = this.stamina_depart;
     this.player.equipement = this.equipement_depart;
@@ -97,7 +86,6 @@ export default class niveau1 extends Phaser.Scene {
     // le laser s'arrête sur les cailloux (seule la pioche les casse)
     this.physics.add.collider(this.projectiles, this.cailloux, (projectile) => projectile.destroy());
     this.cacherEchelle();
->>>>>>> Stashed changes
 
     /****************************
      *  MONDE ET CAMERA         *
@@ -105,17 +93,25 @@ export default class niveau1 extends Phaser.Scene {
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.cameras.main.startFollow(this.player);
+    this.cameras.main.fadeIn(DUREE_FONDU);
+
+    /****************************
+     *  OBSCURITE + TORCHE      *
+     ****************************/
+    // calque noir fixé à l'écran, au-dessus du jeu mais sous le HUD
+    // à chaque image on le remplit de noir puis on y "gomme" la forme de la lumière
+    this.obscurite = this.add.renderTexture(0, 0, this.scale.width, this.scale.height)
+      .setOrigin(0, 0)
+      .setScrollFactor(0)
+      .setDepth(900);
+    this.forme_lumiere = this.make.graphics({}, false); // pas affiché : sert seulement de gomme
+    this.torche_allumee = true;
 
     /****************************
      *  HUD                     *
      ****************************/
     this.barre_vie = fct.creerBarre(this, 20, 20, "sprite_barre_vie");
     this.barre_stamina = fct.creerBarre(this, 20, 76, "sprite_barre_stamina");
-<<<<<<< Updated upstream
-
-    this.clavier = this.input.keyboard.createCursorKeys();
-    this.touche_sprint = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.G);
-=======
     this.add.text(1260, 20, "Niveau " + this.niveau, { fontSize: "28px", color: "#E8EBF0" })
       .setOrigin(1, 0)
       .setScrollFactor(0)
@@ -252,10 +248,11 @@ export default class niveau1 extends Phaser.Scene {
         equipement: this.player.equipement
       });
     });
->>>>>>> Stashed changes
   }
 
   update(time, delta) {
+    if (this.descente) return;
+
     const secondes = delta / 1000;
 
     let vx = 0;
@@ -281,19 +278,6 @@ export default class niveau1 extends Phaser.Scene {
     // normalisation : on ne va pas plus vite en diagonale
     this.player.body.velocity.set(vx, vy).normalize().scale(sprint ? VITESSE_SPRINT : VITESSE_JOUEUR);
 
-<<<<<<< Updated upstream
-    // en diagonale, l'animation gauche/droite est prioritaire
-    if (vx < 0) this.direction = "left";
-    else if (vx > 0) this.direction = "right";
-    else if (vy < 0) this.direction = "up";
-    else if (vy > 0) this.direction = "down";
-
-    const etat = bouge ? "run" : "idle";
-    this.player.anims.play("anim_joueur_" + etat + "_" + this.direction, true);
-
-    fct.majBarre(this.barre_vie, this.player.pv, PV_MAX);
-    fct.majBarre(this.barre_stamina, this.player.stamina, STAMINA_MAX);
-=======
     if (bouge) this.regard.set(vx, vy).normalize();
     if (Phaser.Input.Keyboard.JustDown(this.touches.changer_equipement)) this.changerEquipement();
     // F : l'action dépend de l'outil équipé
@@ -324,6 +308,5 @@ export default class niveau1 extends Phaser.Scene {
 
     // un seul joueur pour l'instant : en duo, il faudra que les deux soient sur l'échelle
     if (this.echelle.visible && this.physics.overlap(this.player, this.echelle)) this.descendre();
->>>>>>> Stashed changes
   }
 }

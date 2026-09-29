@@ -37,7 +37,7 @@ export function creerTouches(scene, touches) {
 /** HUD : BARRES DE VIE / STAMINA
 /***********************************************************************/
 
-const NB_FRAMES_BARRE = 10; // les spritesheets de barre ont 10 niveaux de remplissage (1 à 10 segments)
+const NB_FRAMES_BARRE = 11; // frame 0 = vide, frame 10 = pleine (10 segments)
 const ECHELLE_BARRE = 3; // 96x16 -> 288x48 à l'écran
 
 // crée une barre fixée à l'écran (elle ne suit pas la caméra)
@@ -46,13 +46,12 @@ export function creerBarre(scene, x, y, cle) {
         .setOrigin(0, 0)
         .setScale(ECHELLE_BARRE)
         .setScrollFactor(0)
-        .setDepth(100);
+        .setDepth(1000); // au-dessus du jeu (tri par y)
 }
 
 // affiche la frame correspondant à valeur / max
 export function majBarre(barre, valeur, max) {
-    const segments = Math.ceil((valeur / max) * NB_FRAMES_BARRE);
-    // pas de frame "vide" dans la spritesheet : à 0 on garde 1 segment, mais en transparence
-    barre.setFrame(Math.max(segments - 1, 0));
-    barre.setAlpha(valeur > 0 ? 1 : 0.4);
+    // arrondi au segment supérieur : la barre ne paraît vide qu'à 0 exactement
+    const segments = Math.ceil((valeur / max) * (NB_FRAMES_BARRE - 1));
+    barre.setFrame(segments);
 }
