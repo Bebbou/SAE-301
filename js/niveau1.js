@@ -28,6 +28,11 @@ const VITESSE_ROTATION_TORCHE = 12; // radians/s : le cône rejoint la direction
 const SCINTILLEMENT_TORCHE = 0.04; // variation de portée (+/- 4 %)
 // halo autour du joueur : [rayon en px, opacité] ; le dernier cercle rend le perso toujours visible
 const HALO_JOUEUR = [[28, 0.15], [14, 1]];
+// lumière portée par chaque laser en vol, même principe que le halo du joueur
+const HALO_LASER = [[44, 0.15], [28, 0.25], [14, 0.6]];
+// éclat à l'impact d'un laser (mur ou caillou) : il s'éteint progressivement
+const HALO_ECLAT = [[56, 0.2], [32, 0.4], [16, 0.8]];
+const DUREE_ECLAT = 150; // ms
 const VITESSE_LASER = 500; // px/s
 const DUREE_VIE_LASER = 1200; // ms : le laser disparait s'il ne touche rien
 const DEPART_LASER = 16; // px : le laser part un peu devant le joueur
@@ -88,7 +93,8 @@ export default class niveau1 extends Phaser.Scene {
 
     this.physics.add.collider(this.player, calque_murs);
     this.projectiles = this.physics.add.group();
-    this.physics.add.collider(this.projectiles, calque_murs, (projectile) => projectile.destroy());
+    this.eclats = []; // éclats de lumière laissés par les lasers qui touchent quelque chose
+    this.physics.add.collider(this.projectiles, calque_murs, (projectile) => this.impactLaser(projectile));
 
     /****************************
      *  CAILLOUX + ECHELLE      *
@@ -96,7 +102,7 @@ export default class niveau1 extends Phaser.Scene {
     this.placerCailloux(calque_sol, calque_murs);
     this.physics.add.collider(this.player, this.cailloux);
     // le laser s'arrête sur les cailloux (seule la pioche les casse)
-    this.physics.add.collider(this.projectiles, this.cailloux, (projectile) => projectile.destroy());
+    this.physics.add.collider(this.projectiles, this.cailloux, (projectile) => this.impactLaser(projectile));
     this.cacherEchelle();
 
     /****************************
@@ -140,12 +146,21 @@ export default class niveau1 extends Phaser.Scene {
      ****************************/
     this.touches = fct.creerTouches(this, fct.TOUCHES_J1);
 
-    this.majTorche(0); // sinon la première image s'affiche sans obscurité
+    this.majLumieres(0); // sinon la première image s'affiche sans obscurité
   }
 
-  // redessine l'obscurité : noir partout sauf le halo du joueur et le cône de la torche
+  // dessine des cercles concentriques [rayon, opacité] dans la forme de lumière (coordonnées du monde)
+  dessinerHalo(x, y, halo, facteur_rayon = 1, facteur_opacite = 1) {
+    const camera = this.cameras.main;
+    halo.forEach(([rayon, opacite]) => {
+      this.forme_lumiere.fillStyle(0xffffff, opacite * facteur_opacite);
+      this.forme_lumiere.fillCircle(x - camera.scrollX, y - camera.scrollY, rayon * facteur_rayon);
+    });
+  }
+
+  // redessine l'obscurité : noir partout sauf les sources de lumière (joueur, torche, lasers, éclats)
   // chaque forme "gomme" une partie de l'obscurité : en les superposant on obtient un dégradé
-  majTorche(secondes) {
+  majLumieres(secondes) {
     // le calque est fixé à l'écran : on passe des coordonnées du monde à celles de l'écran
     const camera = this.cameras.main;
     const forme = this.forme_lumiere;
@@ -155,10 +170,16 @@ export default class niveau1 extends Phaser.Scene {
     const t = this.time.now;
     const scintillement = 1 + SCINTILLEMENT_TORCHE * (Math.sin(t * 0.011) + 0.6 * Math.sin(t * 0.029)) / 1.6;
 
-    // halo autour du joueur
-    HALO_JOUEUR.forEach(([rayon, opacite]) => {
-      forme.fillStyle(0xffffff, opacite);
-      forme.fillCircle(this.player.x - camera.scrollX, this.player.y - camera.scrollY, rayon * scintillement);
+    this.dessinerHalo(this.player.x, this.player.y, HALO_JOUEUR, scintillement);
+
+    // chaque laser en vol éclaire autour de lui
+    this.projectiles.getChildren().forEach((laser) => this.dessinerHalo(laser.x, laser.y, HALO_LASER));
+
+    // éclats d'impact : ils faiblissent jusqu'à disparaître
+    this.eclats = this.eclats.filter((eclat) => t < eclat.fin);
+    this.eclats.forEach((eclat) => {
+      const restant = (eclat.fin - t) / DUREE_ECLAT; // 1 -> 0
+      this.dessinerHalo(eclat.x, eclat.y, HALO_ECLAT, 1, restant);
     });
 
     if (this.torche_allumee) {
@@ -274,6 +295,12 @@ export default class niveau1 extends Phaser.Scene {
     this.time.delayedCall(DUREE_VIE_LASER, () => projectile.destroy());
   }
 
+  // le laser touche un mur ou un caillou : il laisse un éclat de lumière puis disparait
+  impactLaser(projectile) {
+    this.eclats.push({ x: projectile.x, y: projectile.y, fin: this.time.now + DUREE_ECLAT });
+    projectile.destroy();
+  }
+
   // coup de pioche sur le caillou juste devant le joueur
   frapper() {
     // zone de frappe carrée, décalée devant les pieds du joueur
@@ -350,7 +377,7 @@ export default class niveau1 extends Phaser.Scene {
       else this.tirer();
     }
     if (Phaser.Input.Keyboard.JustDown(this.touches.torche)) this.torche_allumee = !this.torche_allumee;
-    this.majTorche(secondes);
+    this.majLumieres(secondes);
 
     // animation : la gauche est la droite retournée
     if (bouge) {
