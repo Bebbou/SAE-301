@@ -136,16 +136,16 @@ export default class niveau1 extends Phaser.Scene {
     /****************************
      *  HUD                     *
      ****************************/
-    this.barre_vie = fct.creerBarre(this, 20, 20, "sprite_barre_vie");
-    this.barre_stamina = fct.creerBarre(this, 20, 60, "sprite_barre_stamina");
+    // coin haut gauche : la bulle d'équipement, puis les deux barres à sa droite
+    // la grande bulle (72 px) a la même hauteur que les deux barres empilées (32 + 8 + 32 px)
+    this.barre_vie = fct.creerBarre(this, 132, 20, "sprite_barre_vie");
+    this.barre_stamina = fct.creerBarre(this, 132, 60, "sprite_barre_stamina");
     this.add.text(1260, 20, "Niveau " + this.niveau, { fontSize: "28px", color: "#E8EBF0" })
       .setOrigin(1, 0)
       .setScrollFactor(0)
       .setDepth(fct.PROFONDEUR.hud);
-    this.texte_equipement = this.add.text(20, 100, "", { fontSize: "22px", color: "#E8EBF0" })
-      .setScrollFactor(0)
-      .setDepth(fct.PROFONDEUR.hud);
-    this.majTexteEquipement();
+    // équipement actuel en grand, suivant en petit (en bas à droite de la grande, il s'arrête avant les barres)
+    this.bulles_equipement = fct.creerBullesEquipement(this, 56, 56, EQUIPEMENTS, this.player.equipement);
 
     /****************************
      *  COMMANDES               *
@@ -299,15 +299,11 @@ export default class niveau1 extends Phaser.Scene {
     this.echelle.setVisible(false);
   }
 
-  majTexteEquipement() {
-    this.texte_equipement.setText("Outil : " + this.player.equipement + " (H)");
-  }
-
   // passe à l'équipement suivant de la liste EQUIPEMENTS
   changerEquipement() {
     const suivant = (EQUIPEMENTS.indexOf(this.player.equipement) + 1) % EQUIPEMENTS.length;
     this.player.equipement = EQUIPEMENTS[suivant];
-    this.majTexteEquipement();
+    this.bulles_equipement.changer(this.player.equipement);
   }
 
   // tir de laser dans la direction du regard (8 directions)
