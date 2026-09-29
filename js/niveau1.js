@@ -4,6 +4,7 @@ import * as generation from "./generation.js";
 const LARGEUR_NIVEAU = 50; // cases de 32 px
 const HAUTEUR_NIVEAU = 34;
 
+const ECHELLE_JOUEUR = 1.25; // taille du joueur (sa hitbox suit) ; 1 = sprite d'origine de 32 px
 const VITESSE_JOUEUR = 160; // px/s
 const VITESSE_SPRINT = 260; // px/s
 const PV_MAX = 100;
@@ -15,6 +16,8 @@ const DUREE_FONDU = 400; // ms
 const NB_CAILLOUX = 14;
 const DISTANCE_MIN_CAILLOU = 64; // px : pas de caillou sur le joueur à son arrivée
 const COUPS_CAILLOU = 3; // coups de pioche pour casser un caillou
+const FRAME_IMPACT_PIOCHE = 2; // frame de l'animation de coup (0 à 3) où la pioche touche : c'est là que le caillou encaisse
+const AVANCE_PROFONDEUR_COUP = 20; // px : pendant un coup de côté, le joueur passe devant le caillou pour qu'on voie le fer de la pioche
 const PORTEE_FRAPPE = 12; // px : distance entre les pieds du joueur et le centre de la zone de frappe
 const TAILLE_ZONE_FRAPPE = 16; // px
 const PORTEE_TORCHE = 260; // px : longueur max du cône de lumière
@@ -91,9 +94,15 @@ export default class niveau1 extends Phaser.Scene {
     const depart = Phaser.Utils.Array.GetRandom(calque_sol.filterTiles((tuile) => tuile.index !== -1));
     this.player = this.physics.add.sprite(depart.getCenterX(), depart.getCenterY(), "sprite_joueur_walk_down" + VARIANTE_SPRITE[this.equipement_depart]);
     this.sprite_direction = "down"; // dernière direction de marche : sert aussi à l'arrêt, quand on change d'équipement
-    // hitbox réduite aux pieds du personnage
+    this.sprite_retourne = false; // le joueur regarde-t-il à gauche (sprite de droite retourné) ?
+    this.frappe = null; // coup de pioche en cours : { regard, touche }
+    this.player.on(Phaser.Animations.Events.ANIMATION_COMPLETE, (animation) => {
+      if (animation.key.startsWith("anim_joueur_pioche_")) this.frappe = null; // fin du coup : retour à la marche
+    });
+    // hitbox réduite aux pieds du personnage (en pixels du sprite d'origine : elle suit l'échelle)
     this.player.setSize(12, 6);
     this.player.setOffset(10, 25);
+    this.player.setScale(ECHELLE_JOUEUR);
     this.player.setCollideWorldBounds(true);
     this.player.pv = this.pv_depart;
     this.player.stamina = this.stamina_depart;
@@ -307,6 +316,7 @@ export default class niveau1 extends Phaser.Scene {
     const suivant = (EQUIPEMENTS.indexOf(this.player.equipement) + 1) % EQUIPEMENTS.length;
     this.player.equipement = EQUIPEMENTS[suivant];
     this.bulles_equipement.changer(this.player.equipement);
+    this.frappe = null; // changer d'outil annule un coup de pioche en cours
   }
 
   // tir de laser dans la direction du regard (8 directions)
@@ -331,13 +341,26 @@ export default class niveau1 extends Phaser.Scene {
     projectile.destroy();
   }
 
-  // coup de pioche sur le caillou juste devant le joueur
-  frapper() {
+  // lance l'animation du coup de pioche ; le caillou n'encaisse qu'à la frame d'impact (cf. update)
+  commencerFrappe() {
+    if (this.frappe) return; // un coup à la fois : on attend la fin de l'animation
+    const regard = this.regard.clone(); // direction figée : le joueur peut bouger pendant le coup
+    // 3 sprites de coup : bas, haut et droite (retournée pour la gauche ; les diagonales prennent la droite)
+    if (Math.abs(regard.x) < 0.1) this.sprite_direction = regard.y < 0 ? "up" : "down";
+    else this.sprite_direction = "right";
+    this.sprite_retourne = regard.x < 0;
+    this.player.setFlipX(this.sprite_retourne);
+    this.player.anims.play("anim_joueur_pioche_" + this.sprite_direction);
+    this.frappe = { regard: regard, touche: false };
+  }
+
+  // coup de pioche sur le caillou situé devant le joueur, dans la direction donnée
+  frapper(regard) {
     // zone de frappe carrée, décalée devant les pieds du joueur
     const zone = new Phaser.Geom.Rectangle(0, 0, TAILLE_ZONE_FRAPPE, TAILLE_ZONE_FRAPPE);
     Phaser.Geom.Rectangle.CenterOn(zone,
-      this.player.body.center.x + this.regard.x * PORTEE_FRAPPE,
-      this.player.body.center.y + this.regard.y * PORTEE_FRAPPE
+      this.player.body.center.x + regard.x * PORTEE_FRAPPE,
+      this.player.body.center.y + regard.y * PORTEE_FRAPPE
     );
     const caillou = this.cailloux.getChildren().find((c) =>
       Phaser.Geom.Intersects.RectangleToRectangle(zone, new Phaser.Geom.Rectangle(c.body.x, c.body.y, c.body.width, c.body.height))
@@ -403,7 +426,7 @@ export default class niveau1 extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(this.touches.changer_equipement)) this.changerEquipement();
     // F : l'action dépend de l'outil équipé
     if (Phaser.Input.Keyboard.JustDown(this.touches.frapper_tirer)) {
-      if (this.player.equipement === "pioche") this.frapper();
+      if (this.player.equipement === "pioche") this.commencerFrappe();
       else this.tirer();
     }
     if (Phaser.Input.Keyboard.JustDown(this.touches.torche)) this.torche_allumee = !this.torche_allumee;
@@ -411,18 +434,28 @@ export default class niveau1 extends Phaser.Scene {
 
     // animation : la gauche est la droite retournée ; le joueur tient le fusil ou non selon l'équipement
     const variante = VARIANTE_SPRITE[this.player.equipement];
-    if (bouge) {
+    if (this.frappe) {
+      // coup de pioche en cours : son animation remplace celle de marche, l'impact a lieu à la frame FRAME_IMPACT_PIOCHE
+      if (!this.frappe.touche && this.player.anims.currentFrame.textureFrame >= FRAME_IMPACT_PIOCHE) {
+        this.frappe.touche = true;
+        this.frapper(this.frappe.regard);
+      }
+    } else if (bouge) {
       if (vx === 0) this.sprite_direction = vy < 0 ? "up" : "down";
       else if (vy === 0) this.sprite_direction = "right";
       else this.sprite_direction = vy < 0 ? "up_diagonal" : "down_diagonal";
-      this.player.setFlipX(vx < 0);
+      this.sprite_retourne = vx < 0;
+      this.player.setFlipX(this.sprite_retourne);
       this.player.anims.play("anim_joueur_walk_" + this.sprite_direction + variante, true);
     } else {
       // pas d'animation idle : on s'arrête sur la première frame (de la bonne variante si l'équipement vient de changer)
       this.player.anims.stop();
+      this.player.setFlipX(this.sprite_retourne);
       this.player.setTexture("sprite_joueur_walk_" + this.sprite_direction + variante, 0);
     }
-    this.player.setDepth(this.player.y); // même tri d'affichage que les cailloux
+    // même tri d'affichage que les cailloux (plus bas = devant), avec une avance pour les coups de côté
+    const avance = this.frappe && this.sprite_direction === "right" ? AVANCE_PROFONDEUR_COUP : 0;
+    this.player.setDepth(this.player.y + avance);
 
     fct.majBarre(this.barre_vie, this.player.pv, PV_MAX);
     fct.majBarre(this.barre_stamina, this.player.stamina, STAMINA_MAX);
