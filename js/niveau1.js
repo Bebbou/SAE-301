@@ -23,7 +23,7 @@ const OPACITE_COUCHE_TORCHE = 0.25; // chaque couche retire 25 % de l'obscurité
 const VITESSE_ROTATION_TORCHE = 12; // radians/s : le cône rejoint la direction du regard en douceur
 const SCINTILLEMENT_TORCHE = 0.04; // variation de portée (+/- 4 %)
 // halo autour du joueur : [rayon en px, opacité] ; le dernier cercle rend le perso toujours visible
-const HALO_JOUEUR = [[52, 0.08], [44, 0.1], [36, 0.12], [28, 0.15], [20, 0.2], [14, 1]];
+const HALO_JOUEUR = [[28, 0.15], [14, 1]];
 const VITESSE_LASER = 500; // px/s
 const DUREE_VIE_LASER = 1200; // ms : le laser disparait s'il ne touche rien
 const DEPART_LASER = 16; // px : le laser part un peu devant le joueur
