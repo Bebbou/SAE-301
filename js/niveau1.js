@@ -29,7 +29,13 @@ const SCINTILLEMENT_TORCHE = 0.04; // variation de portée (+/- 4 %)
 // halo autour du joueur : [rayon en px, opacité] ; le dernier cercle rend le perso toujours visible
 const HALO_JOUEUR = [[28, 0.15], [14, 1]];
 // lumière portée par chaque laser en vol, même principe que le halo du joueur
+// elle n'apparait que lorsque le laser est sorti du cône de la torche (sinon la torche l'éclaire déjà)
 const HALO_LASER = [[44, 0.15], [28, 0.25], [14, 0.6]];
+const FONDU_HALO_LASER = 40; // px : distance sur laquelle le halo apparait en douceur
+// le halo commence un peu AVANT la sortie du cône : la lumière y est déjà faible, le laser paraitrait s'éteindre
+const AVANCE_HALO_LASER = 60; // px : avant le bout du cône (portée de la torche)
+const AVANCE_ANGLE_HALO_LASER = Phaser.Math.DegToRad(8); // avant les bords du cône
+const DISTANCE_HALO_LASER = [30, 80]; // px : près du joueur le halo est éteint, il est plein à partir de la 2e valeur
 // éclat à l'impact d'un laser (mur ou caillou) : il s'éteint progressivement
 const HALO_ECLAT = [[56, 0.2], [32, 0.4], [16, 0.8]];
 const DUREE_ECLAT = 150; // ms
@@ -172,9 +178,6 @@ export default class niveau1 extends Phaser.Scene {
 
     this.dessinerHalo(this.player.x, this.player.y, HALO_JOUEUR, scintillement);
 
-    // chaque laser en vol éclaire autour de lui
-    this.projectiles.getChildren().forEach((laser) => this.dessinerHalo(laser.x, laser.y, HALO_LASER));
-
     // éclats d'impact : ils faiblissent jusqu'à disparaître
     this.eclats = this.eclats.filter((eclat) => t < eclat.fin);
     this.eclats.forEach((eclat) => {
@@ -182,17 +185,18 @@ export default class niveau1 extends Phaser.Scene {
       this.dessinerHalo(eclat.x, eclat.y, HALO_ECLAT, 1, restant);
     });
 
+    // la lumière part des pieds : c'est la hitbox, elle n'est donc jamais dans un mur
+    const ox = this.player.body.center.x;
+    const oy = this.player.body.center.y;
+    const portee = PORTEE_TORCHE * scintillement;
+    const milieu = (NB_RAYONS_TORCHE - 1) / 2;
+    const demi_angle = Phaser.Math.DegToRad(ANGLE_TORCHE / 2);
+    let distances = null; // longueur de chaque rayon du cône : reste null tant que la torche est éteinte
+
     if (this.torche_allumee) {
       // rotation fluide vers la direction du regard
       this.angle_torche = Phaser.Math.Angle.RotateTo(this.angle_torche, this.regard.angle(), VITESSE_ROTATION_TORCHE * secondes);
-
-      // la lumière part des pieds : c'est la hitbox, elle n'est donc jamais dans un mur
-      const ox = this.player.body.center.x;
-      const oy = this.player.body.center.y;
-      const portee = PORTEE_TORCHE * scintillement;
-      const distances = this.lancerRayons(ox, oy, portee);
-      const milieu = (NB_RAYONS_TORCHE - 1) / 2;
-      const demi_angle = Phaser.Math.DegToRad(ANGLE_TORCHE / 2);
+      distances = this.lancerRayons(ox, oy, portee);
 
       // couche 0 = cône complet (bords faibles) ... dernière couche = coeur court et serré
       for (let c = 0; c < NB_COUCHES_TORCHE; c++) {
@@ -214,8 +218,35 @@ export default class niveau1 extends Phaser.Scene {
       }
     }
 
+    // chaque laser en vol éclaire autour de lui, une fois sorti de la lumière de la torche
+    this.projectiles.getChildren().forEach((laser) => {
+      const facteur = this.facteurHaloLaser(laser, ox, oy, distances, portee, milieu, demi_angle);
+      if (facteur > 0) this.dessinerHalo(laser.x, laser.y, HALO_LASER, 1, facteur);
+    });
+
     this.obscurite.fill(0x000000);
     this.obscurite.erase(forme);
+  }
+
+  // force du halo d'un laser, de 0 à 1 :
+  // 0 quand le laser est dans le cône de la torche ou collé au joueur, 1 quand il en est sorti (transition douce)
+  facteurHaloLaser(laser, ox, oy, distances, portee, milieu, demi_angle) {
+    const distance_joueur = Phaser.Math.Distance.Between(ox, oy, laser.x, laser.y);
+
+    // tout près du joueur, le halo du laser se confondrait avec celui du joueur
+    const [debut, fin] = DISTANCE_HALO_LASER;
+    let facteur = Phaser.Math.Clamp((distance_joueur - debut) / (fin - debut), 0, 1);
+
+    if (distances) { // torche allumée : y a-t-il encore de la lumière à cet endroit ?
+      const ecart = Phaser.Math.Angle.Wrap(Math.atan2(laser.y - oy, laser.x - ox) - this.angle_torche);
+      const rayon = distances[Math.round(milieu + Phaser.Math.Clamp(ecart / demi_angle, -1, 1) * milieu)];
+      const hors_cote = (Math.abs(ecart) - demi_angle + AVANCE_ANGLE_HALO_LASER) * distance_joueur; // px, > 0 : à côté du cône
+      // > 0 : au-delà de la portée ou d'un mur ; l'avance ne vaut que pour la portée (un mur est éclairé jusqu'au bout)
+      const avance = rayon < portee ? 0 : AVANCE_HALO_LASER;
+      const hors_bout = distance_joueur - Math.min(rayon, portee) + avance;
+      facteur *= Phaser.Math.Clamp(Math.max(hors_cote, hors_bout) / FONDU_HALO_LASER, 0, 1);
+    }
+    return facteur;
   }
 
   // lance NB_RAYONS_TORCHE rayons en éventail et renvoie, pour chacun, la distance parcourue avant un mur
