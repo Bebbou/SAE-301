@@ -13,9 +13,17 @@ const DISTANCE_MIN_CAILLOU = 64; // px : pas de caillou sur le joueur à son arr
 const COUPS_CAILLOU = 3; // coups de pioche pour casser un caillou
 const PORTEE_FRAPPE = 12; // px : distance entre les pieds du joueur et le centre de la zone de frappe
 const TAILLE_ZONE_FRAPPE = 16; // px
-const PORTEE_TORCHE = 220; // px : longueur du cône de lumière
+const PORTEE_TORCHE = 260; // px : longueur max du cône de lumière
 const ANGLE_TORCHE = 60; // degrés : ouverture totale du cône
-const RAYON_JOUEUR_VISIBLE = 14; // px : cercle autour du joueur pour qu'on le voie dans le noir (0 = invisible)
+const NB_RAYONS_TORCHE = 49; // rayons lancés pour que les murs arrêtent la lumière (impair : un rayon au centre)
+const PAS_RAYON = 4; // px : précision des rayons
+const PENETRATION_MUR = 12; // px : la lumière éclaire un peu la face du mur qu'elle touche
+const NB_COUCHES_TORCHE = 12; // cônes superposés, du plus large au plus serré, pour le dégradé
+const OPACITE_COUCHE_TORCHE = 0.25; // chaque couche retire 25 % de l'obscurité restante
+const VITESSE_ROTATION_TORCHE = 12; // radians/s : le cône rejoint la direction du regard en douceur
+const SCINTILLEMENT_TORCHE = 0.04; // variation de portée (+/- 4 %)
+// halo autour du joueur : [rayon en px, opacité] ; le dernier cercle rend le perso toujours visible
+const HALO_JOUEUR = [[52, 0.08], [44, 0.1], [36, 0.12], [28, 0.15], [20, 0.2], [14, 1]];
 const VITESSE_LASER = 500; // px/s
 const DUREE_VIE_LASER = 1200; // ms : le laser disparait s'il ne touche rien
 const DEPART_LASER = 16; // px : le laser part un peu devant le joueur
@@ -106,6 +114,8 @@ export default class niveau1 extends Phaser.Scene {
       .setDepth(900);
     this.forme_lumiere = this.make.graphics({}, false); // pas affiché : sert seulement de gomme
     this.torche_allumee = true;
+    this.angle_torche = this.regard.angle(); // angle affiché, qui rattrape le regard en douceur
+    this.calque_murs = calque_murs; // les rayons de lumière s'arrêtent sur ce calque
 
     /****************************
      *  HUD                     *
@@ -126,29 +136,79 @@ export default class niveau1 extends Phaser.Scene {
      ****************************/
     this.touches = fct.creerTouches(this, fct.TOUCHES_J1);
 
-    this.majTorche(); // sinon la première image s'affiche sans obscurité
+    this.majTorche(0); // sinon la première image s'affiche sans obscurité
   }
 
-  // redessine l'obscurité : noir partout sauf le cône de la torche (et le joueur)
-  majTorche() {
+  // redessine l'obscurité : noir partout sauf le halo du joueur et le cône de la torche
+  // chaque forme "gomme" une partie de l'obscurité : en les superposant on obtient un dégradé
+  majTorche(secondes) {
     // le calque est fixé à l'écran : on passe des coordonnées du monde à celles de l'écran
     const camera = this.cameras.main;
-    const x = this.player.x - camera.scrollX;
-    const y = this.player.y - camera.scrollY;
-
     const forme = this.forme_lumiere;
     forme.clear();
-    forme.fillStyle(0xffffff);
-    forme.fillCircle(x, y, RAYON_JOUEUR_VISIBLE);
+
+    // scintillement : petite variation douce (deux sinus de fréquences différentes)
+    const t = this.time.now;
+    const scintillement = 1 + SCINTILLEMENT_TORCHE * (Math.sin(t * 0.011) + 0.6 * Math.sin(t * 0.029)) / 1.6;
+
+    // halo autour du joueur
+    HALO_JOUEUR.forEach(([rayon, opacite]) => {
+      forme.fillStyle(0xffffff, opacite);
+      forme.fillCircle(this.player.x - camera.scrollX, this.player.y - camera.scrollY, rayon * scintillement);
+    });
+
     if (this.torche_allumee) {
-      const direction = this.regard.angle(); // radians, 0 = vers la droite
+      // rotation fluide vers la direction du regard
+      this.angle_torche = Phaser.Math.Angle.RotateTo(this.angle_torche, this.regard.angle(), VITESSE_ROTATION_TORCHE * secondes);
+
+      // la lumière part des pieds : c'est la hitbox, elle n'est donc jamais dans un mur
+      const ox = this.player.body.center.x;
+      const oy = this.player.body.center.y;
+      const portee = PORTEE_TORCHE * scintillement;
+      const distances = this.lancerRayons(ox, oy, portee);
+      const milieu = (NB_RAYONS_TORCHE - 1) / 2;
       const demi_angle = Phaser.Math.DegToRad(ANGLE_TORCHE / 2);
-      forme.slice(x, y, PORTEE_TORCHE, direction - demi_angle, direction + demi_angle);
-      forme.fillPath();
+
+      // couche 0 = cône complet (bords faibles) ... dernière couche = coeur court et serré
+      for (let c = 0; c < NB_COUCHES_TORCHE; c++) {
+        const progression = c / (NB_COUCHES_TORCHE - 1);
+        const portee_couche = portee * Phaser.Math.Linear(1, 0.45, progression);
+        const nb_cote = Math.round(milieu * Phaser.Math.Linear(1, 0.5, progression)); // rayons gardés de chaque côté
+
+        const points = [new Phaser.Math.Vector2(ox - camera.scrollX, oy - camera.scrollY)];
+        for (let i = milieu - nb_cote; i <= milieu + nb_cote; i++) {
+          const angle = this.angle_torche + ((i - milieu) / milieu) * demi_angle;
+          const distance = Math.min(distances[i], portee_couche);
+          points.push(new Phaser.Math.Vector2(
+            ox + Math.cos(angle) * distance - camera.scrollX,
+            oy + Math.sin(angle) * distance - camera.scrollY
+          ));
+        }
+        forme.fillStyle(0xffffff, OPACITE_COUCHE_TORCHE);
+        forme.fillPoints(points, true);
+      }
     }
 
     this.obscurite.fill(0x000000);
     this.obscurite.erase(forme);
+  }
+
+  // lance NB_RAYONS_TORCHE rayons en éventail et renvoie, pour chacun, la distance parcourue avant un mur
+  lancerRayons(ox, oy, portee) {
+    const milieu = (NB_RAYONS_TORCHE - 1) / 2;
+    const demi_angle = Phaser.Math.DegToRad(ANGLE_TORCHE / 2);
+    const distances = [];
+    for (let i = 0; i < NB_RAYONS_TORCHE; i++) {
+      const angle = this.angle_torche + ((i - milieu) / milieu) * demi_angle;
+      const dx = Math.cos(angle);
+      const dy = Math.sin(angle);
+      let distance = 0;
+      while (distance < portee && !this.calque_murs.hasTileAtWorldXY(ox + dx * distance, oy + dy * distance)) {
+        distance += PAS_RAYON;
+      }
+      distances.push(Math.min(distance + PENETRATION_MUR, portee));
+    }
+    return distances;
   }
 
   // pose NB_CAILLOUX cailloux sur des cases de sol libres (sans mur), tirées au hasard
@@ -286,7 +346,7 @@ export default class niveau1 extends Phaser.Scene {
       else this.tirer();
     }
     if (Phaser.Input.Keyboard.JustDown(this.touches.torche)) this.torche_allumee = !this.torche_allumee;
-    this.majTorche();
+    this.majTorche(secondes);
 
     // animation : la gauche est la droite retournée
     if (bouge) {
