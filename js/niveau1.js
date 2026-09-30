@@ -565,7 +565,7 @@ export default class niveau1 extends Phaser.Scene {
 
     if (bouge) j.regard.set(vx, vy).normalize();
     if (Phaser.Input.Keyboard.JustDown(touches.changer_equipement)) this.changerEquipement(j);
-    // F (pour le joueur 1) : l'action dépend de l'outil équipé
+    // bouton frapper / tirer : l'action dépend de l'outil équipé
     if (Phaser.Input.Keyboard.JustDown(touches.frapper_tirer)) {
       if (j.equipement === "pioche") this.commencerFrappe(j);
       else this.tirer(j);

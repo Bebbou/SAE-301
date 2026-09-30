@@ -14,30 +14,34 @@ export function doAlsoNothing() {
 /** COMMANDES (cf. docs/documentation.html, section Commandes)
 /***********************************************************************/
 
-// touches clavier du joueur 1 (le joystick = les flèches)
-// R (interagir en face) et T (interagir avec un objet) seront ajoutées avec leurs mécaniques
+// touches de la borne d'arcade : le joystick + 6 boutons par joueur, sur deux rangées de trois
+// les deux joueurs ont les mêmes actions, dans le même ordre :
+//   rangée du haut : interagir en face, interagir avec un objet, lampe
+//   rangée du bas  : frapper / tirer, sprint, changer d'équipement
+// les deux interactions (1er et 2e boutons du haut) seront ajoutées avec leurs mécaniques
+
+// joueur 1 : joystick = les flèches ; boutons I O P (haut) et K L M (bas)
 export const TOUCHES_J1 = {
     haut: "UP",
     bas: "DOWN",
     gauche: "LEFT",
     droite: "RIGHT",
-    frapper_tirer: "F",
-    sprint: "G",
-    torche: "Y",
-    changer_equipement: "H"
+    torche: "P",
+    frapper_tirer: "K",
+    sprint: "L",
+    changer_equipement: "M"
 };
 
-// touches clavier du joueur 2 : PROVISOIRES (clavier de test, à gauche ZQSD, à droite P / K L M)
-// à remplacer par les codes réels de la borne d'arcade pour le joueur 2 (cf. docs/documentation.html, section Commandes)
+// joueur 2 : joystick = ZQSD ; boutons R T Y (haut) et F G H (bas)
 export const TOUCHES_J2 = {
     haut: "Z",
     bas: "S",
     gauche: "Q",
     droite: "D",
-    frapper_tirer: "K",
-    sprint: "L",
-    torche: "P",
-    changer_equipement: "M"
+    torche: "Y",
+    frapper_tirer: "F",
+    sprint: "G",
+    changer_equipement: "H"
 };
 
 // crée les objets Phaser.Key à partir d'une table de touches : { haut: Key, bas: Key, ... }
