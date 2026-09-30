@@ -4,10 +4,6 @@ import * as fct from "./fonctions.js";
 /** VARIABLES GLOBALES
 /***********************************************************************/
 
-// nombre de joueurs : 1 (solo) ou 2 (duo)
-// TODO : à fixer par le menu (images jouer_solo / jouer_duo) quand il existera
-const NB_JOUEURS = 2;
-
 // directions du joueur : une spritesheet de marche par direction
 // la gauche n'a pas d'image : on retourne la droite (flipX) dans la scene
 const DIRECTIONS = ["down", "up", "right", "down_diagonal", "up_diagonal"];
@@ -50,6 +46,10 @@ export default class selection extends Phaser.Scene {
     // tant qu'un fichier est absent, le HUD affiche un dessin de remplacement (cf. fonctions.js)
     this.load.image("img_icone_pioche", "./assets/ui/icone_pioche.png");
     this.load.image("img_icone_laser", "./assets/ui/icone_laser.png");
+
+    // boutons du menu (cf. menu.js)
+    this.load.image("img_bouton_solo", "./assets/ui/jouer_solo.png");
+    this.load.image("img_bouton_duo", "./assets/ui/jouer_duo.png");
 
     // cailloux (32x32)
     this.load.image("img_caillou_1", "./assets/rock1_3_no_shadow.png");
@@ -124,11 +124,7 @@ export default class selection extends Phaser.Scene {
       });
     });
 
-    // nouvelle partie : on oublie les niveaux visités (le jeu garde en mémoire l'état de chaque niveau pour pouvoir y revenir)
-    this.registry.set("niveaux", {});
-    this.registry.set("nb_joueurs", NB_JOUEURS);
-
-    // pas encore de menu : on lance directement le niveau de test
-    this.scene.start("niveau1", { niveau: 1 });
+    // tout est chargé : on ouvre le menu (qui lance la partie, cf. menu.js)
+    this.scene.start("menu");
   }
 }
