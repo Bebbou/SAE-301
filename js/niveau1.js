@@ -1,5 +1,6 @@
 import * as fct from "./fonctions.js";
 import * as generation from "./generation.js";
+import * as ennemis from "./ennemis.js";
 
 const LARGEUR_NIVEAU = 50; // cases de 32 px
 const HAUTEUR_NIVEAU = 34;
@@ -16,6 +17,8 @@ const ECART_DEPART_JOUEURS = 30; // px : distance minimale entre deux joueurs à
 const DISTANCE_MIN_ECHELLE = 200; // px : l'échelle n'est pas cachée juste à coté des joueurs
 const DUREE_FONDU = 400; // ms
 const NB_CAILLOUX = 14;
+const DISTANCE_MIN_DEPART = 72; // px : à l'arrivée, on apparaît à cette distance minimale de l'échelle (hors de portée d'interaction)
+const PORTEE_INTERACTION = 40; // px : distance max à l'échelle de montée pour l'utiliser
 const DISTANCE_MIN_CAILLOU = 64; // px : pas de caillou sur un joueur à son arrivée
 const COUPS_CAILLOU = 3; // coups de pioche pour casser un caillou
 const FRAME_IMPACT_PIOCHE = 2; // frame de l'animation de coup (0 à 3) où la pioche touche : c'est là que le caillou encaisse
@@ -111,7 +114,7 @@ export default class niveau1 extends Phaser.Scene {
      *  CREATION DES PERSONNAGES *
      ****************************/
     const nb_joueurs = Math.min(this.registry.get("nb_joueurs") ?? 1, fct.JOUEURS.length);
-    const departs = this.choisirDeparts(calque_sol, nouveau, nb_joueurs);
+    const departs = this.choisirDeparts(calque_sol, calque_murs, nouveau, nb_joueurs);
     this.joueurs = fct.JOUEURS.slice(0, nb_joueurs).map((definition, i) =>
       this.creerJoueur(definition, departs[i], this.donnees_joueurs[i] || {})
     );
@@ -131,6 +134,7 @@ export default class niveau1 extends Phaser.Scene {
     // le laser s'arrête sur les cailloux (seule la pioche les casse)
     this.physics.add.collider(this.projectiles, this.cailloux, (projectile) => this.impactLaser(projectile));
     this.creerEchelles();
+    ennemis.creerEnnemis(this, calque_sol, calque_murs);
     // "1/2" affiché au-dessus d'une échelle quand un seul des deux joueurs est dessus
     this.compteur_echelle = this.add.text(0, 0, "", { fontSize: "20px", color: "#E8EBF0" })
       .setOrigin(0.5, 1)
@@ -332,7 +336,7 @@ export default class niveau1 extends Phaser.Scene {
   // - tout premier niveau : une case de sol au hasard, les joueurs l'un à côté de l'autre
   // - sinon : à côté (pas dessus : on ne repart pas aussitôt) de l'échelle par laquelle on arrive,
   //   c'est-à-dire l'échelle de montée si on descend, ou le trou si on remonte
-  choisirDeparts(calque_sol, nouveau, nb_joueurs) {
+  choisirDeparts(calque_sol, calque_murs, nouveau, nb_joueurs) {
     const cases_sol = calque_sol.filterTiles((tuile) => tuile.index !== -1);
     const centre = (tuile) => ({ x: tuile.getCenterX(), y: tuile.getCenterY() });
     const distance = (a, b) => Phaser.Math.Distance.Between(a.x, a.y, b.x, b.y);
@@ -342,13 +346,17 @@ export default class niveau1 extends Phaser.Scene {
     if (premier_depart) {
       origine = centre(Phaser.Utils.Array.GetRandom(cases_sol));
     } else {
-      if (nouveau) this.etat.montee = centre(Phaser.Utils.Array.GetRandom(cases_sol)); // l'échelle de montée est là où on arrive
+      if (nouveau) {
+        // l'échelle de montée est plaquée contre un mur (hors du passage) : les joueurs arrivent à côté, pas dessus
+        const contre_mur = cases_sol.filter((tuile) => !calque_murs.hasTileAt(tuile.x, tuile.y) && calque_murs.hasTileAt(tuile.x, tuile.y - 1));
+        this.etat.montee = centre(Phaser.Utils.Array.GetRandom(contre_mur.length > 0 ? contre_mur : cases_sol));
+      }
       origine = this.arrivee === "bas" ? this.etat.trou : this.etat.montee;
     }
 
     const cailloux = this.etat.cailloux || []; // vide dans un niveau tout neuf : ils sont tirés après le départ
     const candidats = cases_sol.map(centre)
-      .filter((case_sol) => distance(case_sol, origine) <= 100 && (premier_depart || distance(case_sol, origine) >= 32))
+      .filter((case_sol) => distance(case_sol, origine) <= 150 && (premier_depart || distance(case_sol, origine) >= DISTANCE_MIN_DEPART))
       .filter((case_sol) => cailloux.every((caillou) => distance(case_sol, caillou) >= 40))
       .sort((a, b) => distance(a, origine) - distance(b, origine));
 
@@ -490,6 +498,7 @@ export default class niveau1 extends Phaser.Scene {
       j.sprite.body.center.x + regard.x * PORTEE_FRAPPE,
       j.sprite.body.center.y + regard.y * PORTEE_FRAPPE
     );
+    ennemis.frapperEnnemis(this, zone, regard);
     const caillou = this.cailloux.getChildren().find((c) =>
       Phaser.Geom.Intersects.RectangleToRectangle(zone, new Phaser.Geom.Rectangle(c.body.x, c.body.y, c.body.width, c.body.height))
     );
@@ -606,29 +615,38 @@ export default class niveau1 extends Phaser.Scene {
 
     const secondes = delta / 1000;
     this.joueurs.forEach((j) => this.majJoueur(j, secondes));
+    ennemis.majEnnemis(this);
     this.placerCible();
     this.limiterAEcran();
     this.majLumieres(secondes);
 
-    // changement de niveau : tous les joueurs doivent être sur l'échelle (le trou ou l'échelle de montée)
-    // tant qu'un seul des deux y est, on affiche "1/2" au-dessus
-    const passages = [
-      { objet: this.trou.visible ? this.trou : null, niveau: this.niveau + 1, arrivee: "haut" },
-      { objet: this.echelle_montee, niveau: this.niveau - 1, arrivee: "bas" }
-    ];
+    // descente : tous les joueurs doivent être sur le trou (automatique)
+    // montée : tous les joueurs doivent être près de l'échelle et l'un d'eux appuie sur "interagir"
+    // tant qu'ils ne sont pas tous là, on affiche "1/2" au-dessus
     let partiel = null;
-    for (const passage of passages) {
-      if (!passage.objet) continue;
-      const nb_dessus = this.joueurs.filter((j) => this.physics.overlap(j.sprite, passage.objet)).length;
+    if (this.trou.visible) {
+      const nb_dessus = this.joueurs.filter((j) => this.physics.overlap(j.sprite, this.trou)).length;
       if (nb_dessus === this.joueurs.length) {
-        this.changerDeNiveau(passage.niveau, passage.arrivee);
+        this.changerDeNiveau(this.niveau + 1, "haut");
         return;
       }
-      if (nb_dessus > 0) partiel = { objet: passage.objet, nb_dessus: nb_dessus };
+      if (nb_dessus > 0) partiel = { objet: this.trou, texte: nb_dessus + "/" + this.joueurs.length };
+    }
+    if (this.echelle_montee) {
+      const proches = this.joueurs.filter((j) =>
+        Phaser.Math.Distance.Between(j.sprite.x, j.sprite.y, this.echelle_montee.x, this.echelle_montee.y) <= PORTEE_INTERACTION);
+      if (proches.length === this.joueurs.length && proches.some((j) => Phaser.Input.Keyboard.JustDown(j.touches.interagir))) {
+        this.changerDeNiveau(this.niveau - 1, "bas");
+        return;
+      }
+      if (proches.length > 0) {
+        const nom = proches[0].definition.touches.interagir;
+        partiel = { objet: this.echelle_montee, texte: proches.length === this.joueurs.length ? "[" + nom + "] monter" : proches.length + "/" + this.joueurs.length };
+      }
     }
     this.compteur_echelle.setVisible(partiel !== null);
     if (partiel) {
-      this.compteur_echelle.setText(partiel.nb_dessus + "/" + this.joueurs.length);
+      this.compteur_echelle.setText(partiel.texte);
       this.compteur_echelle.setPosition(partiel.objet.x, partiel.objet.y - 20);
     }
   }

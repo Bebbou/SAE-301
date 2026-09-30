@@ -29,7 +29,8 @@ export const TOUCHES_J1 = {
     torche: "P",
     frapper_tirer: "K",
     sprint: "L",
-    changer_equipement: "M"
+    changer_equipement: "M",
+    interagir: "I"
 };
 
 // joueur 2 : joystick = ZQSD ; boutons R T Y (haut) et F G H (bas)
@@ -41,7 +42,8 @@ export const TOUCHES_J2 = {
     torche: "Y",
     frapper_tirer: "F",
     sprint: "G",
-    changer_equipement: "H"
+    changer_equipement: "H",
+    interagir: "R"
 };
 
 // crée les objets Phaser.Key à partir d'une table de touches : { haut: Key, bas: Key, ... }
