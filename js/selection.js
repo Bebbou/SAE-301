@@ -1,6 +1,12 @@
+import * as fct from "./fonctions.js";
+
 /***********************************************************************/
 /** VARIABLES GLOBALES
 /***********************************************************************/
+
+// nombre de joueurs : 1 (solo) ou 2 (duo)
+// TODO : à fixer par le menu (images jouer_solo / jouer_duo) quand il existera
+const NB_JOUEURS = 2;
 
 // directions du joueur : une spritesheet de marche par direction
 // la gauche n'a pas d'image : on retourne la droite (flipX) dans la scene
@@ -53,24 +59,28 @@ export default class selection extends Phaser.Scene {
     this.load.image("img_trou", "./assets/map/hole_ladder.png");
     this.load.image("img_echelle", "./assets/map/ladder.png");
 
-    // tir du joueur : 4 frames de 16x16
+    // tirs : 4 frames de 16x16 (bleu pour le joueur 1, rouge pour le joueur 2)
     this.load.spritesheet("sprite_laser_bleu", "./assets/character/fire/laser_bleu.png", { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet("sprite_laser_rouge", "./assets/character/fire/laser_rouge.png", { frameWidth: 16, frameHeight: 16 });
 
-    // joueur : 4 frames de 32x32 par spritesheet
-    DIRECTIONS.forEach((direction) => {
-      VARIANTES_JOUEUR.forEach((variante) => {
-        this.load.spritesheet("sprite_joueur_walk_" + direction + variante, "./assets/character/mc/walk_" + direction + variante + ".png", {
+    // joueurs : 4 frames de 32x32 par spritesheet (les images du joueur 2 sont dans mc2/, préfixées "mc2_")
+    fct.JOUEURS.forEach((joueur) => {
+      const dossier = "./assets/character/" + joueur.dossier + "/" + joueur.prefixe;
+      DIRECTIONS.forEach((direction) => {
+        VARIANTES_JOUEUR.forEach((variante) => {
+          this.load.spritesheet(fct.cleSprite(joueur, "walk_" + direction + variante), dossier + "walk_" + direction + variante + ".png", {
+            frameWidth: 32,
+            frameHeight: 32
+          });
+        });
+      });
+
+      // coup de pioche : 4 frames de 32x32 (pioche levée, levée, impact, retour)
+      DIRECTIONS_PIOCHE.forEach((direction) => {
+        this.load.spritesheet(fct.cleSprite(joueur, "pioche_" + direction), dossier + direction + "_pickaxe.png", {
           frameWidth: 32,
           frameHeight: 32
         });
-      });
-    });
-
-    // coup de pioche : 4 frames de 32x32 (pioche levée, levée, impact, retour)
-    DIRECTIONS_PIOCHE.forEach((direction) => {
-      this.load.spritesheet("sprite_joueur_pioche_" + direction, "./assets/character/mc/" + direction + "_pickaxe.png", {
-        frameWidth: 32,
-        frameHeight: 32
       });
     });
   }
@@ -83,35 +93,40 @@ export default class selection extends Phaser.Scene {
    * pour qu'elles soient disponibles dans toutes les scenes.
    */
   create() {
-    DIRECTIONS.forEach((direction) => {
-      VARIANTES_JOUEUR.forEach((variante) => {
+    fct.JOUEURS.forEach((joueur) => {
+      DIRECTIONS.forEach((direction) => {
+        VARIANTES_JOUEUR.forEach((variante) => {
+          this.anims.create({
+            key: fct.cleAnim(joueur, "walk_" + direction + variante),
+            frames: this.anims.generateFrameNumbers(fct.cleSprite(joueur, "walk_" + direction + variante)),
+            frameRate: 8,
+            repeat: -1 // -1 = infini
+          });
+        });
+      });
+
+      DIRECTIONS_PIOCHE.forEach((direction) => {
         this.anims.create({
-          key: "anim_joueur_walk_" + direction + variante,
-          frames: this.anims.generateFrameNumbers("sprite_joueur_walk_" + direction + variante),
-          frameRate: 8,
-          repeat: -1 // -1 = infini
+          key: fct.cleAnim(joueur, "pioche_" + direction),
+          frames: this.anims.generateFrameNumbers(fct.cleSprite(joueur, "pioche_" + direction)),
+          frameRate: 14, // 4 frames : le coup dure environ 0,3 s
+          repeat: 0 // une seule fois
         });
       });
     });
 
-    DIRECTIONS_PIOCHE.forEach((direction) => {
+    ["bleu", "rouge"].forEach((couleur) => {
       this.anims.create({
-        key: "anim_joueur_pioche_" + direction,
-        frames: this.anims.generateFrameNumbers("sprite_joueur_pioche_" + direction),
-        frameRate: 14, // 4 frames : le coup dure environ 0,3 s
-        repeat: 0 // une seule fois
+        key: "anim_laser_" + couleur,
+        frames: this.anims.generateFrameNumbers("sprite_laser_" + couleur),
+        frameRate: 16,
+        repeat: -1
       });
-    });
-
-    this.anims.create({
-      key: "anim_laser_bleu",
-      frames: this.anims.generateFrameNumbers("sprite_laser_bleu"),
-      frameRate: 16,
-      repeat: -1
     });
 
     // nouvelle partie : on oublie les niveaux visités (le jeu garde en mémoire l'état de chaque niveau pour pouvoir y revenir)
     this.registry.set("niveaux", {});
+    this.registry.set("nb_joueurs", NB_JOUEURS);
 
     // pas encore de menu : on lance directement le niveau de test
     this.scene.start("niveau1", { niveau: 1 });

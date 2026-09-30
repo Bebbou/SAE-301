@@ -27,10 +27,40 @@ export const TOUCHES_J1 = {
     changer_equipement: "H"
 };
 
+// touches clavier du joueur 2 : PROVISOIRES (clavier de test, à gauche ZQSD, à droite P / K L M)
+// à remplacer par les codes réels de la borne d'arcade pour le joueur 2 (cf. docs/documentation.html, section Commandes)
+export const TOUCHES_J2 = {
+    haut: "Z",
+    bas: "S",
+    gauche: "Q",
+    droite: "D",
+    frapper_tirer: "K",
+    sprint: "L",
+    torche: "P",
+    changer_equipement: "M"
+};
+
 // crée les objets Phaser.Key à partir d'une table de touches : { haut: Key, bas: Key, ... }
 export function creerTouches(scene, touches) {
     return scene.input.keyboard.addKeys(touches);
 }
+
+
+/***********************************************************************/
+/** JOUEURS (le joueur 2 n'existe qu'en mode duo)
+/***********************************************************************/
+
+// cle : sert à nommer les sprites et les animations du joueur (cf. cleSprite et cleAnim)
+// dossier, prefixe : où sont ses images (assets/character/<dossier>/<prefixe>walk_down.png ...)
+// laser : couleur de ses tirs ("bleu" ou "rouge", cf. assets/character/fire/)
+export const JOUEURS = [
+    { numero: 1, cle: "joueur", dossier: "mc", prefixe: "", laser: "bleu", touches: TOUCHES_J1 },
+    { numero: 2, cle: "joueur2", dossier: "mc2", prefixe: "mc2_", laser: "rouge", touches: TOUCHES_J2 }
+];
+
+// clés Phaser des sprites et des animations d'un joueur : cleSprite(JOUEURS[0], "walk_down") = "sprite_joueur_walk_down"
+export const cleSprite = (joueur, nom) => "sprite_" + joueur.cle + "_" + nom;
+export const cleAnim = (joueur, nom) => "anim_" + joueur.cle + "_" + nom;
 
 
 /***********************************************************************/
@@ -138,11 +168,12 @@ function dessinerIcone(bulle, nom) {
 
 // crée les deux bulles : l'équipement actuel en grand, le suivant en petit, en dessous et derrière
 // x, y : centre de la grande bulle ; equipements : liste des noms (dans l'ordre du changement)
+// sens : 1 = la petite bulle est en bas à droite de la grande, -1 = en bas à gauche (HUD du joueur 2, en miroir)
 // renvoie { afficher(nom), changer(nom) } : changer() joue l'animation d'échange
-export function creerBullesEquipement(scene, x, y, equipements, actuel) {
+export function creerBullesEquipement(scene, x, y, equipements, actuel, sens = 1) {
     const GRANDE = { x: x, y: y, echelle: 1, opacite: 1, profondeur: PROFONDEUR.hud + 1 };
     const PETITE = {
-        x: x + DECALAGE_PETITE_BULLE.x,
+        x: x + sens * DECALAGE_PETITE_BULLE.x,
         y: y + DECALAGE_PETITE_BULLE.y,
         echelle: ECHELLE_PETITE_BULLE,
         opacite: OPACITE_PETITE_BULLE,
