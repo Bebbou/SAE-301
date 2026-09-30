@@ -46,6 +46,7 @@ export default class selection extends Phaser.Scene {
     // tant qu'un fichier est absent, le HUD affiche un dessin de remplacement (cf. fonctions.js)
     this.load.image("img_icone_pioche", "./assets/ui/icone_pioche.png");
     this.load.image("img_icone_laser", "./assets/ui/icone_laser.png");
+    this.load.image("img_icone_gun2", "./assets/ui/icone_gun2.png"); // arme du joueur 2
 
     // boutons du menu (cf. menu.js)
     this.load.image("img_bouton_solo", "./assets/ui/jouer_solo.png");

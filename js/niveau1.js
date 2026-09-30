@@ -216,7 +216,7 @@ export default class niveau1 extends Phaser.Scene {
     j.barre_stamina.setX(x_barres);
     // équipement actuel en grand, suivant en petit (en bas de la grande, du côté des barres il s'arrête avant elles)
     const x_bulle = a_droite ? this.scale.width - 56 : 56;
-    j.bulles = fct.creerBullesEquipement(this, x_bulle, 56, EQUIPEMENTS, j.equipement, a_droite ? -1 : 1);
+    j.bulles = fct.creerBullesEquipement(this, x_bulle, 56, EQUIPEMENTS, j.equipement, a_droite ? -1 : 1, j.definition.icones);
   }
 
   // dessine des cercles concentriques [rayon, opacité] dans la forme de lumière (coordonnées du monde)

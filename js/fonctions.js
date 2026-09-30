@@ -61,7 +61,7 @@ export function creerTouches(scene, touches) {
 // laser : couleur de ses tirs ("bleu" ou "rouge", cf. assets/character/fire/)
 export const JOUEURS = [
     { numero: 1, cle: "joueur", dossier: "mc", prefixe: "", laser: "bleu", touches: TOUCHES_J1 },
-    { numero: 2, cle: "joueur2", dossier: "mc2", prefixe: "mc2_", laser: "rouge", touches: TOUCHES_J2 }
+    { numero: 2, cle: "joueur2", dossier: "mc2", prefixe: "mc2_", laser: "rouge", icones: { laser: "gun2" }, touches: TOUCHES_J2 }
 ];
 
 // clés Phaser des sprites et des animations d'un joueur : cleSprite(JOUEURS[0], "walk_down") = "sprite_joueur_walk_down"
@@ -158,8 +158,9 @@ function creerBulle(scene) {
     return bulle;
 }
 
-function dessinerIcone(bulle, nom) {
-    const cle = "img_icone_" + nom;
+// icones : { équipement: nom de l'icône } pour les joueurs dont l'icône d'un équipement diffère (ex. l'arme du joueur 2)
+function dessinerIcone(bulle, nom, icones = {}) {
+    const cle = "img_icone_" + (icones[nom] ?? nom);
     bulle.dessin.clear();
     if (bulle.scene.textures.exists(cle)) {
         // agrandissement entier (x1, x2, x3...) pour que le pixel art reste net
@@ -176,7 +177,8 @@ function dessinerIcone(bulle, nom) {
 // x, y : centre de la grande bulle ; equipements : liste des noms (dans l'ordre du changement)
 // sens : 1 = la petite bulle est en bas à droite de la grande, -1 = en bas à gauche (HUD du joueur 2, en miroir)
 // renvoie { afficher(nom), changer(nom) } : changer() joue l'animation d'échange
-export function creerBullesEquipement(scene, x, y, equipements, actuel, sens = 1) {
+// icones : cf. dessinerIcone
+export function creerBullesEquipement(scene, x, y, equipements, actuel, sens = 1, icones = {}) {
     const GRANDE = { x: x, y: y, echelle: 1, opacite: 1, profondeur: PROFONDEUR.hud + 1 };
     const PETITE = {
         x: x + sens * DECALAGE_PETITE_BULLE.x,
@@ -198,8 +200,8 @@ export function creerBullesEquipement(scene, x, y, equipements, actuel, sens = 1
         if (terminer_echange) terminer_echange();
         placer(grande, GRANDE);
         placer(petite, PETITE);
-        dessinerIcone(grande, nom);
-        dessinerIcone(petite, suivant(nom));
+        dessinerIcone(grande, nom, icones);
+        dessinerIcone(petite, suivant(nom), icones);
     };
 
     // la petite bulle (le nouvel équipement) grandit et prend la place de la grande, qui rapetisse
@@ -219,7 +221,7 @@ export function creerBullesEquipement(scene, x, y, equipements, actuel, sens = 1
             placer(partante, PETITE);
             grande = arrivante;
             petite = partante;
-            dessinerIcone(petite, suivant(nom));
+            dessinerIcone(petite, suivant(nom), icones);
             terminer_echange = null;
         };
 

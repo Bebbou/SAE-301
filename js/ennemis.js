@@ -91,8 +91,10 @@ export function creerEnnemis(scene, calque_sol, calque_murs) {
   });
   // un laser qui touche un ennemi s'arrête et lui fait des dégâts
   scene.physics.add.overlap(scene.projectiles, scene.ennemis, (projectile, ennemi) => {
+    // la direction se lit avant impactLaser : il détruit le projectile (et son corps physique)
+    const direction = new Phaser.Math.Vector2(projectile.body.velocity.x, projectile.body.velocity.y).normalize();
     scene.impactLaser(projectile);
-    blesserEnnemi(scene, ennemi, DEGATS_LASER, new Phaser.Math.Vector2(projectile.body.velocity.x, projectile.body.velocity.y).normalize());
+    blesserEnnemi(scene, ennemi, DEGATS_LASER, direction);
   });
 }
 
