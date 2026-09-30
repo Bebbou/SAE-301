@@ -14,16 +14,33 @@ export function doAlsoNothing() {
 /** COMMANDES (cf. docs/documentation.html, section Commandes)
 /***********************************************************************/
 
-// touches clavier du joueur 1 (le joystick = les flèches)
-// R (interagir en face) et T (interagir avec un objet) seront ajoutées avec leurs mécaniques
+// touches de la borne d'arcade : le joystick + 6 boutons par joueur, sur deux rangées de trois
+// les deux joueurs ont les mêmes actions, dans le même ordre :
+//   rangée du haut : interagir en face, interagir avec un objet, lampe
+//   rangée du bas  : frapper / tirer, sprint, changer d'équipement
+// les deux interactions (1er et 2e boutons du haut) seront ajoutées avec leurs mécaniques
+
+// joueur 1 : joystick = les flèches ; boutons I O P (haut) et K L M (bas)
 export const TOUCHES_J1 = {
     haut: "UP",
     bas: "DOWN",
     gauche: "LEFT",
     droite: "RIGHT",
+    torche: "P",
+    frapper_tirer: "K",
+    sprint: "L",
+    changer_equipement: "M"
+};
+
+// joueur 2 : joystick = ZQSD ; boutons R T Y (haut) et F G H (bas)
+export const TOUCHES_J2 = {
+    haut: "Z",
+    bas: "S",
+    gauche: "Q",
+    droite: "D",
+    torche: "Y",
     frapper_tirer: "F",
     sprint: "G",
-    torche: "Y",
     changer_equipement: "H"
 };
 
@@ -31,6 +48,23 @@ export const TOUCHES_J1 = {
 export function creerTouches(scene, touches) {
     return scene.input.keyboard.addKeys(touches);
 }
+
+
+/***********************************************************************/
+/** JOUEURS (le joueur 2 n'existe qu'en mode duo)
+/***********************************************************************/
+
+// cle : sert à nommer les sprites et les animations du joueur (cf. cleSprite et cleAnim)
+// dossier, prefixe : où sont ses images (assets/character/<dossier>/<prefixe>walk_down.png ...)
+// laser : couleur de ses tirs ("bleu" ou "rouge", cf. assets/character/fire/)
+export const JOUEURS = [
+    { numero: 1, cle: "joueur", dossier: "mc", prefixe: "", laser: "bleu", touches: TOUCHES_J1 },
+    { numero: 2, cle: "joueur2", dossier: "mc2", prefixe: "mc2_", laser: "rouge", touches: TOUCHES_J2 }
+];
+
+// clés Phaser des sprites et des animations d'un joueur : cleSprite(JOUEURS[0], "walk_down") = "sprite_joueur_walk_down"
+export const cleSprite = (joueur, nom) => "sprite_" + joueur.cle + "_" + nom;
+export const cleAnim = (joueur, nom) => "anim_" + joueur.cle + "_" + nom;
 
 
 /***********************************************************************/
@@ -138,11 +172,12 @@ function dessinerIcone(bulle, nom) {
 
 // crée les deux bulles : l'équipement actuel en grand, le suivant en petit, en dessous et derrière
 // x, y : centre de la grande bulle ; equipements : liste des noms (dans l'ordre du changement)
+// sens : 1 = la petite bulle est en bas à droite de la grande, -1 = en bas à gauche (HUD du joueur 2, en miroir)
 // renvoie { afficher(nom), changer(nom) } : changer() joue l'animation d'échange
-export function creerBullesEquipement(scene, x, y, equipements, actuel) {
+export function creerBullesEquipement(scene, x, y, equipements, actuel, sens = 1) {
     const GRANDE = { x: x, y: y, echelle: 1, opacite: 1, profondeur: PROFONDEUR.hud + 1 };
     const PETITE = {
-        x: x + DECALAGE_PETITE_BULLE.x,
+        x: x + sens * DECALAGE_PETITE_BULLE.x,
         y: y + DECALAGE_PETITE_BULLE.y,
         echelle: ECHELLE_PETITE_BULLE,
         opacite: OPACITE_PETITE_BULLE,
