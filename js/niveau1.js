@@ -1,5 +1,6 @@
 import * as fct from "./fonctions.js";
 import * as generation from "./generation.js";
+import * as ennemis from "./ennemis.js";
 
 const LARGEUR_NIVEAU = 50; // cases de 32 px
 const HAUTEUR_NIVEAU = 34;
@@ -133,6 +134,7 @@ export default class niveau1 extends Phaser.Scene {
     // le laser s'arrête sur les cailloux (seule la pioche les casse)
     this.physics.add.collider(this.projectiles, this.cailloux, (projectile) => this.impactLaser(projectile));
     this.creerEchelles();
+    ennemis.creerEnnemis(this, calque_sol, calque_murs);
     // "1/2" affiché au-dessus d'une échelle quand un seul des deux joueurs est dessus
     this.compteur_echelle = this.add.text(0, 0, "", { fontSize: "20px", color: "#E8EBF0" })
       .setOrigin(0.5, 1)
@@ -496,6 +498,7 @@ export default class niveau1 extends Phaser.Scene {
       j.sprite.body.center.x + regard.x * PORTEE_FRAPPE,
       j.sprite.body.center.y + regard.y * PORTEE_FRAPPE
     );
+    ennemis.frapperEnnemis(this, zone, regard);
     const caillou = this.cailloux.getChildren().find((c) =>
       Phaser.Geom.Intersects.RectangleToRectangle(zone, new Phaser.Geom.Rectangle(c.body.x, c.body.y, c.body.width, c.body.height))
     );
@@ -612,6 +615,7 @@ export default class niveau1 extends Phaser.Scene {
 
     const secondes = delta / 1000;
     this.joueurs.forEach((j) => this.majJoueur(j, secondes));
+    ennemis.majEnnemis(this);
     this.placerCible();
     this.limiterAEcran();
     this.majLumieres(secondes);

@@ -59,6 +59,9 @@ export default class selection extends Phaser.Scene {
     this.load.image("img_trou", "./assets/map/hole_ladder.png");
     this.load.image("img_echelle", "./assets/map/ladder.png");
 
+    // ennemi (slime) : 8 frames de 32x32
+    this.load.spritesheet("sprite_slime", "./assets/enemy/slime_alien.png", { frameWidth: 32, frameHeight: 32 });
+
     // tirs : 4 frames de 16x16 (bleu pour le joueur 1, rouge pour le joueur 2)
     this.load.spritesheet("sprite_laser_bleu", "./assets/character/fire/laser_bleu.png", { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet("sprite_laser_rouge", "./assets/character/fire/laser_rouge.png", { frameWidth: 16, frameHeight: 16 });
@@ -113,6 +116,13 @@ export default class selection extends Phaser.Scene {
           repeat: 0 // une seule fois
         });
       });
+    });
+
+    this.anims.create({
+      key: "anim_slime",
+      frames: this.anims.generateFrameNumbers("sprite_slime"),
+      frameRate: 8,
+      repeat: -1
     });
 
     ["bleu", "rouge"].forEach((couleur) => {
