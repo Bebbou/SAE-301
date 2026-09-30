@@ -4,16 +4,16 @@
   <export target="safe_map_test.tmj" format="json"/>
  </editorsettings>
  <tileset firstgid="1" name="walls_floor" tilewidth="32" tileheight="32" tilecount="299" columns="13">
-  <image source="../../craftpix-net-169442-free-2d-top-down-pixel-dungeon-asset-pack/PNG/walls_floor.png" width="416" height="736"/>
+  <image source="walls_floor.png" width="416" height="736"/>
  </tileset>
- <tileset firstgid="300" name="Walls_floor" tilewidth="32" tileheight="32" tilecount="176" columns="11">
-  <image source="../../Walls_and_floor.png" width="352" height="512"/>
+ <tileset firstgid="300" name="walls_and_floor" tilewidth="32" tileheight="32" tilecount="176" columns="11">
+  <image source="walls_and_floor.png" width="352" height="512"/>
  </tileset>
- <tileset firstgid="476" name="Exterior_objects" tilewidth="32" tileheight="32" tilecount="902" columns="22">
-  <image source="../../craftpix-net-160005-free-ruined-temple-top-down-location-pixel-art/PNG/Exterior_objects.png" width="704" height="1312"/>
+ <tileset firstgid="476" name="exterior_objects" tilewidth="32" tileheight="32" tilecount="902" columns="22">
+  <image source="exterior_objects.png" width="704" height="1312"/>
  </tileset>
  <tileset firstgid="1378" name="chest" tilewidth="32" tileheight="32" tilecount="12" columns="2">
-  <image source="../../craftpix-net-160005-free-ruined-temple-top-down-location-pixel-art/PNG/chest.png" width="64" height="192"/>
+  <image source="chest.png" width="64" height="192"/>
  </tileset>
  <layer id="4" name="background" width="40" height="23">
   <data encoding="csv">
