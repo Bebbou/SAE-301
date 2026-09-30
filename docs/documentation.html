@@ -488,9 +488,24 @@
     <!-- 08 -->
     <section id="commandes">
       <h2><span class="num">08</span>Commandes (borne d'arcade)</h2>
-      <p class="lead">Un joystick + 6 boutons par joueur. Le mapping ci-dessous vient du brainstorm (touches clavier côté développeur).</p>
+      <p class="lead">Un joystick + 6 boutons par joueur, sur deux rangées de trois. Les deux joueurs ont les mêmes actions, dans le même ordre : seules les touches clavier changent. Elles sont définies dans <code>TOUCHES_J1</code> et <code>TOUCHES_J2</code> (<code>js/fonctions.js</code>).</p>
+
+      <h3>Joueur 1 · joystick = flèches</h3>
       <div class="pad">
-        <div class="stick">Déplacement</div>
+        <div class="stick">Flèches</div>
+        <div class="buttons">
+          <div class="btn"><kbd>I</kbd><span>Interagir en face</span></div>
+          <div class="btn"><kbd>O</kbd><span>Interagir avec un objet</span></div>
+          <div class="btn"><kbd>P</kbd><span>Allumer / éteindre la lampe</span></div>
+          <div class="btn"><kbd>K</kbd><span>Frapper / tirer</span></div>
+          <div class="btn"><kbd>L</kbd><span>Sprint</span></div>
+          <div class="btn"><kbd>M</kbd><span>Changer d'équipement</span></div>
+        </div>
+      </div>
+
+      <h3>Joueur 2 · joystick = ZQSD</h3>
+      <div class="pad">
+        <div class="stick">ZQSD</div>
         <div class="buttons">
           <div class="btn"><kbd>R</kbd><span>Interagir en face</span></div>
           <div class="btn"><kbd>T</kbd><span>Interagir avec un objet</span></div>
@@ -501,8 +516,8 @@
         </div>
       </div>
       <div class="callout warn">
-        <strong>À confirmer</strong>
-        Les touches du joueur 2 et la correspondance exacte avec les boutons A–F de la borne (voir le schéma des consignes). À tester sur la borne le 2 octobre.
+        <strong>Partiellement implémenté</strong>
+        Le bouton « interagir en face » (<kbd>I</kbd> pour le joueur 1, <kbd>R</kbd> pour le joueur 2) sert pour l'instant à remonter par l'échelle. Les boutons « interagir avec un objet » (<kbd>O</kbd> / <kbd>T</kbd>) n'ont pas encore de mécanique : ils seront branchés avec l'offrande à la statue. À tester sur la borne le 2 octobre.
       </div>
       <p class="small">Rappel des consignes : une borne, ce n'est pas un PC. Pas de souris, pas de texte à taper. Le joueur ne connaît pas le jeu : il faut un écran de commandes et une prise en main guidée.</p>
     </section>
