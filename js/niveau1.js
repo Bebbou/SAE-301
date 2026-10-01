@@ -6,6 +6,7 @@ import * as salle_safe from "./salle_safe.js";
 import * as offrande from "./offrande.js";
 import * as butin from "./butin.js";
 import * as bonus from "./bonus.js";
+import * as cristaux from "./cristaux.js";
 
 const LARGEUR_NIVEAU = 50; // cases de 32 px
 const HAUTEUR_NIVEAU = 34;
@@ -161,6 +162,8 @@ export default class niveau1 extends Phaser.Scene {
     // le laser s'arrête sur les cailloux (seule la pioche les casse)
     this.physics.add.collider(this.projectiles, this.cailloux, (projectile) => this.impactLaser(projectile));
     this.creerEchelles();
+    this.cristaux = []; // décors lumineux des niveaux générés (cf. cristaux.js) ; aucun dans la salle safe, déjà éclairée
+    if (!this.etat.safe) cristaux.creerCristaux(this, calque_sol, calque_murs);
     if (this.etat.safe) {
       // décor solide de la salle safe : statue, coffre, vases...
       const obstacles = salle_safe.creerObstacles(this);
@@ -334,12 +337,16 @@ export default class niveau1 extends Phaser.Scene {
       this.dessinerHalo(eclat.x, eclat.y, eclat.halo ?? HALO_ECLAT, rayon, restant);
     });
 
-    // cône de chaque joueur : la lumière part des pieds (la hitbox), elle n'est donc jamais dans un mur
     // les potions posées au sol brillent dans le noir
     this.butin.forEach((objet) => {
       if (objet.definition.lumiere) this.dessinerHalo(objet.x, objet.y, bonus.HALO_POTION, 1, 1);
     });
+    // les cristaux aussi, avec une pulsation lente (chacun la sienne)
+    this.cristaux.forEach((cristal) => {
+      this.dessinerHalo(cristal.x, cristal.y - 14, cristaux.HALO_CRISTAL, 1, 0.85 + 0.15 * Math.sin(t * 0.002 + cristal.phase));
+    });
 
+    // cône de chaque joueur : la lumière part des pieds (la hitbox), elle n'est donc jamais dans un mur
     const cones = this.joueurs.map((j) => {
       const portee = PORTEE_TORCHE * scintillement * (j.effets.vision > 0 ? bonus.PORTEE_VISION : 1); // potion de vision : torche plus longue
       const cone = { ox: j.sprite.body.center.x, oy: j.sprite.body.center.y, portee: portee, angle: j.angle_torche, distances: null };

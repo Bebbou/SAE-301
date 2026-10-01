@@ -56,6 +56,9 @@ export default class selection extends Phaser.Scene {
     // pierre lunaire (16x16) : icône du compteur et drops (cf. pierres.js)
     this.load.image("img_pierre_lunaire", "./assets/ui/pierre_lunaire.png");
 
+    // cristaux décoratifs des niveaux (cf. cristaux.js) : 24 images de 38x39
+    this.load.spritesheet("sprite_cristal", "./assets/map/yellow_crystal.png", { frameWidth: 38, frameHeight: 39 });
+
     // potions lâchées par les cailloux (cf. bonus.js) : frames de 16x16, animées
     ["heal", "vision", "vitesse"].forEach((nom) => {
       this.load.spritesheet("sprite_potion_" + nom, "./assets/powerup/powerup_" + nom + ".png", { frameWidth: 16, frameHeight: 16 });
@@ -149,6 +152,13 @@ export default class selection extends Phaser.Scene {
       key: "anim_slime",
       frames: this.anims.generateFrameNumbers("sprite_slime"),
       frameRate: 8,
+      repeat: -1
+    });
+
+    this.anims.create({
+      key: "anim_cristal",
+      frames: this.anims.generateFrameNumbers("sprite_cristal"),
+      frameRate: 10,
       repeat: -1
     });
 
