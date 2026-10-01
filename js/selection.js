@@ -92,6 +92,12 @@ export default class selection extends Phaser.Scene {
         });
       });
 
+      // descente / montée d'échelle : 8 frames de 32x32, le personnage vu de dos sur l'échelle (assets/character/anims/mc_ladder.png)
+      this.load.spritesheet(fct.cleSprite(joueur, "echelle"), "./assets/character/anims/" + joueur.dossier + "_ladder.png", {
+        frameWidth: 32,
+        frameHeight: 32
+      });
+
       // coup de pioche : 4 frames de 32x32 (pioche levée, levée, impact, retour)
       DIRECTIONS_PIOCHE.forEach((direction) => {
         this.load.spritesheet(fct.cleSprite(joueur, "pioche_" + direction), dossier + direction + "_pickaxe.png", {
@@ -120,6 +126,13 @@ export default class selection extends Phaser.Scene {
             repeat: -1 // -1 = infini
           });
         });
+      });
+
+      this.anims.create({
+        key: fct.cleAnim(joueur, "echelle"),
+        frames: this.anims.generateFrameNumbers(fct.cleSprite(joueur, "echelle")),
+        frameRate: 12,
+        repeat: -1
       });
 
       DIRECTIONS_PIOCHE.forEach((direction) => {

@@ -25,6 +25,8 @@ const MARGE_ECRAN = 40; // px : en duo, la caméra suit le milieu des joueurs et
 const ECART_DEPART_JOUEURS = 30; // px : distance minimale entre deux joueurs à leur arrivée
 const DISTANCE_MIN_ECHELLE = 200; // px : l'échelle n'est pas cachée juste à coté des joueurs
 const DUREE_FONDU = 400; // ms
+const DUREE_ENTREE_ECHELLE = 160; // ms : le joueur se place sur l'échelle
+const DUREE_ECHELLE = 900; // ms : animation de descente (ou de montée) d'échelle, avant le changement de niveau
 const NB_CAILLOUX = 14;
 const DISTANCE_MIN_DEPART = 72; // px : à l'arrivée, on apparaît à cette distance minimale de l'échelle (hors de portée d'interaction)
 const PORTEE_INTERACTION = 40; // px : distance max à l'échelle de montée pour l'utiliser
@@ -616,12 +618,36 @@ export default class niveau1 extends Phaser.Scene {
   // arrivee : "haut" quand on descend, "bas" quand on remonte (cf. init)
   changerDeNiveau(niveau, arrivee) {
     this.changement_niveau = true;
-    this.joueurs.forEach((j) => {
-      j.sprite.setVelocity(0, 0);
-      j.sprite.anims.stop();
-    });
+    this.compteur_echelle.setVisible(false);
     this.sauvegarderEtat();
-    this.cameras.main.fadeOut(DUREE_FONDU);
+
+    // les joueurs montent sur l'échelle et la descendent (ou la montent) : l'animation d'Inas, de dos, qui s'efface
+    const descente = arrivee === "haut";
+    const passage = descente ? this.trou : this.echelle_montee;
+    this.joueurs.forEach((j, i) => {
+      const x = passage.x + (i - (this.joueurs.length - 1) / 2) * 14; // côte à côte en duo
+      this.tweens.killTweensOf(j.sprite); // un clignotement après un coup, par exemple
+      j.sprite.body.enable = false;
+      j.sprite.setVelocity(0, 0).clearTint().setAlpha(1).setFlipX(false);
+      j.sprite.anims.stop();
+      j.sprite.setTexture(fct.cleSprite(j.definition, "echelle"), 0).setDepth(passage.depth + 1);
+      this.tweens.add({
+        targets: j.sprite, x: x, y: passage.y, duration: DUREE_ENTREE_ECHELLE,
+        onComplete: () => {
+          // les barreaux défilent vers le haut quand on descend, vers le bas quand on monte (animation jouée à l'envers)
+          const animation = fct.cleAnim(j.definition, "echelle");
+          if (descente) j.sprite.anims.play(animation);
+          else j.sprite.anims.playReverse(animation);
+          this.tweens.add({
+            targets: j.sprite, y: passage.y + (descente ? 10 : -10), scale: ECHELLE_JOUEUR * 0.7, alpha: 0,
+            duration: DUREE_ECHELLE, ease: "Quad.easeIn"
+          });
+        }
+      });
+    });
+
+    // l'écran s'assombrit pendant la fin de l'animation
+    this.time.delayedCall(DUREE_ENTREE_ECHELLE + DUREE_ECHELLE - DUREE_FONDU, () => this.cameras.main.fadeOut(DUREE_FONDU));
     this.cameras.main.once("camerafadeoutcomplete", () => {
       this.scene.restart({
         niveau: niveau,
@@ -697,7 +723,10 @@ export default class niveau1 extends Phaser.Scene {
   }
 
   update(time, delta) {
-    if (this.changement_niveau) return;
+    if (this.changement_niveau) {
+      this.majLumieres(delta / 1000); // la lumière suit les joueurs pendant l'animation d'échelle
+      return;
+    }
 
     const secondes = delta / 1000;
     this.joueurs.forEach((j) => this.majJoueur(j, secondes));
