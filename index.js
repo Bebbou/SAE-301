@@ -1,6 +1,8 @@
 // chargement des librairies
 import selection from "./js/selection.js";
 import menu from "./js/menu.js";
+import infos from "./js/infos.js";
+import gameover from "./js/gameover.js";
 import niveau1 from "./js/niveau1.js";
 import niveau2 from "./js/niveau2.js";
 import niveau3 from "./js/niveau3.js";
@@ -25,10 +27,10 @@ var config = {
       gravity: {
         y: 0 // jeu vu de dessus : pas de gravité
       },
-      debug: true // permet de voir les hitbox et les vecteurs d'acceleration quand mis à true
+      debug: false // permet de voir les hitbox et les vecteurs d'acceleration quand mis à true
     }
   },
-  scene: [selection, menu, niveau1, niveau2, niveau3],
+  scene: [selection, menu, infos, gameover, niveau1, niveau2, niveau3],
   baseURL: window.location.pathname.replace(/\/[^/]*$/, '')
 };
 

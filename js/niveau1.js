@@ -61,6 +61,7 @@ const DISTANCE_HALO_LASER = [30, 80]; // px : près du joueur le halo est étein
 // éclat à l'impact d'un laser (mur ou caillou) : il s'éteint progressivement
 const HALO_ECLAT = [[56, 0.2], [32, 0.4], [16, 0.8]];
 const DUREE_ECLAT = 150; // ms
+const HALO_TIR_ENNEMI = [[34, 0.2], [18, 0.5], [9, 0.85]]; // lumière portée par un tir d'alien
 const VITESSE_LASER = 500; // px/s
 const DUREE_VIE_LASER = 1200; // ms : le laser disparait s'il ne touche rien
 const DEPART_LASER = 16; // px : le laser part un peu devant le joueur
@@ -111,6 +112,7 @@ export default class niveau1 extends Phaser.Scene {
     /* >>>>> AJOUT SON <<<<< */ musique_en_cours = true;
     /* >>>>> AJOUT SON <<<<< */ }
     /* >>>>> AJOUT SON <<<<< */ this.game_over = false;
+    this.game_over_lance = false; // true une fois l'écran de game over programmé (cf. update)
 
     /*************************************
      *  CREATION DE LA MAP (procédurale) *
@@ -360,6 +362,8 @@ export default class niveau1 extends Phaser.Scene {
     this.butin.forEach((objet) => {
       if (objet.definition.lumiere) this.dessinerHalo(objet.x, objet.y, bonus.HALO_POTION, 1, 1);
     });
+    // les tirs des aliens verts se voient de loin (on doit pouvoir les esquiver)
+    this.tirs_ennemis.getChildren().forEach((tir) => this.dessinerHalo(tir.x, tir.y, HALO_TIR_ENNEMI, 1, 1));
     // les cristaux aussi, avec une pulsation lente (chacun la sienne)
     this.cristaux.forEach((cristal) => {
       this.dessinerHalo(cristal.x, cristal.y, cristaux.HALO_CRISTAL, 1, 0.85 + 0.15 * Math.sin(t * 0.002 + cristal.phase));
@@ -481,7 +485,7 @@ export default class niveau1 extends Phaser.Scene {
     this.etat.cailloux = cases_libres.slice(0, NB_CAILLOUX).map((tuile) => ({
       x: tuile.getCenterX(),
       y: tuile.getCenterY(),
-      image: Phaser.Utils.Array.GetRandom(["img_caillou_1", "img_caillou_2"]),
+      image: Phaser.Utils.Array.GetRandom(["img_caillou_1", "img_caillou_2", "img_caillou_lune_1", "img_caillou_lune_2"]),
       coups_restants: COUPS_CAILLOU,
       cache_le_trou: false
     }));
@@ -765,6 +769,19 @@ export default class niveau1 extends Phaser.Scene {
     /* >>>>> AJOUT SON <<<<< */ son_echelle.stop();
     /* >>>>> AJOUT SON <<<<< */ son_game_over.play();
     /* >>>>> AJOUT SON <<<<< */ }
+    if (this.game_over) {
+      // la partie est perdue : tout s'immobilise un instant (joueurs grisés), puis l'écran de game over (cf. gameover.js)
+      if (!this.game_over_lance) {
+        this.game_over_lance = true;
+        this.joueurs.forEach((j) => { j.sprite.setVelocity(0, 0).setTint(0x777788); j.sprite.anims.stop(); });
+        this.ennemis.getChildren().forEach((e) => e.setVelocity(0, 0));
+        this.time.delayedCall(1200, () => this.cameras.main.fadeOut(DUREE_FONDU));
+        this.cameras.main.once("camerafadeoutcomplete", () => {
+          this.scene.start("gameover", { niveau: this.niveau, pierres: pierres.nombrePierres(this) });
+        });
+      }
+      return;
+    }
 
     const secondes = delta / 1000;
     this.joueurs.forEach((j) => this.majJoueur(j, secondes));

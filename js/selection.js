@@ -64,13 +64,27 @@ export default class selection extends Phaser.Scene {
       this.load.spritesheet("sprite_potion_" + nom, "./assets/powerup/powerup_" + nom + ".png", { frameWidth: 16, frameHeight: 16 });
     });
 
-    // boutons du menu (cf. menu.js)
-    this.load.image("img_bouton_solo", "./assets/ui/jouer_solo.png");
-    this.load.image("img_bouton_duo", "./assets/ui/jouer_duo.png");
+    // menu (cf. menu.js et infos.js) : fond, logo et boutons
+    this.load.image("img_fond_menu", "./assets/ui/background_artemis.jpg");
+    this.load.image("img_logo", "./assets/ui/logo_artemis.png");
+    ["solo", "duo", "controles", "credits"].forEach((nom) => {
+      this.load.image("img_bouton_" + nom, "./assets/ui/bouton_" + nom + ".png");
+    });
+
+    // game over (cf. gameover.js)
+    this.load.image("img_fond_game_over", "./assets/ui/background_game_over.jpg");
+    this.load.image("img_titre_game_over", "./assets/ui/game_over.png");
 
     // cailloux (32x32)
     this.load.image("img_caillou_1", "./assets/rock1_3_no_shadow.png");
     this.load.image("img_caillou_2", "./assets/rock5_3_no_shadow.png");
+    this.load.image("img_caillou_lune_1", "./assets/map/caillou_lune.png"); // cailloux lunaires à cristaux roses
+    this.load.image("img_caillou_lune_2", "./assets/map/caillou_lune2.png");
+
+    // ennemis (cf. ennemis.js) : slime et aliens, 8 frames de 32x32 ; l'alien vert a en plus 6 frames de tir
+    this.load.spritesheet("sprite_alien_vert", "./assets/enemy/alien_vert.png", { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("sprite_alien_vert_tir", "./assets/enemy/alien_vert_tir.png", { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("sprite_alien_rouge", "./assets/enemy/alien_rouge.png", { frameWidth: 32, frameHeight: 32 });
 
     // passages entre les niveaux (32x32) : le trou avec son échelle pour descendre, l'échelle pour remonter
     this.load.image("img_trou", "./assets/map/hole_ladder.png");
@@ -160,6 +174,11 @@ export default class selection extends Phaser.Scene {
       frameRate: 8,
       repeat: -1
     });
+
+    ["alien_vert", "alien_rouge"].forEach((nom) => {
+      this.anims.create({ key: "anim_" + nom, frames: this.anims.generateFrameNumbers("sprite_" + nom), frameRate: 8, repeat: -1 });
+    });
+    this.anims.create({ key: "anim_alien_vert_tir", frames: this.anims.generateFrameNumbers("sprite_alien_vert_tir"), frameRate: 14, repeat: 0 });
 
     this.anims.create({
       key: "anim_cristal",
