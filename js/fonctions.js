@@ -30,7 +30,8 @@ export const TOUCHES_J1 = {
     frapper_tirer: "K",
     sprint: "L",
     changer_equipement: "M",
-    interagir: "I"
+    interagir: "I", // interagir en face (échelle)
+    objet: "O" // interagir avec un objet (offrande à la statue)
 };
 
 // joueur 2 : joystick = ZQSD ; boutons R T Y (haut) et F G H (bas)
@@ -43,7 +44,8 @@ export const TOUCHES_J2 = {
     frapper_tirer: "F",
     sprint: "G",
     changer_equipement: "H",
-    interagir: "R"
+    interagir: "R",
+    objet: "T"
 };
 
 // crée les objets Phaser.Key à partir d'une table de touches : { haut: Key, bas: Key, ... }

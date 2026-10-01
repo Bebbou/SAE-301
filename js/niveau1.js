@@ -3,6 +3,7 @@ import * as generation from "./generation.js";
 import * as ennemis from "./ennemis.js";
 import * as pierres from "./pierres.js";
 import * as salle_safe from "./salle_safe.js";
+import * as offrande from "./offrande.js";
 
 const LARGEUR_NIVEAU = 50; // cases de 32 px
 const HAUTEUR_NIVEAU = 34;
@@ -12,6 +13,7 @@ const VITESSE_JOUEUR = 160; // px/s
 const VITESSE_SPRINT = 260; // px/s
 const PV_MAX = 100;
 const STAMINA_MAX = 100;
+const OFFRANDE_SOIN_PV = 25; // PV rendus par une offrande à la statue (en plus de toute la stamina)
 const STAMINA_CONSO = 35; // stamina perdue par seconde de sprint
 const STAMINA_RECUP = 20; // stamina regagnée par seconde sans sprinter
 const MARGE_ECRAN = 40; // px : en duo, la caméra suit le milieu des joueurs et aucun ne peut sortir de l'écran
@@ -156,6 +158,7 @@ export default class niveau1 extends Phaser.Scene {
       const obstacles = salle_safe.creerObstacles(this);
       this.joueurs.forEach((j) => this.physics.add.collider(j.sprite, obstacles));
       this.physics.add.collider(this.projectiles, obstacles, (projectile) => this.impactLaser(projectile));
+      offrande.creerOffrande(this); // bulle au-dessus de la statue
     }
     ennemis.creerEnnemis(this, calque_sol, calque_murs, this.etat.safe ? 0 : undefined); // aucun ennemi dans la salle safe
     // "1/2" affiché au-dessus d'une échelle quand un seul des deux joueurs est dessus
@@ -544,6 +547,20 @@ export default class niveau1 extends Phaser.Scene {
     caillou.destroy();
   }
 
+  // offrande à la statue (cf. offrande.js) : le joueur a-t-il quelque chose à récupérer ?
+  besoinOffrande(j) {
+    return j.pv < PV_MAX || j.stamina < STAMINA_MAX;
+  }
+
+  // la statue accepte l'offrande : PV rendus (renvoyés) et stamina pleine
+  recevoirOffrande(j) {
+    const avant = j.pv;
+    j.pv = Math.min(j.pv + OFFRANDE_SOIN_PV, PV_MAX);
+    j.stamina = STAMINA_MAX;
+    j.essouffle = false;
+    return j.pv - avant;
+  }
+
   // recopie dans l'état du niveau ce qui a changé depuis qu'on y est : cailloux restants (et leurs coups), trou révélé
   sauvegarderEtat() {
     this.etat.cailloux = this.cailloux.getChildren().map((caillou) => ({
@@ -646,6 +663,7 @@ export default class niveau1 extends Phaser.Scene {
     this.joueurs.forEach((j) => this.majJoueur(j, secondes));
     ennemis.majEnnemis(this);
     pierres.majPierres(this, secondes);
+    if (this.etat.safe) offrande.majOffrande(this);
     this.placerCible();
     this.limiterAEcran();
     this.majLumieres(secondes);
