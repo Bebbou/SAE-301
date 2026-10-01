@@ -1,4 +1,5 @@
 import * as fct from "./fonctions.js";
+import * as salle_safe from "./salle_safe.js";
 
 /***********************************************************************/
 /** VARIABLES GLOBALES
@@ -37,6 +38,10 @@ export default class selection extends Phaser.Scene {
     this.load.image("tiles_decorative_cracks_floor", "./assets/map/decorative_cracks_floor.png");
     this.load.image("tiles_decorative_cracks_walls", "./assets/map/decorative_cracks_walls.png");
     this.load.image("tiles_walls_floor", "./assets/map/walls_floor.png");
+
+    // salle safe (map Tiled) et ses tilesets (cf. salle_safe.js)
+    this.load.tilemapTiledJSON(salle_safe.CLE_MAP, salle_safe.FICHIER_MAP);
+    salle_safe.TILESETS.forEach(([nom, cle, fichier]) => { if (fichier) this.load.image(cle, fichier); });
 
     // HUD : 11 frames de 96x16 (frame 0 = vide, frame 10 = pleine)
     this.load.spritesheet("sprite_barre_vie", "./assets/ui/life.png", { frameWidth: 96, frameHeight: 16 });

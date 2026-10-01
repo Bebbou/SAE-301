@@ -27,7 +27,7 @@ const centre_de = (indice) => indice * TAILLE_CASE + TAILLE_CASE / 2;
 // cases où l'on ne peut pas marcher : murs (grille[y][x] = true) et cailloux
 function casesBloquees(scene) {
   const bloquees = new Set();
-  scene.etat.grille.forEach((ligne, y) => ligne.forEach((mur, x) => { if (mur) bloquees.add(x + "," + y); }));
+  (scene.etat.grille || []).forEach((ligne, y) => ligne.forEach((mur, x) => { if (mur) bloquees.add(x + "," + y); }));
   scene.cailloux.getChildren().forEach((caillou) => bloquees.add(case_de(caillou.x) + "," + case_de(caillou.y)));
   return bloquees;
 }
@@ -62,14 +62,14 @@ export function chercherChemin(bloquees, largeur, hauteur, depart, arrivee) {
 }
 
 // crée les ennemis sur des cases de sol libres, loin des joueurs
-export function creerEnnemis(scene, calque_sol, calque_murs) {
+export function creerEnnemis(scene, calque_sol, calque_murs, nombre = NB_ENNEMIS) {
   scene.ennemis = scene.physics.add.group();
   const bloquees = casesBloquees(scene);
   const cases_libres = calque_sol.filterTiles((tuile) =>
     !bloquees.has(tuile.x + "," + tuile.y) &&
     Math.min(...scene.joueurs.map((j) => Phaser.Math.Distance.Between(tuile.getCenterX(), tuile.getCenterY(), j.sprite.x, j.sprite.y))) >= DISTANCE_MIN_APPARITION
   );
-  Phaser.Utils.Array.Shuffle(cases_libres).slice(0, NB_ENNEMIS).forEach((tuile) => {
+  Phaser.Utils.Array.Shuffle(cases_libres).slice(0, nombre).forEach((tuile) => {
     const ennemi = scene.ennemis.create(tuile.getCenterX(), tuile.getCenterY(), "sprite_slime");
     ennemi.setScale(ECHELLE_ENNEMI);
     ennemi.body.setSize(22, 14); // hitbox sur le bas du corps : colonnes 5 à 26, lignes 18 à 31 (pixels du sprite d'origine)

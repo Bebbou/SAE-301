@@ -2,6 +2,7 @@ import * as fct from "./fonctions.js";
 import * as generation from "./generation.js";
 import * as ennemis from "./ennemis.js";
 import * as pierres from "./pierres.js";
+import * as salle_safe from "./salle_safe.js";
 
 const LARGEUR_NIVEAU = 50; // cases de 32 px
 const HAUTEUR_NIVEAU = 34;
@@ -90,7 +91,17 @@ export default class niveau1 extends Phaser.Scene {
     const niveaux = this.registry.get("niveaux");
     const nouveau = !niveaux[this.niveau];
     if (nouveau) {
-      niveaux[this.niveau] = {
+      // une salle safe apparait rarement, jamais au niveau 1 ni deux fois de suite
+      const safe = this.niveau > 1 && !niveaux[this.niveau - 1]?.safe && Math.random() < salle_safe.chanceSafe();
+      niveaux[this.niveau] = safe ? {
+        safe: true, // salle de temple faite sous Tiled : éclairée, sans ennemi ni caillou (cf. salle_safe.js)
+        grille: null,
+        cailloux: [],
+        trou: { ...salle_safe.TROU },
+        trou_revele: true,
+        montee: { ...salle_safe.MONTEE }
+      } : {
+        safe: false,
         grille: generation.genererGrille(LARGEUR_NIVEAU, HAUTEUR_NIVEAU),
         cailloux: null, // liste { x, y, image, coups_restants, cache_le_trou }, tirée au hasard plus bas
         trou: null, // { x, y } : la descente, sous l'un des cailloux
@@ -99,17 +110,22 @@ export default class niveau1 extends Phaser.Scene {
       };
     }
     this.etat = niveaux[this.niveau];
-    // grille[y][x] = true si mur (cf. generation.js), puis on la traduit en tuiles
-    const grille = this.etat.grille;
-    const map = this.make.tilemap({ tileWidth: 32, tileHeight: 32, width: LARGEUR_NIVEAU, height: HAUTEUR_NIVEAU });
-    const tileset = map.addTilesetImage("walls_floor", "tiles_walls_floor");
-    const calque_sol = map.createBlankLayer("sol", tileset);
-    const calque_murs = map.createBlankLayer("murs", tileset);
-    grille.forEach((ligne, y) => ligne.forEach((mur, x) => {
-      if (mur) calque_murs.putTileAt(generation.tuileMur(grille, x, y), x, y);
-      else calque_sol.putTileAt(generation.TUILES.sol, x, y);
-    }));
-    calque_murs.setCollisionByExclusion([-1]); // toutes les tuiles non vides du calque "murs" sont solides
+    let map, calque_sol, calque_murs;
+    if (this.etat.safe) {
+      ({ map, calque_sol, calque_murs } = salle_safe.creerCarte(this));
+    } else {
+      // grille[y][x] = true si mur (cf. generation.js), puis on la traduit en tuiles
+      const grille = this.etat.grille;
+      map = this.make.tilemap({ tileWidth: 32, tileHeight: 32, width: LARGEUR_NIVEAU, height: HAUTEUR_NIVEAU });
+      const tileset = map.addTilesetImage("walls_floor", "tiles_walls_floor");
+      calque_sol = map.createBlankLayer("sol", tileset);
+      calque_murs = map.createBlankLayer("murs", tileset);
+      grille.forEach((ligne, y) => ligne.forEach((mur, x) => {
+        if (mur) calque_murs.putTileAt(generation.tuileMur(grille, x, y), x, y);
+        else calque_sol.putTileAt(generation.TUILES.sol, x, y);
+      }));
+      calque_murs.setCollisionByExclusion([-1]); // toutes les tuiles non vides du calque "murs" sont solides
+    }
 
     /****************************
      *  CREATION DES PERSONNAGES *
@@ -135,7 +151,13 @@ export default class niveau1 extends Phaser.Scene {
     // le laser s'arrête sur les cailloux (seule la pioche les casse)
     this.physics.add.collider(this.projectiles, this.cailloux, (projectile) => this.impactLaser(projectile));
     this.creerEchelles();
-    ennemis.creerEnnemis(this, calque_sol, calque_murs);
+    if (this.etat.safe) {
+      // décor solide de la salle safe : statue, coffre, vases...
+      const obstacles = salle_safe.creerObstacles(this);
+      this.joueurs.forEach((j) => this.physics.add.collider(j.sprite, obstacles));
+      this.physics.add.collider(this.projectiles, obstacles, (projectile) => this.impactLaser(projectile));
+    }
+    ennemis.creerEnnemis(this, calque_sol, calque_murs, this.etat.safe ? 0 : undefined); // aucun ennemi dans la salle safe
     // "1/2" affiché au-dessus d'une échelle quand un seul des deux joueurs est dessus
     this.compteur_echelle = this.add.text(0, 0, "", { fontSize: "20px", color: "#E8EBF0" })
       .setOrigin(0.5, 1)
@@ -158,7 +180,8 @@ export default class niveau1 extends Phaser.Scene {
      ****************************/
     // calque noir fixé à l'écran, au-dessus du jeu mais sous le HUD
     // à chaque image on le remplit de noir puis on y "gomme" la forme de la lumière
-    this.obscurite = this.add.renderTexture(0, 0, this.scale.width, this.scale.height)
+    // (pas d'obscurité dans la salle safe : tout est éclairé)
+    this.obscurite = this.etat.safe ? null : this.add.renderTexture(0, 0, this.scale.width, this.scale.height)
       .setOrigin(0, 0)
       .setScrollFactor(0)
       .setDepth(fct.PROFONDEUR.obscurite);
@@ -170,7 +193,7 @@ export default class niveau1 extends Phaser.Scene {
      ****************************/
     this.joueurs.forEach((j) => this.creerHud(j));
     pierres.creerCompteur(this);
-    this.add.text(this.scale.width / 2, 20, "Niveau " + this.niveau, { fontSize: "28px", color: "#E8EBF0" })
+    this.add.text(this.scale.width / 2, 20, "Niveau " + this.niveau + (this.etat.safe ? " · salle sûre" : ""), { fontSize: "28px", color: "#E8EBF0" })
       .setOrigin(0.5, 0)
       .setScrollFactor(0)
       .setDepth(fct.PROFONDEUR.hud);
@@ -256,6 +279,7 @@ export default class niveau1 extends Phaser.Scene {
   // redessine l'obscurité : noir partout sauf les sources de lumière (joueurs, torches, lasers, éclats)
   // chaque forme "gomme" une partie de l'obscurité : en les superposant on obtient un dégradé
   majLumieres(secondes) {
+    if (this.etat.safe) return; // salle safe : pas d'obscurité, donc rien à éclairer
     const forme = this.forme_lumiere;
     forme.clear();
 
@@ -350,7 +374,7 @@ export default class niveau1 extends Phaser.Scene {
     if (premier_depart) {
       origine = centre(Phaser.Utils.Array.GetRandom(cases_sol));
     } else {
-      if (nouveau) {
+      if (nouveau && !this.etat.montee) { // (la salle safe a déjà ses passages)
         // l'échelle de montée est plaquée contre un mur (hors du passage) : les joueurs arrivent à côté, pas dessus
         const contre_mur = cases_sol.filter((tuile) => !calque_murs.hasTileAt(tuile.x, tuile.y) && calque_murs.hasTileAt(tuile.x, tuile.y - 1));
         this.etat.montee = centre(Phaser.Utils.Array.GetRandom(contre_mur.length > 0 ? contre_mur : cases_sol));
@@ -359,7 +383,7 @@ export default class niveau1 extends Phaser.Scene {
     }
 
     const cailloux = this.etat.cailloux || []; // vide dans un niveau tout neuf : ils sont tirés après le départ
-    const candidats = cases_sol.map(centre)
+    const candidats = cases_sol.filter((tuile) => !calque_murs.hasTileAt(tuile.x, tuile.y)).map(centre)
       .filter((case_sol) => distance(case_sol, origine) <= 150 && (premier_depart || distance(case_sol, origine) >= DISTANCE_MIN_DEPART))
       .filter((case_sol) => cailloux.every((caillou) => distance(case_sol, caillou) >= 40))
       .sort((a, b) => distance(a, origine) - distance(b, origine));
@@ -477,7 +501,7 @@ export default class niveau1 extends Phaser.Scene {
 
   // le laser touche un mur ou un caillou : il laisse un éclat de lumière puis disparait
   impactLaser(projectile) {
-    this.eclats.push({ x: projectile.x, y: projectile.y, fin: this.time.now + DUREE_ECLAT });
+    if (!this.etat.safe) this.eclats.push({ x: projectile.x, y: projectile.y, fin: this.time.now + DUREE_ECLAT }); // (rien à éclairer dans la salle safe)
     projectile.destroy();
   }
 
