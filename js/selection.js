@@ -109,6 +109,12 @@ export default class selection extends Phaser.Scene {
         });
       });
     });
+
+    /* >>>>> AJOUT SON <<<<< */ // sons (16 ko/s max) : musiques et bruitages
+    /* >>>>> AJOUT SON <<<<< */ this.load.audio("accueil", "./assets/sons/acceuil_son.mp3");
+    /* >>>>> AJOUT SON <<<<< */ this.load.audio("fondSonore", "./assets/sons/fond_sonore.mp3");
+    /* >>>>> AJOUT SON <<<<< */ this.load.audio("echelle", "./assets/sons/ladder.mp3");
+    /* >>>>> AJOUT SON <<<<< */ this.load.audio("gameOver", "./assets/sons/music_game_over.mp3");
   }
 
   /***********************************************************************/
