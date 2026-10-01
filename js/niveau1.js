@@ -13,7 +13,10 @@ const VITESSE_JOUEUR = 160; // px/s
 const VITESSE_SPRINT = 260; // px/s
 const PV_MAX = 100;
 const STAMINA_MAX = 100;
-const OFFRANDE_SOIN_PV = 25; // PV rendus par une offrande à la statue (en plus de toute la stamina)
+// offrande à la statue : chaque pierre lunaire rend des PV (et la stamina revient d'un coup)
+// équilibrage : ~0,6 pierre par caillou cassé (cf. pierres.js), 14 cailloux par niveau, la salle safe est rare
+// -> quelques dizaines de pierres entre deux salles : à 5 PV par pierre, ça couvre un à deux barres de vie, pas plus
+const PV_PAR_PIERRE = 5;
 const STAMINA_CONSO = 35; // stamina perdue par seconde de sprint
 const STAMINA_RECUP = 20; // stamina regagnée par seconde sans sprinter
 const MARGE_ECRAN = 40; // px : en duo, la caméra suit le milieu des joueurs et aucun ne peut sortir de l'écran
@@ -547,15 +550,17 @@ export default class niveau1 extends Phaser.Scene {
     caillou.destroy();
   }
 
-  // offrande à la statue (cf. offrande.js) : le joueur a-t-il quelque chose à récupérer ?
-  besoinOffrande(j) {
-    return j.pv < PV_MAX || j.stamina < STAMINA_MAX;
+  // offrande à la statue (cf. offrande.js) : nombre de pierres pour tout récupérer (0 si le joueur est au maximum)
+  // une stamina à compléter seule coûte une pierre
+  pierresPourSoigner(j) {
+    if (j.pv < PV_MAX) return Math.ceil((PV_MAX - j.pv) / PV_PAR_PIERRE);
+    return j.stamina < STAMINA_MAX ? 1 : 0;
   }
 
-  // la statue accepte l'offrande : PV rendus (renvoyés) et stamina pleine
-  recevoirOffrande(j) {
+  // la statue accepte `nombre` pierres : PV rendus (renvoyés) et stamina pleine
+  recevoirOffrande(j, nombre) {
     const avant = j.pv;
-    j.pv = Math.min(j.pv + OFFRANDE_SOIN_PV, PV_MAX);
+    j.pv = Math.min(j.pv + nombre * PV_PAR_PIERRE, PV_MAX);
     j.stamina = STAMINA_MAX;
     j.essouffle = false;
     return j.pv - avant;
