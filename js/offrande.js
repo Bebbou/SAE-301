@@ -124,8 +124,5 @@ function anneau(scene, x, y) {
 
 // texte qui monte au-dessus du joueur en s'effaçant
 function texteFlottant(scene, j, message, couleur) {
-  const texte = scene.add.text(j.sprite.x, j.sprite.y - 44, message, { fontSize: "20px", fontStyle: "bold", color: couleur, stroke: "#20283A", strokeThickness: 4 })
-    .setOrigin(0.5)
-    .setDepth(fct.PROFONDEUR.projectiles);
-  scene.tweens.add({ targets: texte, y: texte.y - 30, alpha: 0, duration: 1000, ease: "Quad.easeOut", onComplete: () => texte.destroy() });
+  fct.texteFlottant(scene, j.sprite.x, j.sprite.y - 44, message, couleur);
 }

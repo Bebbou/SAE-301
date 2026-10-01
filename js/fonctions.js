@@ -84,6 +84,15 @@ export const PROFONDEUR = {
 };
 
 
+// texte qui monte en s'effaçant à (x, y) du monde (gain de PV, bonus ramassé, refus...)
+export function texteFlottant(scene, x, y, message, couleur) {
+    const texte = scene.add.text(x, y, message, { fontSize: "20px", fontStyle: "bold", color: couleur, stroke: "#20283A", strokeThickness: 4 })
+        .setOrigin(0.5)
+        .setDepth(PROFONDEUR.projectiles);
+    scene.tweens.add({ targets: texte, y: y - 30, alpha: 0, duration: 1000, ease: "Quad.easeOut", onComplete: () => texte.destroy() });
+}
+
+
 /***********************************************************************/
 /** HUD : BARRES DE VIE / STAMINA
 /***********************************************************************/
