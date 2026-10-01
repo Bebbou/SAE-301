@@ -19,6 +19,9 @@ const NB_ETOILES = 90;
 // boutons d'action des joueurs qui valident le choix (la navigation se fait au joystick, haut / bas)
 const BOUTONS_VALIDER = ["frapper_tirer", "sprint", "torche", "changer_equipement"];
 
+/* >>>>> AJOUT SON <<<<< */ // musique de l'écran d'accueil
+/* >>>>> AJOUT SON <<<<< */ var son_accueil;
+
 // scene du menu : elle choisit le nombre de joueurs (registry "nb_joueurs"), remet le jeu à zéro puis lance le niveau 1
 // n'importe quel joueur peut naviguer et valider, avec son joystick et ses boutons
 export default class menu extends Phaser.Scene {
@@ -59,6 +62,10 @@ export default class menu extends Phaser.Scene {
 
     // les touches des deux joueurs (cf. fonctions.js)
     this.touches = fct.JOUEURS.map((joueur) => fct.creerTouches(this, joueur.touches));
+
+    /* >>>>> AJOUT SON <<<<< */ // musique de l'écran d'accueil
+    /* >>>>> AJOUT SON <<<<< */ son_accueil = this.sound.add("accueil");
+    /* >>>>> AJOUT SON <<<<< */ son_accueil.play({ loop: true });
   }
 
   // met en avant le bouton choisi
@@ -73,6 +80,7 @@ export default class menu extends Phaser.Scene {
   // enregistre le choix, remet le jeu à zéro et lance le premier niveau
   lancer() {
     this.lancement = true;
+    /* >>>>> AJOUT SON <<<<< */ son_accueil.stop();
     // nouvelle partie : on oublie les niveaux visités (le jeu garde en mémoire l'état de chaque niveau pour pouvoir y revenir)
     this.registry.set("niveaux", {});
     this.registry.set("pierres_lunaires", 0);

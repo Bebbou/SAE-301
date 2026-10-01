@@ -68,6 +68,12 @@ const EQUIPEMENTS = ["pioche", "laser"]; // H passe de l'un à l'autre
 // variante des sprites du joueur selon l'équipement (cf. VARIANTES_JOUEUR dans selection.js)
 const VARIANTE_SPRITE = { pioche: "", laser: "_gun" };
 
+/* >>>>> AJOUT SON <<<<< */ // sons de la partie (gardés d'un niveau à l'autre)
+/* >>>>> AJOUT SON <<<<< */ var musique_de_fond;
+/* >>>>> AJOUT SON <<<<< */ var son_echelle;
+/* >>>>> AJOUT SON <<<<< */ var son_game_over;
+/* >>>>> AJOUT SON <<<<< */ var musique_en_cours = false;
+
 // scene de jeu : elle est relancée à chaque changement de niveau (descente ou montée), avec le numéro du niveau voulu
 // l'état de chaque niveau visité est gardé dans this.registry ("niveaux") : on retrouve un niveau tel qu'on l'a laissé
 // les joueurs (1 ou 2 selon this.registry "nb_joueurs") sont dans this.joueurs : un objet par joueur, cf. creerJoueur
@@ -92,6 +98,19 @@ export default class niveau1 extends Phaser.Scene {
 
   create() {
     this.changement_niveau = false; // true pendant le fondu vers un autre niveau
+
+    /* >>>>> AJOUT SON <<<<< */ // sons : ajoutés une seule fois au gestionnaire, puis réutilisés à chaque niveau
+    /* >>>>> AJOUT SON <<<<< */ if (!musique_de_fond) {
+    /* >>>>> AJOUT SON <<<<< */ musique_de_fond = this.sound.add("fondSonore");
+    /* >>>>> AJOUT SON <<<<< */ son_echelle = this.sound.add("echelle");
+    /* >>>>> AJOUT SON <<<<< */ son_game_over = this.sound.add("gameOver");
+    /* >>>>> AJOUT SON <<<<< */ }
+    /* >>>>> AJOUT SON <<<<< */ son_echelle.stop(); // on vient d'arriver : le bruit d'échelle s'arrête
+    /* >>>>> AJOUT SON <<<<< */ if (!musique_en_cours) {
+    /* >>>>> AJOUT SON <<<<< */ musique_de_fond.play({ loop: true, volume: 0.5 });
+    /* >>>>> AJOUT SON <<<<< */ musique_en_cours = true;
+    /* >>>>> AJOUT SON <<<<< */ }
+    /* >>>>> AJOUT SON <<<<< */ this.game_over = false;
 
     /*************************************
      *  CREATION DE LA MAP (procédurale) *
@@ -629,6 +648,7 @@ export default class niveau1 extends Phaser.Scene {
     this.changement_niveau = true;
     this.compteur_echelle.setVisible(false);
     this.sauvegarderEtat();
+    /* >>>>> AJOUT SON <<<<< */ son_echelle.play(); // bruit d'échelle pendant la descente ou la montée
 
     // les joueurs montent sur l'échelle et la descendent (ou la montent) : l'animation d'Inas, de dos, qui s'efface
     const descente = arrivee === "haut";
@@ -736,6 +756,15 @@ export default class niveau1 extends Phaser.Scene {
       this.majLumieres(delta / 1000); // la lumière suit les joueurs pendant l'animation d'échelle
       return;
     }
+
+    /* >>>>> AJOUT SON <<<<< */ // game over : tous les joueurs sont à 0 PV
+    /* >>>>> AJOUT SON <<<<< */ if (!this.game_over && this.joueurs.every((j) => j.pv <= 0)) {
+    /* >>>>> AJOUT SON <<<<< */ this.game_over = true;
+    /* >>>>> AJOUT SON <<<<< */ musique_de_fond.stop();
+    /* >>>>> AJOUT SON <<<<< */ musique_en_cours = false; // la prochaine partie relancera la musique
+    /* >>>>> AJOUT SON <<<<< */ son_echelle.stop();
+    /* >>>>> AJOUT SON <<<<< */ son_game_over.play();
+    /* >>>>> AJOUT SON <<<<< */ }
 
     const secondes = delta / 1000;
     this.joueurs.forEach((j) => this.majJoueur(j, secondes));
