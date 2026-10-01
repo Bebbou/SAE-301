@@ -56,10 +56,11 @@ const PIERRE = {
 };
 
 // un caillou vient d'être cassé en (x, y) : avec un peu de chance, 1 à 3 pierres jaillissent autour
-export function lacherPierres(scene, x, y) {
-  if (Math.random() >= CHANCE_DROP) return;
+// (un cristal cassé en lâche à coup sûr, plus : chance = 1, cf. cristaux.js)
+export function lacherPierres(scene, x, y, chance = CHANCE_DROP, minimum = PIERRES_MIN, maximum = PIERRES_MAX) {
+  if (Math.random() >= chance) return;
   // la lumière jaillit avec les pierres : elle s'élargit en s'éteignant (éclat géré par niveau1.js, comme l'impact des lasers)
   scene.eclats.push({ x: x, y: y - 6, fin: scene.time.now + DUREE_LUEUR, duree: DUREE_LUEUR, halo: HALO_LUEUR, expansion: true });
-  const nombre = Phaser.Math.Between(PIERRES_MIN, PIERRES_MAX);
+  const nombre = Phaser.Math.Between(minimum, maximum);
   for (let i = 0; i < nombre; i++) butin.lacherButin(scene, x, y, PIERRE);
 }

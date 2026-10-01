@@ -29,6 +29,7 @@ function casesBloquees(scene) {
   const bloquees = new Set();
   (scene.etat.grille || []).forEach((ligne, y) => ligne.forEach((mur, x) => { if (mur) bloquees.add(x + "," + y); }));
   scene.cailloux.getChildren().forEach((caillou) => bloquees.add(case_de(caillou.x) + "," + case_de(caillou.y)));
+  scene.cristaux.forEach((cristal) => bloquees.add(case_de(cristal.body.center.x) + "," + case_de(cristal.body.center.y)));
   return bloquees;
 }
 
@@ -84,6 +85,7 @@ export function creerEnnemis(scene, calque_sol, calque_murs, nombre = NB_ENNEMIS
 
   scene.physics.add.collider(scene.ennemis, calque_murs);
   scene.physics.add.collider(scene.ennemis, scene.cailloux);
+  if (scene.groupe_cristaux) scene.physics.add.collider(scene.ennemis, scene.groupe_cristaux);
   scene.physics.add.collider(scene.ennemis, scene.ennemis);
   // un ennemi qui touche un joueur lui fait des dégâts
   scene.joueurs.forEach((j) => {

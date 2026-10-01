@@ -343,7 +343,7 @@ export default class niveau1 extends Phaser.Scene {
     });
     // les cristaux aussi, avec une pulsation lente (chacun la sienne)
     this.cristaux.forEach((cristal) => {
-      this.dessinerHalo(cristal.x, cristal.y - 14, cristaux.HALO_CRISTAL, 1, 0.85 + 0.15 * Math.sin(t * 0.002 + cristal.phase));
+      this.dessinerHalo(cristal.x, cristal.y, cristaux.HALO_CRISTAL, 1, 0.85 + 0.15 * Math.sin(t * 0.002 + cristal.phase));
     });
 
     // cône de chaque joueur : la lumière part des pieds (la hitbox), elle n'est donc jamais dans un mur
@@ -575,6 +575,7 @@ export default class niveau1 extends Phaser.Scene {
       j.sprite.body.center.y + regard.y * PORTEE_FRAPPE
     );
     ennemis.frapperEnnemis(this, zone, regard);
+    if (cristaux.frapperCristal(this, zone)) return; // un cristal devant : le coup est pour lui
     const caillou = this.cailloux.getChildren().find((c) =>
       Phaser.Geom.Intersects.RectangleToRectangle(zone, new Phaser.Geom.Rectangle(c.body.x, c.body.y, c.body.width, c.body.height))
     );
@@ -619,6 +620,7 @@ export default class niveau1 extends Phaser.Scene {
       cache_le_trou: caillou === this.caillou_trou
     }));
     this.etat.trou_revele = this.trou.visible;
+    if (!this.etat.safe) this.etat.cristaux = cristaux.etatCristaux(this); // cristaux restants et leurs coups
   }
 
   // fondu au noir, sauvegarde du niveau, puis relance de la scene sur le niveau voulu
