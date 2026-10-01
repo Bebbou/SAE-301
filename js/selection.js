@@ -1,4 +1,5 @@
 import * as fct from "./fonctions.js";
+import * as salle_safe from "./salle_safe.js";
 
 /***********************************************************************/
 /** VARIABLES GLOBALES
@@ -38,6 +39,10 @@ export default class selection extends Phaser.Scene {
     this.load.image("tiles_decorative_cracks_walls", "./assets/map/decorative_cracks_walls.png");
     this.load.image("tiles_walls_floor", "./assets/map/walls_floor.png");
 
+    // salle safe (map Tiled) et ses tilesets (cf. salle_safe.js)
+    this.load.tilemapTiledJSON(salle_safe.CLE_MAP, salle_safe.FICHIER_MAP);
+    salle_safe.TILESETS.forEach(([nom, cle, fichier]) => { if (fichier) this.load.image(cle, fichier); });
+
     // HUD : 11 frames de 96x16 (frame 0 = vide, frame 10 = pleine)
     this.load.spritesheet("sprite_barre_vie", "./assets/ui/life.png", { frameWidth: 96, frameHeight: 16 });
     this.load.spritesheet("sprite_barre_stamina", "./assets/ui/stamina.png", { frameWidth: 96, frameHeight: 16 });
@@ -47,6 +52,9 @@ export default class selection extends Phaser.Scene {
     this.load.image("img_icone_pioche", "./assets/ui/icone_pioche.png");
     this.load.image("img_icone_laser", "./assets/ui/icone_laser.png");
     this.load.image("img_icone_gun2", "./assets/ui/icone_gun2.png"); // arme du joueur 2
+
+    // pierre lunaire (16x16) : icône du compteur et drops (cf. pierres.js)
+    this.load.image("img_pierre_lunaire", "./assets/ui/pierre_lunaire.png");
 
     // boutons du menu (cf. menu.js)
     this.load.image("img_bouton_solo", "./assets/ui/jouer_solo.png");
