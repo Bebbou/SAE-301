@@ -1,6 +1,7 @@
 import * as fct from "./fonctions.js";
 import * as generation from "./generation.js";
 import * as ennemis from "./ennemis.js";
+import * as pierres from "./pierres.js";
 
 const LARGEUR_NIVEAU = 50; // cases de 32 px
 const HAUTEUR_NIVEAU = 34;
@@ -168,6 +169,7 @@ export default class niveau1 extends Phaser.Scene {
      *  HUD                     *
      ****************************/
     this.joueurs.forEach((j) => this.creerHud(j));
+    pierres.creerCompteur(this);
     this.add.text(this.scale.width / 2, 20, "Niveau " + this.niveau, { fontSize: "28px", color: "#E8EBF0" })
       .setOrigin(0.5, 0)
       .setScrollFactor(0)
@@ -512,6 +514,7 @@ export default class niveau1 extends Phaser.Scene {
     }
 
     if (caillou === this.caillou_trou) this.trou.setVisible(true);
+    pierres.lacherPierres(this, caillou.x, caillou.y + 8); // à la base du rocher
     caillou.destroy();
   }
 
@@ -616,6 +619,7 @@ export default class niveau1 extends Phaser.Scene {
     const secondes = delta / 1000;
     this.joueurs.forEach((j) => this.majJoueur(j, secondes));
     ennemis.majEnnemis(this);
+    pierres.majPierres(this, secondes);
     this.placerCible();
     this.limiterAEcran();
     this.majLumieres(secondes);

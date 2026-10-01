@@ -48,6 +48,9 @@ export default class selection extends Phaser.Scene {
     this.load.image("img_icone_laser", "./assets/ui/icone_laser.png");
     this.load.image("img_icone_gun2", "./assets/ui/icone_gun2.png"); // arme du joueur 2
 
+    // pierre lunaire (16x16) : icône du compteur et drops (cf. pierres.js)
+    this.load.image("img_pierre_lunaire", "./assets/ui/pierre_lunaire.png");
+
     // boutons du menu (cf. menu.js)
     this.load.image("img_bouton_solo", "./assets/ui/jouer_solo.png");
     this.load.image("img_bouton_duo", "./assets/ui/jouer_duo.png");
