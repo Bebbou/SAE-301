@@ -39,9 +39,9 @@ export default class menu extends Phaser.Scene {
       etoiles.fillRect(Phaser.Math.Between(0, this.scale.width), Phaser.Math.Between(0, this.scale.height), taille, taille);
     }
 
-    this.add.text(this.scale.width / 2, 120, "ARTEMIS", { fontSize: "104px", fontStyle: "bold", color: "#EC8697", stroke: "#20283A", strokeThickness: 10 })
+    this.add.text(this.scale.width / 2, 120, "ARTEMIS", { fontFamily: fct.POLICES.logo, fontSize: "104px", color: "#EC8697", stroke: "#20283A", strokeThickness: 10 })
       .setOrigin(0.5);
-    this.add.text(this.scale.width / 2, 205, "un rogue-like sur la Lune", { fontSize: "28px", color: "#BFC3CC" })
+    this.add.text(this.scale.width / 2, 205, "un rogue-like sur la Lune", { fontFamily: fct.POLICES.texte, fontSize: "28px", color: "#BFC3CC" })
       .setOrigin(0.5);
 
     // les boutons sont réduits d'environ 40 % : on adoucit le filtre (le mode pixel art les rendrait crénelés)
@@ -54,7 +54,7 @@ export default class menu extends Phaser.Scene {
     this.choix = 0; // indice du bouton choisi : jouer seul par défaut
     this.majSelection();
 
-    this.add.text(this.scale.width / 2, this.scale.height - 60, "Joystick : choisir      Bouton : valider", { fontSize: "24px", color: "#9AA0AE" })
+    this.add.text(this.scale.width / 2, this.scale.height - 60, "Joystick : choisir      Bouton : valider", { fontFamily: fct.POLICES.texte, fontSize: "24px", color: "#9AA0AE" })
       .setOrigin(0.5);
 
     // les touches des deux joueurs (cf. fonctions.js)

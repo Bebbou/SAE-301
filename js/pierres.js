@@ -24,7 +24,7 @@ export function creerCompteur(scene) {
     .setScale(ECHELLE_ICONE_HUD)
     .setScrollFactor(0)
     .setDepth(fct.PROFONDEUR.hud);
-  scene.texte_pierre = scene.add.text(POSITION_HUD.x + 26, POSITION_HUD.y, "", { fontSize: "28px", fontStyle: "bold", color: "#E8EBF0", stroke: "#20283A", strokeThickness: 5 })
+  scene.texte_pierre = scene.add.text(POSITION_HUD.x + 26, POSITION_HUD.y, "", { fontFamily: fct.POLICES.bouton, fontSize: "22px", color: "#E8EBF0", stroke: "#20283A", strokeThickness: 5 })
     .setOrigin(0, 0.5)
     .setScrollFactor(0)
     .setDepth(fct.PROFONDEUR.hud);

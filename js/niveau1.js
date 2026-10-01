@@ -173,7 +173,7 @@ export default class niveau1 extends Phaser.Scene {
     }
     ennemis.creerEnnemis(this, calque_sol, calque_murs, this.etat.safe ? 0 : undefined); // aucun ennemi dans la salle safe
     // "1/2" affiché au-dessus d'une échelle quand un seul des deux joueurs est dessus
-    this.compteur_echelle = this.add.text(0, 0, "", { fontSize: "20px", color: "#E8EBF0" })
+    this.compteur_echelle = this.add.text(0, 0, "", { fontFamily: fct.POLICES.bouton, fontSize: "16px", color: "#E8EBF0", stroke: "#20283A", strokeThickness: 4 })
       .setOrigin(0.5, 1)
       .setDepth(fct.PROFONDEUR.projectiles)
       .setVisible(false);
@@ -207,7 +207,7 @@ export default class niveau1 extends Phaser.Scene {
      ****************************/
     this.joueurs.forEach((j) => this.creerHud(j));
     pierres.creerCompteur(this);
-    this.add.text(this.scale.width / 2, 20, "Niveau " + this.niveau + (this.etat.safe ? " · salle sûre" : ""), { fontSize: "28px", color: "#E8EBF0" })
+    this.add.text(this.scale.width / 2, 20, "Niveau " + this.niveau + (this.etat.safe ? " · salle sûre" : ""), { fontFamily: fct.POLICES.texte, fontSize: "28px", color: "#E8EBF0" })
       .setOrigin(0.5, 0)
       .setScrollFactor(0)
       .setDepth(fct.PROFONDEUR.hud);
@@ -262,7 +262,7 @@ export default class niveau1 extends Phaser.Scene {
     j.hud_effets = bonus.EFFETS.map((nom, i) => {
       const x = x_barres + i * 84;
       const icone = this.add.image(x, 112, "sprite_potion_" + nom, 0).setOrigin(0, 0.5).setScale(1.5).setScrollFactor(0).setDepth(fct.PROFONDEUR.hud);
-      const texte = this.add.text(x + 28, 112, "", { fontSize: "18px", fontStyle: "bold", color: "#E8EBF0", stroke: "#20283A", strokeThickness: 4 })
+      const texte = this.add.text(x + 28, 112, "", { fontFamily: fct.POLICES.bouton, fontSize: "14px", color: "#E8EBF0", stroke: "#20283A", strokeThickness: 4 })
         .setOrigin(0, 0.5).setScrollFactor(0).setDepth(fct.PROFONDEUR.hud);
       return { nom: nom, icone: icone, texte: texte };
     });
