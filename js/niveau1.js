@@ -198,7 +198,7 @@ export default class niveau1 extends Phaser.Scene {
     });
     // hitbox réduite aux pieds du personnage (en pixels du sprite d'origine : elle suit l'échelle)
     j.sprite.setSize(12, 6);
-    j.sprite.setOffset(10, 25);
+    j.sprite.setOffset(10, 26); // pieds du sprite : colonnes 10 à 21, lignes 26 à 31 (le bas de l'image)
     j.sprite.setScale(ECHELLE_JOUEUR);
     j.sprite.setCollideWorldBounds(true);
     return j;
@@ -404,8 +404,8 @@ export default class niveau1 extends Phaser.Scene {
     this.etat.cailloux.forEach((donnees) => {
       const caillou = this.cailloux.create(donnees.x, donnees.y, donnees.image);
       // hitbox sur le bas du caillou : le joueur peut passer derrière le haut
-      caillou.body.setSize(24, 14);
-      caillou.body.setOffset(4, 16);
+      caillou.body.setSize(24, 15); // colonnes 5 à 28 (centrée sur le caillou), lignes 16 à 30 : la base du rocher
+      caillou.body.setOffset(5, 16);
       caillou.setDepth(caillou.y); // tri d'affichage vue de dessus : plus bas = devant
       caillou.coups_restants = donnees.coups_restants;
       if (donnees.cache_le_trou) this.caillou_trou = caillou;

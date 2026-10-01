@@ -72,8 +72,8 @@ export function creerEnnemis(scene, calque_sol, calque_murs) {
   Phaser.Utils.Array.Shuffle(cases_libres).slice(0, NB_ENNEMIS).forEach((tuile) => {
     const ennemi = scene.ennemis.create(tuile.getCenterX(), tuile.getCenterY(), "sprite_slime");
     ennemi.setScale(ECHELLE_ENNEMI);
-    ennemi.body.setSize(16, 12); // hitbox sur le bas du corps (pixels du sprite d'origine)
-    ennemi.body.setOffset(8, 18);
+    ennemi.body.setSize(22, 14); // hitbox sur le bas du corps : colonnes 5 à 26, lignes 18 à 31 (pixels du sprite d'origine)
+    ennemi.body.setOffset(5, 18);
     ennemi.pv = PV_ENNEMI;
     ennemi.chemin = [];
     ennemi.alerte = false;
