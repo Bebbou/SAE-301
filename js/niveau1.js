@@ -268,8 +268,10 @@ export default class niveau1 extends Phaser.Scene {
     // éclats d'impact : ils faiblissent jusqu'à disparaître
     this.eclats = this.eclats.filter((eclat) => t < eclat.fin);
     this.eclats.forEach((eclat) => {
-      const restant = (eclat.fin - t) / DUREE_ECLAT; // 1 -> 0
-      this.dessinerHalo(eclat.x, eclat.y, HALO_ECLAT, 1, restant);
+      const restant = (eclat.fin - t) / (eclat.duree ?? DUREE_ECLAT); // 1 -> 0
+      // un éclat peut avoir son propre halo, et s'élargir en s'éteignant (cf. pierres.js)
+      const rayon = eclat.expansion ? 0.6 + 0.4 * (1 - restant) : 1;
+      this.dessinerHalo(eclat.x, eclat.y, eclat.halo ?? HALO_ECLAT, rayon, restant);
     });
 
     // cône de chaque joueur : la lumière part des pieds (la hitbox), elle n'est donc jamais dans un mur

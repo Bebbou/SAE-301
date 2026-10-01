@@ -7,6 +7,9 @@ import * as fct from "./fonctions.js";
 const CHANCE_DROP = 0.3; // chance qu'un caillou cassé laisse des pierres
 const PIERRES_MIN = 1;
 const PIERRES_MAX = 3;
+// lueur quand des pierres jaillissent : [rayon en px, opacité] (même principe que les halos de niveau1.js)
+const HALO_LUEUR = [[150, 0.15], [110, 0.2], [76, 0.3], [46, 0.5], [24, 0.9]];
+const DUREE_LUEUR = 1100; // ms
 const ECHELLE_PIERRE = 1.5; // la pierre fait 16 px : affichée à 24 px
 const PORTEE_EJECTION = [20, 38]; // px : distance min / max à laquelle une pierre est éjectée
 const DUREE_EJECTION = 380; // ms
@@ -41,6 +44,8 @@ function majCompteur(scene) {
 // un caillou vient d'être cassé en (x, y) : avec un peu de chance, 1 à 3 pierres jaillissent autour
 export function lacherPierres(scene, x, y) {
   if (Math.random() >= CHANCE_DROP) return;
+  // la lumière jaillit avec les pierres : elle s'élargit en s'éteignant (éclat géré par niveau1.js, comme l'impact des lasers)
+  scene.eclats.push({ x: x, y: y - 6, fin: scene.time.now + DUREE_LUEUR, duree: DUREE_LUEUR, halo: HALO_LUEUR, expansion: true });
   const nombre = Phaser.Math.Between(PIERRES_MIN, PIERRES_MAX);
   for (let i = 0; i < nombre; i++) creerPierre(scene, x, y);
 }
