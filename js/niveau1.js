@@ -4,6 +4,9 @@ import * as ennemis from "./ennemis.js";
 import * as pierres from "./pierres.js";
 import * as salle_safe from "./salle_safe.js";
 import * as offrande from "./offrande.js";
+import * as butin from "./butin.js";
+import * as bonus from "./bonus.js";
+import * as cristaux from "./cristaux.js";
 
 const LARGEUR_NIVEAU = 50; // cases de 32 px
 const HAUTEUR_NIVEAU = 34;
@@ -23,6 +26,8 @@ const MARGE_ECRAN = 40; // px : en duo, la caméra suit le milieu des joueurs et
 const ECART_DEPART_JOUEURS = 30; // px : distance minimale entre deux joueurs à leur arrivée
 const DISTANCE_MIN_ECHELLE = 200; // px : l'échelle n'est pas cachée juste à coté des joueurs
 const DUREE_FONDU = 400; // ms
+const DUREE_ENTREE_ECHELLE = 160; // ms : le joueur se place sur l'échelle
+const DUREE_ECHELLE = 900; // ms : animation de descente (ou de montée) d'échelle, avant le changement de niveau
 const NB_CAILLOUX = 14;
 const DISTANCE_MIN_DEPART = 72; // px : à l'arrivée, on apparaît à cette distance minimale de l'échelle (hors de portée d'interaction)
 const PORTEE_INTERACTION = 40; // px : distance max à l'échelle de montée pour l'utiliser
@@ -145,6 +150,7 @@ export default class niveau1 extends Phaser.Scene {
     this.joueurs.forEach((j) => this.physics.add.collider(j.sprite, calque_murs));
     this.projectiles = this.physics.add.group();
     this.eclats = []; // éclats de lumière laissés par les lasers qui touchent quelque chose
+    butin.initButin(this); // objets lâchés par les cailloux (pierres, potions)
     this.physics.add.collider(this.projectiles, calque_murs, (projectile) => this.impactLaser(projectile));
 
     /****************************
@@ -156,6 +162,8 @@ export default class niveau1 extends Phaser.Scene {
     // le laser s'arrête sur les cailloux (seule la pioche les casse)
     this.physics.add.collider(this.projectiles, this.cailloux, (projectile) => this.impactLaser(projectile));
     this.creerEchelles();
+    this.cristaux = []; // décors lumineux des niveaux générés (cf. cristaux.js) ; aucun dans la salle safe, déjà éclairée
+    if (!this.etat.safe) cristaux.creerCristaux(this, calque_sol, calque_murs);
     if (this.etat.safe) {
       // décor solide de la salle safe : statue, coffre, vases...
       const obstacles = salle_safe.creerObstacles(this);
@@ -165,7 +173,7 @@ export default class niveau1 extends Phaser.Scene {
     }
     ennemis.creerEnnemis(this, calque_sol, calque_murs, this.etat.safe ? 0 : undefined); // aucun ennemi dans la salle safe
     // "1/2" affiché au-dessus d'une échelle quand un seul des deux joueurs est dessus
-    this.compteur_echelle = this.add.text(0, 0, "", { fontSize: "20px", color: "#E8EBF0" })
+    this.compteur_echelle = this.add.text(0, 0, "", { fontFamily: fct.POLICES.bouton, fontSize: "16px", color: "#E8EBF0", stroke: "#20283A", strokeThickness: 4 })
       .setOrigin(0.5, 1)
       .setDepth(fct.PROFONDEUR.projectiles)
       .setVisible(false);
@@ -199,7 +207,7 @@ export default class niveau1 extends Phaser.Scene {
      ****************************/
     this.joueurs.forEach((j) => this.creerHud(j));
     pierres.creerCompteur(this);
-    this.add.text(this.scale.width / 2, 20, "Niveau " + this.niveau + (this.etat.safe ? " · salle sûre" : ""), { fontSize: "28px", color: "#E8EBF0" })
+    this.add.text(this.scale.width / 2, 20, "Niveau " + this.niveau + (this.etat.safe ? " · salle sûre" : ""), { fontFamily: fct.POLICES.texte, fontSize: "28px", color: "#E8EBF0" })
       .setOrigin(0.5, 0)
       .setScrollFactor(0)
       .setDepth(fct.PROFONDEUR.hud);
@@ -221,8 +229,10 @@ export default class niveau1 extends Phaser.Scene {
       sprite_retourne: false, // le joueur regarde-t-il à gauche (sprite de droite retourné) ?
       frappe: null, // coup de pioche en cours : { regard, touche }
       torche_allumee: true,
-      angle_torche: Math.PI / 2 // angle affiché du cône, qui rattrape le regard en douceur
+      angle_torche: Math.PI / 2, // angle affiché du cône, qui rattrape le regard en douceur
+      effets: {} // bonus temporaires (cf. bonus.js) : durée restante en ms de chaque effet, reportée d'un niveau à l'autre
     };
+    bonus.EFFETS.forEach((nom) => { j.effets[nom] = donnees.effets?.[nom] ?? 0; });
     j.sprite = this.physics.add.sprite(depart.x, depart.y, fct.cleSprite(definition, "walk_down" + VARIANTE_SPRITE[j.equipement]));
     j.sprite.on(Phaser.Animations.Events.ANIMATION_COMPLETE, (animation) => {
       if (animation.key.startsWith(fct.cleAnim(definition, "pioche_"))) j.frappe = null; // fin du coup : retour à la marche
@@ -248,6 +258,29 @@ export default class niveau1 extends Phaser.Scene {
     // équipement actuel en grand, suivant en petit (en bas de la grande, du côté des barres il s'arrête avant elles)
     const x_bulle = a_droite ? this.scale.width - 56 : 56;
     j.bulles = fct.creerBullesEquipement(this, x_bulle, 56, EQUIPEMENTS, j.equipement, a_droite ? -1 : 1, j.definition.icones);
+    // bonus temporaires en cours sous les barres : l'icône de la potion et les secondes restantes (cachés sans bonus)
+    j.hud_effets = bonus.EFFETS.map((nom, i) => {
+      const x = x_barres + i * 84;
+      const icone = this.add.image(x, 112, "sprite_potion_" + nom, 0).setOrigin(0, 0.5).setScale(1.5).setScrollFactor(0).setDepth(fct.PROFONDEUR.hud);
+      const texte = this.add.text(x + 28, 112, "", { fontFamily: fct.POLICES.bouton, fontSize: "14px", color: "#E8EBF0", stroke: "#20283A", strokeThickness: 4 })
+        .setOrigin(0, 0.5).setScrollFactor(0).setDepth(fct.PROFONDEUR.hud);
+      return { nom: nom, icone: icone, texte: texte };
+    });
+  }
+
+  // rend des PV (potion de soin)
+  soigner(j, pv) {
+    j.pv = Math.min(j.pv + pv, PV_MAX);
+  }
+
+  // les bonus temporaires s'écoulent ; le HUD montre ceux qui sont actifs
+  majEffets(j, secondes) {
+    j.hud_effets.forEach((e) => {
+      j.effets[e.nom] = Math.max(j.effets[e.nom] - secondes * 1000, 0);
+      const actif = j.effets[e.nom] > 0;
+      e.icone.setVisible(actif);
+      e.texte.setVisible(actif).setText(Math.ceil(j.effets[e.nom] / 1000) + "s");
+    });
   }
 
   // dessine des cercles concentriques [rayon, opacité] dans la forme de lumière (coordonnées du monde)
@@ -304,9 +337,18 @@ export default class niveau1 extends Phaser.Scene {
       this.dessinerHalo(eclat.x, eclat.y, eclat.halo ?? HALO_ECLAT, rayon, restant);
     });
 
+    // les potions posées au sol brillent dans le noir
+    this.butin.forEach((objet) => {
+      if (objet.definition.lumiere) this.dessinerHalo(objet.x, objet.y, bonus.HALO_POTION, 1, 1);
+    });
+    // les cristaux aussi, avec une pulsation lente (chacun la sienne)
+    this.cristaux.forEach((cristal) => {
+      this.dessinerHalo(cristal.x, cristal.y, cristaux.HALO_CRISTAL, 1, 0.85 + 0.15 * Math.sin(t * 0.002 + cristal.phase));
+    });
+
     // cône de chaque joueur : la lumière part des pieds (la hitbox), elle n'est donc jamais dans un mur
-    const portee = PORTEE_TORCHE * scintillement;
     const cones = this.joueurs.map((j) => {
+      const portee = PORTEE_TORCHE * scintillement * (j.effets.vision > 0 ? bonus.PORTEE_VISION : 1); // potion de vision : torche plus longue
       const cone = { ox: j.sprite.body.center.x, oy: j.sprite.body.center.y, portee: portee, angle: j.angle_torche, distances: null };
       if (j.torche_allumee) { // distances reste null tant que la torche est éteinte
         // rotation fluide vers la direction du regard
@@ -533,6 +575,7 @@ export default class niveau1 extends Phaser.Scene {
       j.sprite.body.center.y + regard.y * PORTEE_FRAPPE
     );
     ennemis.frapperEnnemis(this, zone, regard);
+    if (cristaux.frapperCristal(this, zone)) return; // un cristal devant : le coup est pour lui
     const caillou = this.cailloux.getChildren().find((c) =>
       Phaser.Geom.Intersects.RectangleToRectangle(zone, new Phaser.Geom.Rectangle(c.body.x, c.body.y, c.body.width, c.body.height))
     );
@@ -547,6 +590,7 @@ export default class niveau1 extends Phaser.Scene {
 
     if (caillou === this.caillou_trou) this.trou.setVisible(true);
     pierres.lacherPierres(this, caillou.x, caillou.y + 8); // à la base du rocher
+    bonus.lacherBonus(this, caillou.x, caillou.y + 8);
     caillou.destroy();
   }
 
@@ -576,23 +620,48 @@ export default class niveau1 extends Phaser.Scene {
       cache_le_trou: caillou === this.caillou_trou
     }));
     this.etat.trou_revele = this.trou.visible;
+    if (!this.etat.safe) this.etat.cristaux = cristaux.etatCristaux(this); // cristaux restants et leurs coups
   }
 
   // fondu au noir, sauvegarde du niveau, puis relance de la scene sur le niveau voulu
   // arrivee : "haut" quand on descend, "bas" quand on remonte (cf. init)
   changerDeNiveau(niveau, arrivee) {
     this.changement_niveau = true;
-    this.joueurs.forEach((j) => {
-      j.sprite.setVelocity(0, 0);
-      j.sprite.anims.stop();
-    });
+    this.compteur_echelle.setVisible(false);
     this.sauvegarderEtat();
-    this.cameras.main.fadeOut(DUREE_FONDU);
+
+    // les joueurs montent sur l'échelle et la descendent (ou la montent) : l'animation d'Inas, de dos, qui s'efface
+    const descente = arrivee === "haut";
+    const passage = descente ? this.trou : this.echelle_montee;
+    this.joueurs.forEach((j, i) => {
+      const x = passage.x + (i - (this.joueurs.length - 1) / 2) * 14; // côte à côte en duo
+      this.tweens.killTweensOf(j.sprite); // un clignotement après un coup, par exemple
+      j.sprite.body.enable = false;
+      j.sprite.setVelocity(0, 0).clearTint().setAlpha(1).setFlipX(false);
+      j.sprite.anims.stop();
+      j.sprite.setTexture(fct.cleSprite(j.definition, "echelle"), 0).setDepth(passage.depth + 1);
+      this.tweens.add({
+        targets: j.sprite, x: x, y: passage.y, duration: DUREE_ENTREE_ECHELLE,
+        onComplete: () => {
+          // les barreaux défilent vers le haut quand on descend, vers le bas quand on monte (animation jouée à l'envers)
+          const animation = fct.cleAnim(j.definition, "echelle");
+          if (descente) j.sprite.anims.play(animation);
+          else j.sprite.anims.playReverse(animation);
+          this.tweens.add({
+            targets: j.sprite, y: passage.y + (descente ? 10 : -10), scale: ECHELLE_JOUEUR * 0.7, alpha: 0,
+            duration: DUREE_ECHELLE, ease: "Quad.easeIn"
+          });
+        }
+      });
+    });
+
+    // l'écran s'assombrit pendant la fin de l'animation
+    this.time.delayedCall(DUREE_ENTREE_ECHELLE + DUREE_ECHELLE - DUREE_FONDU, () => this.cameras.main.fadeOut(DUREE_FONDU));
     this.cameras.main.once("camerafadeoutcomplete", () => {
       this.scene.restart({
         niveau: niveau,
         arrivee: arrivee,
-        joueurs: this.joueurs.map((j) => ({ pv: j.pv, stamina: j.stamina, equipement: j.equipement }))
+        joueurs: this.joueurs.map((j) => ({ pv: j.pv, stamina: j.stamina, equipement: j.equipement, effets: j.effets }))
       });
     });
   }
@@ -600,6 +669,7 @@ export default class niveau1 extends Phaser.Scene {
   // déplacement, actions et animation d'un joueur, selon ses touches
   majJoueur(j, secondes) {
     const touches = j.touches;
+    this.majEffets(j, secondes);
     let vx = 0;
     let vy = 0;
     if (touches.gauche.isDown) vx = -1;
@@ -621,7 +691,7 @@ export default class niveau1 extends Phaser.Scene {
     }
 
     // normalisation : on ne va pas plus vite en diagonale
-    j.sprite.body.velocity.set(vx, vy).normalize().scale(sprint ? VITESSE_SPRINT : VITESSE_JOUEUR);
+    j.sprite.body.velocity.set(vx, vy).normalize().scale((sprint ? VITESSE_SPRINT : VITESSE_JOUEUR) * (j.effets.vitesse > 0 ? bonus.FACTEUR_VITESSE : 1));
 
     if (bouge) j.regard.set(vx, vy).normalize();
     if (Phaser.Input.Keyboard.JustDown(touches.changer_equipement)) this.changerEquipement(j);
@@ -662,12 +732,15 @@ export default class niveau1 extends Phaser.Scene {
   }
 
   update(time, delta) {
-    if (this.changement_niveau) return;
+    if (this.changement_niveau) {
+      this.majLumieres(delta / 1000); // la lumière suit les joueurs pendant l'animation d'échelle
+      return;
+    }
 
     const secondes = delta / 1000;
     this.joueurs.forEach((j) => this.majJoueur(j, secondes));
     ennemis.majEnnemis(this);
-    pierres.majPierres(this, secondes);
+    butin.majButin(this, secondes);
     if (this.etat.safe) offrande.majOffrande(this);
     this.placerCible();
     this.limiterAEcran();

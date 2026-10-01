@@ -56,6 +56,14 @@ export default class selection extends Phaser.Scene {
     // pierre lunaire (16x16) : icône du compteur et drops (cf. pierres.js)
     this.load.image("img_pierre_lunaire", "./assets/ui/pierre_lunaire.png");
 
+    // cristaux décoratifs des niveaux (cf. cristaux.js) : 24 images de 38x39
+    this.load.spritesheet("sprite_cristal", "./assets/map/yellow_crystal.png", { frameWidth: 38, frameHeight: 39 });
+
+    // potions lâchées par les cailloux (cf. bonus.js) : frames de 16x16, animées
+    ["heal", "vision", "vitesse"].forEach((nom) => {
+      this.load.spritesheet("sprite_potion_" + nom, "./assets/powerup/powerup_" + nom + ".png", { frameWidth: 16, frameHeight: 16 });
+    });
+
     // boutons du menu (cf. menu.js)
     this.load.image("img_bouton_solo", "./assets/ui/jouer_solo.png");
     this.load.image("img_bouton_duo", "./assets/ui/jouer_duo.png");
@@ -85,6 +93,12 @@ export default class selection extends Phaser.Scene {
             frameHeight: 32
           });
         });
+      });
+
+      // descente / montée d'échelle : 8 frames de 32x32, le personnage vu de dos sur l'échelle (assets/character/anims/mc_ladder.png)
+      this.load.spritesheet(fct.cleSprite(joueur, "echelle"), "./assets/character/anims/" + joueur.dossier + "_ladder.png", {
+        frameWidth: 32,
+        frameHeight: 32
       });
 
       // coup de pioche : 4 frames de 32x32 (pioche levée, levée, impact, retour)
@@ -117,6 +131,13 @@ export default class selection extends Phaser.Scene {
         });
       });
 
+      this.anims.create({
+        key: fct.cleAnim(joueur, "echelle"),
+        frames: this.anims.generateFrameNumbers(fct.cleSprite(joueur, "echelle")),
+        frameRate: 12,
+        repeat: -1
+      });
+
       DIRECTIONS_PIOCHE.forEach((direction) => {
         this.anims.create({
           key: fct.cleAnim(joueur, "pioche_" + direction),
@@ -134,6 +155,22 @@ export default class selection extends Phaser.Scene {
       repeat: -1
     });
 
+    this.anims.create({
+      key: "anim_cristal",
+      frames: this.anims.generateFrameNumbers("sprite_cristal"),
+      frameRate: 10,
+      repeat: -1
+    });
+
+    ["heal", "vision", "vitesse"].forEach((nom) => {
+      this.anims.create({
+        key: "anim_potion_" + nom,
+        frames: this.anims.generateFrameNumbers("sprite_potion_" + nom),
+        frameRate: 8,
+        repeat: -1
+      });
+    });
+
     ["bleu", "rouge"].forEach((couleur) => {
       this.anims.create({
         key: "anim_laser_" + couleur,
@@ -144,6 +181,7 @@ export default class selection extends Phaser.Scene {
     });
 
     // tout est chargé : on ouvre le menu (qui lance la partie, cf. menu.js)
-    this.scene.start("menu");
+    // (après le chargement des typographies, cf. POLICES dans fonctions.js : un fichier absent n'empêche pas le jeu de démarrer)
+    fct.chargerPolices().then(() => this.scene.start("menu"));
   }
 }

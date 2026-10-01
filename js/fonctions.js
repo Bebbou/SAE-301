@@ -85,6 +85,33 @@ export const PROFONDEUR = {
 
 
 /***********************************************************************/
+/** TYPOGRAPHIES (déclarées dans index.html, fichiers dans assets/fonts/)
+/***********************************************************************/
+
+// logo : titre du jeu ; bouton : touches à presser et compteurs ; texte : tout le reste
+// la police de secours (sans-serif) s'affiche si un fichier est absent
+export const POLICES = {
+    logo: '"Origin Tech", sans-serif',
+    bouton: '"Ethnocentric", sans-serif',
+    texte: '"Kallisto", sans-serif'
+};
+
+// charge les trois polices avant d'afficher quoi que ce soit (sinon le premier texte apparait avec la police de secours)
+export function chargerPolices() {
+    return Promise.all(Object.values(POLICES).map((police) => document.fonts.load("20px " + police))).catch(() => {});
+}
+
+
+// texte qui monte en s'effaçant à (x, y) du monde (gain de PV, bonus ramassé, refus...)
+export function texteFlottant(scene, x, y, message, couleur) {
+    const texte = scene.add.text(x, y, message, { fontFamily: POLICES.texte, fontSize: "20px", color: couleur, stroke: "#20283A", strokeThickness: 4 })
+        .setOrigin(0.5)
+        .setDepth(PROFONDEUR.projectiles);
+    scene.tweens.add({ targets: texte, y: y - 30, alpha: 0, duration: 1000, ease: "Quad.easeOut", onComplete: () => texte.destroy() });
+}
+
+
+/***********************************************************************/
 /** HUD : BARRES DE VIE / STAMINA
 /***********************************************************************/
 

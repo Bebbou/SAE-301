@@ -30,8 +30,8 @@ export function creerOffrande(scene) {
   fond.fillRect(-8, HAUTEUR_BULLE / 2 - 3, 16, 3);
 
   const icone = scene.add.image(-28, -8, "img_pierre_lunaire").setScale(2);
-  const cout = scene.add.text(-10, -8, "x" + PIERRES_MAX, { fontSize: "26px", fontStyle: "bold", color: "#E8EBF0" }).setOrigin(0, 0.5);
-  const touches = scene.add.text(0, 18, "", { fontSize: "16px", color: "#BFC3CC" }).setOrigin(0.5);
+  const cout = scene.add.text(-10, -8, "x" + PIERRES_MAX, { fontFamily: fct.POLICES.bouton, fontSize: "20px", color: "#E8EBF0" }).setOrigin(0, 0.5);
+  const touches = scene.add.text(0, 18, "", { fontFamily: fct.POLICES.bouton, fontSize: "12px", color: "#BFC3CC" }).setOrigin(0.5);
 
   const bulle = scene.add.container(STATUE.centre_x, BULLE_Y, [fond, icone, cout, touches])
     .setDepth(fct.PROFONDEUR.projectiles)
@@ -124,8 +124,5 @@ function anneau(scene, x, y) {
 
 // texte qui monte au-dessus du joueur en s'effaçant
 function texteFlottant(scene, j, message, couleur) {
-  const texte = scene.add.text(j.sprite.x, j.sprite.y - 44, message, { fontSize: "20px", fontStyle: "bold", color: couleur, stroke: "#20283A", strokeThickness: 4 })
-    .setOrigin(0.5)
-    .setDepth(fct.PROFONDEUR.projectiles);
-  scene.tweens.add({ targets: texte, y: texte.y - 30, alpha: 0, duration: 1000, ease: "Quad.easeOut", onComplete: () => texte.destroy() });
+  fct.texteFlottant(scene, j.sprite.x, j.sprite.y - 44, message, couleur);
 }
