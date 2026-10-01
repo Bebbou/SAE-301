@@ -41,6 +41,15 @@ function majCompteur(scene) {
   scene.texte_pierre.setText("x" + nombrePierres(scene));
 }
 
+// retire des pierres du compteur (offrande) ; renvoie false, sans rien retirer, s'il n'y en a pas assez
+export function retirerPierres(scene, nombre) {
+  if (nombrePierres(scene) < nombre) return false;
+  scene.registry.set("pierres_lunaires", nombrePierres(scene) - nombre);
+  majCompteur(scene);
+  scene.tweens.add({ targets: scene.icone_pierre, scale: ECHELLE_ICONE_HUD * 0.75, duration: 70, yoyo: true });
+  return true;
+}
+
 // un caillou vient d'être cassé en (x, y) : avec un peu de chance, 1 à 3 pierres jaillissent autour
 export function lacherPierres(scene, x, y) {
   if (Math.random() >= CHANCE_DROP) return;

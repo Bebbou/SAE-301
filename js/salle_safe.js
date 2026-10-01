@@ -25,11 +25,14 @@ export const chanceSafe = () => (new URLSearchParams(window.location.search).has
 export const MONTEE = { x: 12 * 32 + 16, y: 12 * 32 + 16 };
 export const TROU = { x: 30 * 32 + 16, y: 12 * 32 + 16 };
 
+// la statue (cf. offrande.js) : rectangle solide [x, y, largeur, hauteur] ; sa tête dépasse en haut, vers y = 165
+export const STATUE = { rect: [650, 224, 76, 94], centre_x: 688, tete_y: 165 };
+
 // objets de décor solides, en pixels de la map : [x, y, largeur, hauteur]
 // (les tuiles du calque "assets" ne sont pas solides : on pose ici des rectangles invisibles sous la statue, le coffre, etc.)
 // la statue descend jusqu'au mur : on ne peut pas passer derrière
 const OBSTACLES = [
-  [650, 224, 76, 94], // statue
+  STATUE.rect, // statue
   [662, 376, 48, 32], // coffre
   [497, 192, 34, 24], // vase gauche
   [849, 192, 34, 24], // vase droit
