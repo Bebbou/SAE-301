@@ -7,6 +7,7 @@ import * as offrande from "./offrande.js";
 import * as butin from "./butin.js";
 import * as bonus from "./bonus.js";
 import * as cristaux from "./cristaux.js";
+import * as lumiere from "./lumiere.js";
 
 const LARGEUR_NIVEAU = 50; // cases de 32 px
 const HAUTEUR_NIVEAU = 34;
@@ -37,31 +38,6 @@ const FRAME_IMPACT_PIOCHE = 2; // frame de l'animation de coup (0 à 3) où la p
 const AVANCE_PROFONDEUR_COUP = 20; // px : pendant un coup de côté, le joueur passe devant le caillou pour qu'on voie le fer de la pioche
 const PORTEE_FRAPPE = 12; // px : distance entre les pieds du joueur et le centre de la zone de frappe
 const TAILLE_ZONE_FRAPPE = 16; // px
-const PORTEE_TORCHE = 260; // px : longueur max du cône de lumière
-const ANGLE_TORCHE = 60; // degrés : ouverture totale du cône
-const NB_RAYONS_TORCHE = 49; // rayons lancés pour que les murs arrêtent la lumière (impair : un rayon au centre)
-const MILIEU_RAYONS = (NB_RAYONS_TORCHE - 1) / 2; // indice du rayon central
-const DEMI_ANGLE_TORCHE = Phaser.Math.DegToRad(ANGLE_TORCHE / 2);
-const PAS_RAYON = 4; // px : précision des rayons
-const PENETRATION_MUR = 12; // px : la lumière éclaire un peu la face du mur qu'elle touche
-const NB_COUCHES_TORCHE = 12; // cônes superposés, du plus large au plus serré, pour le dégradé
-const OPACITE_COUCHE_TORCHE = 0.25; // chaque couche retire 25 % de l'obscurité restante
-const VITESSE_ROTATION_TORCHE = 12; // radians/s : le cône rejoint la direction du regard en douceur
-const SCINTILLEMENT_TORCHE = 0.04; // variation de portée (+/- 4 %)
-// halo autour du joueur : [rayon en px, opacité] ; le dernier cercle rend le perso toujours visible
-const HALO_JOUEUR = [[28, 0.15], [14, 1]];
-// lumière portée par chaque laser en vol, même principe que le halo du joueur
-// elle n'apparait que lorsque le laser est sorti du cône de la torche (sinon la torche l'éclaire déjà)
-const HALO_LASER = [[44, 0.15], [28, 0.25], [14, 0.6]];
-const FONDU_HALO_LASER = 40; // px : distance sur laquelle le halo apparait en douceur
-// le halo commence un peu AVANT la sortie du cône : la lumière y est déjà faible, le laser paraitrait s'éteindre
-const AVANCE_HALO_LASER = 60; // px : avant le bout du cône (portée de la torche)
-const AVANCE_ANGLE_HALO_LASER = Phaser.Math.DegToRad(8); // avant les bords du cône
-const DISTANCE_HALO_LASER = [30, 80]; // px : près du joueur le halo est éteint, il est plein à partir de la 2e valeur
-// éclat à l'impact d'un laser (mur ou caillou) : il s'éteint progressivement
-const HALO_ECLAT = [[56, 0.2], [32, 0.4], [16, 0.8]];
-const DUREE_ECLAT = 150; // ms
-const HALO_TIR_ENNEMI = [[34, 0.2], [18, 0.5], [9, 0.85]]; // lumière portée par un tir d'alien
 const VITESSE_LASER = 500; // px/s
 const DUREE_VIE_LASER = 1200; // ms : le laser disparait s'il ne touche rien
 const DEPART_LASER = 16; // px : le laser part un peu devant le joueur
@@ -213,14 +189,7 @@ export default class niveau1 extends Phaser.Scene {
     /****************************
      *  OBSCURITE + TORCHE      *
      ****************************/
-    // calque noir fixé à l'écran, au-dessus du jeu mais sous le HUD
-    // à chaque image on le remplit de noir puis on y "gomme" la forme de la lumière
-    // (pas d'obscurité dans la salle safe : tout est éclairé)
-    this.obscurite = this.etat.safe ? null : this.add.renderTexture(0, 0, this.scale.width, this.scale.height)
-      .setOrigin(0, 0)
-      .setScrollFactor(0)
-      .setDepth(fct.PROFONDEUR.obscurite);
-    this.forme_lumiere = this.make.graphics({}, false); // pas affiché : sert seulement de gomme
+    lumiere.creerObscurite(this); // le noir qui couvre l'écran (cf. lumiere.js)
     this.calque_murs = calque_murs; // les rayons de lumière s'arrêtent sur ce calque
 
     /****************************
@@ -233,7 +202,7 @@ export default class niveau1 extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(fct.PROFONDEUR.hud);
 
-    this.majLumieres(0); // sinon la première image s'affiche sans obscurité
+    lumiere.majLumieres(this); // sinon la première image s'affiche sans obscurité
   }
 
   // crée un joueur : un objet qui regroupe tout ce qui lui est propre (sprite, touches, vie, outil, torche...)
@@ -250,7 +219,6 @@ export default class niveau1 extends Phaser.Scene {
       sprite_retourne: false, // le joueur regarde-t-il à gauche (sprite de droite retourné) ?
       frappe: null, // coup de pioche en cours : { regard, touche }
       torche_allumee: true,
-      angle_torche: Math.PI / 2, // angle affiché du cône, qui rattrape le regard en douceur
       effets: {} // bonus temporaires (cf. bonus.js) : durée restante en ms de chaque effet, reportée d'un niveau à l'autre
     };
     bonus.EFFETS.forEach((nom) => { j.effets[nom] = donnees.effets?.[nom] ?? 0; });
@@ -302,133 +270,6 @@ export default class niveau1 extends Phaser.Scene {
       e.icone.setVisible(actif);
       e.texte.setVisible(actif).setText(Math.ceil(j.effets[e.nom] / 1000) + "s");
     });
-  }
-
-  // dessine des cercles concentriques [rayon, opacité] dans la forme de lumière (coordonnées du monde)
-  dessinerHalo(x, y, halo, facteur_rayon = 1, facteur_opacite = 1) {
-    const camera = this.cameras.main;
-    halo.forEach(([rayon, opacite]) => {
-      this.forme_lumiere.fillStyle(0xffffff, opacite * facteur_opacite);
-      this.forme_lumiere.fillCircle(x - camera.scrollX, y - camera.scrollY, rayon * facteur_rayon);
-    });
-  }
-
-  // dessine le cône de lumière d'un joueur : plusieurs cônes superposés, du plus large au plus serré
-  dessinerCone(cone) {
-    const camera = this.cameras.main;
-    // couche 0 = cône complet (bords faibles) ... dernière couche = coeur court et serré
-    for (let c = 0; c < NB_COUCHES_TORCHE; c++) {
-      const progression = c / (NB_COUCHES_TORCHE - 1);
-      const portee_couche = cone.portee * Phaser.Math.Linear(1, 0.45, progression);
-      const nb_cote = Math.round(MILIEU_RAYONS * Phaser.Math.Linear(1, 0.5, progression)); // rayons gardés de chaque côté
-
-      const points = [new Phaser.Math.Vector2(cone.ox - camera.scrollX, cone.oy - camera.scrollY)];
-      for (let i = MILIEU_RAYONS - nb_cote; i <= MILIEU_RAYONS + nb_cote; i++) {
-        const angle = cone.angle + ((i - MILIEU_RAYONS) / MILIEU_RAYONS) * DEMI_ANGLE_TORCHE;
-        const distance = Math.min(cone.distances[i], portee_couche);
-        points.push(new Phaser.Math.Vector2(
-          cone.ox + Math.cos(angle) * distance - camera.scrollX,
-          cone.oy + Math.sin(angle) * distance - camera.scrollY
-        ));
-      }
-      this.forme_lumiere.fillStyle(0xffffff, OPACITE_COUCHE_TORCHE);
-      this.forme_lumiere.fillPoints(points, true);
-    }
-  }
-
-  // redessine l'obscurité : noir partout sauf les sources de lumière (joueurs, torches, lasers, éclats)
-  // chaque forme "gomme" une partie de l'obscurité : en les superposant on obtient un dégradé
-  majLumieres(secondes) {
-    if (this.etat.safe) return; // salle safe : pas d'obscurité, donc rien à éclairer
-    const forme = this.forme_lumiere;
-    forme.clear();
-
-    // scintillement : petite variation douce (deux sinus de fréquences différentes)
-    const t = this.time.now;
-    const scintillement = 1 + SCINTILLEMENT_TORCHE * (Math.sin(t * 0.011) + 0.6 * Math.sin(t * 0.029)) / 1.6;
-
-    this.joueurs.forEach((j) => this.dessinerHalo(j.sprite.x, j.sprite.y, HALO_JOUEUR, scintillement));
-
-    // éclats d'impact : ils faiblissent jusqu'à disparaître
-    this.eclats = this.eclats.filter((eclat) => t < eclat.fin);
-    this.eclats.forEach((eclat) => {
-      const restant = (eclat.fin - t) / (eclat.duree ?? DUREE_ECLAT); // 1 -> 0
-      // un éclat peut avoir son propre halo, et s'élargir en s'éteignant (cf. pierres.js)
-      const rayon = eclat.expansion ? 0.6 + 0.4 * (1 - restant) : 1;
-      this.dessinerHalo(eclat.x, eclat.y, eclat.halo ?? HALO_ECLAT, rayon, restant);
-    });
-
-    // les potions posées au sol brillent dans le noir
-    this.butin.forEach((objet) => {
-      if (objet.definition.lumiere) this.dessinerHalo(objet.x, objet.y, bonus.HALO_POTION, 1, 1);
-    });
-    // les tirs des aliens verts se voient de loin (on doit pouvoir les esquiver)
-    this.tirs_ennemis.getChildren().forEach((tir) => this.dessinerHalo(tir.x, tir.y, HALO_TIR_ENNEMI, 1, 1));
-    // les cristaux aussi, avec une pulsation lente (chacun la sienne)
-    this.cristaux.forEach((cristal) => {
-      this.dessinerHalo(cristal.x, cristal.y, cristaux.HALO_CRISTAL, 1, 0.85 + 0.15 * Math.sin(t * 0.002 + cristal.phase));
-    });
-
-    // cône de chaque joueur : la lumière part des pieds (la hitbox), elle n'est donc jamais dans un mur
-    const cones = this.joueurs.map((j) => {
-      const portee = PORTEE_TORCHE * scintillement * (j.effets.vision > 0 ? bonus.PORTEE_VISION : 1); // potion de vision : torche plus longue
-      const cone = { ox: j.sprite.body.center.x, oy: j.sprite.body.center.y, portee: portee, angle: j.angle_torche, distances: null };
-      if (j.torche_allumee) { // distances reste null tant que la torche est éteinte
-        // rotation fluide vers la direction du regard
-        j.angle_torche = Phaser.Math.Angle.RotateTo(j.angle_torche, j.regard.angle(), VITESSE_ROTATION_TORCHE * secondes);
-        cone.angle = j.angle_torche;
-        cone.distances = this.lancerRayons(cone.ox, cone.oy, portee, cone.angle);
-        this.dessinerCone(cone);
-      }
-      return cone;
-    });
-
-    // chaque laser en vol éclaire autour de lui, une fois sorti de la lumière de la torche (de tous les joueurs)
-    this.projectiles.getChildren().forEach((laser) => {
-      const facteur = Math.min(...cones.map((cone) => this.facteurHaloLaser(laser, cone)));
-      if (facteur > 0) this.dessinerHalo(laser.x, laser.y, HALO_LASER, 1, facteur);
-    });
-
-    this.obscurite.fill(0x000000);
-    this.obscurite.erase(forme);
-  }
-
-  // force du halo d'un laser par rapport à la torche d'un joueur, de 0 à 1 :
-  // 0 quand le laser est dans le cône ou collé au joueur, 1 quand il en est sorti (transition douce)
-  facteurHaloLaser(laser, cone) {
-    const distance_joueur = Phaser.Math.Distance.Between(cone.ox, cone.oy, laser.x, laser.y);
-
-    // tout près du joueur, le halo du laser se confondrait avec celui du joueur
-    const [debut, fin] = DISTANCE_HALO_LASER;
-    let facteur = Phaser.Math.Clamp((distance_joueur - debut) / (fin - debut), 0, 1);
-
-    if (cone.distances) { // torche allumée : y a-t-il encore de la lumière à cet endroit ?
-      const ecart = Phaser.Math.Angle.Wrap(Math.atan2(laser.y - cone.oy, laser.x - cone.ox) - cone.angle);
-      const rayon = cone.distances[Math.round(MILIEU_RAYONS + Phaser.Math.Clamp(ecart / DEMI_ANGLE_TORCHE, -1, 1) * MILIEU_RAYONS)];
-      const hors_cote = (Math.abs(ecart) - DEMI_ANGLE_TORCHE + AVANCE_ANGLE_HALO_LASER) * distance_joueur; // px, > 0 : à côté du cône
-      // > 0 : au-delà de la portée ou d'un mur ; l'avance ne vaut que pour la portée (un mur est éclairé jusqu'au bout)
-      const avance = rayon < cone.portee ? 0 : AVANCE_HALO_LASER;
-      const hors_bout = distance_joueur - Math.min(rayon, cone.portee) + avance;
-      facteur *= Phaser.Math.Clamp(Math.max(hors_cote, hors_bout) / FONDU_HALO_LASER, 0, 1);
-    }
-    return facteur;
-  }
-
-  // lance NB_RAYONS_TORCHE rayons en éventail autour de l'angle donné
-  // renvoie, pour chacun, la distance parcourue avant un mur
-  lancerRayons(ox, oy, portee, angle_central) {
-    const distances = [];
-    for (let i = 0; i < NB_RAYONS_TORCHE; i++) {
-      const angle = angle_central + ((i - MILIEU_RAYONS) / MILIEU_RAYONS) * DEMI_ANGLE_TORCHE;
-      const dx = Math.cos(angle);
-      const dy = Math.sin(angle);
-      let distance = 0;
-      while (distance < portee && !this.calque_murs.hasTileAtWorldXY(ox + dx * distance, oy + dy * distance)) {
-        distance += PAS_RAYON;
-      }
-      distances.push(Math.min(distance + PENETRATION_MUR, portee));
-    }
-    return distances;
   }
 
   // points de départ des joueurs, en coordonnées du monde (un par joueur)
@@ -572,7 +413,7 @@ export default class niveau1 extends Phaser.Scene {
 
   // le laser touche un mur ou un caillou : il laisse un éclat de lumière puis disparait
   impactLaser(projectile) {
-    if (!this.etat.safe) this.eclats.push({ x: projectile.x, y: projectile.y, fin: this.time.now + DUREE_ECLAT }); // (rien à éclairer dans la salle safe)
+    lumiere.ajouterEclat(this, projectile.x, projectile.y);
     projectile.destroy();
   }
 
@@ -757,7 +598,7 @@ export default class niveau1 extends Phaser.Scene {
 
   update(time, delta) {
     if (this.changement_niveau) {
-      this.majLumieres(delta / 1000); // la lumière suit les joueurs pendant l'animation d'échelle
+      lumiere.majLumieres(this); // la lumière suit les joueurs pendant l'animation d'échelle
       return;
     }
 
@@ -790,7 +631,7 @@ export default class niveau1 extends Phaser.Scene {
     if (this.etat.safe) offrande.majOffrande(this);
     this.placerCible();
     this.limiterAEcran();
-    this.majLumieres(secondes);
+    lumiere.majLumieres(this);
 
     // descente : tous les joueurs doivent être sur le trou (automatique)
     // montée : tous les joueurs doivent être près de l'échelle et l'un d'eux appuie sur "interagir"

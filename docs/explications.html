@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0d0d0d">
+<title>Comprendre le code · Artemis</title>
+<meta name="description" content="Artemis : comment le code du jeu est organisé et comment expliquer ses systèmes principaux.">
+<style>
+/* Même direction artistique que la documentation du Devtober 2026 :
+   fond #0D0D0D, texte #E0E0E0, accent #FF0055, Courier New, titres de section en ">> minuscules" */
+:root {
+  --bg: #0d0d0d;
+  --text: #e0e0e0;
+  --muted: #8c8c8c;
+  --dim: #5f5f5f;
+  --line: #1f1f1f;
+  --line-strong: #333333;
+  --card: #111111;
+  --pink: #ff0055;
+  --font: "Courier New", Courier, monospace;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); color-scheme: dark; scroll-behavior: smooth; scroll-padding-top: 24px; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.7 var(--font); }
+::selection { background: var(--pink); color: #fff; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 2px solid var(--pink); outline-offset: 3px; }
+
+/* ---------- Page ---------- */
+.top { max-width: 1000px; margin: 0 auto; padding: 20px 28px; }
+.logo { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; }
+.logo i { width: 8px; height: 8px; border-radius: 50%; background: var(--pink); }
+.shell { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 40px; max-width: 1000px; margin: 0 auto; padding: 0 28px; }
+
+/* ---------- Barre latérale ---------- */
+.side { position: sticky; top: 24px; align-self: start; padding-top: 28px; font-size: 13px; }
+.side nav + nav { margin-top: 24px; }
+.side a { display: block; padding: 3px 0 3px 12px; border-left: 2px solid transparent; color: var(--muted); }
+.side a:hover, .side a.on { color: var(--text); }
+.side a.on { border-left-color: var(--pink); }
+.mark { margin: 0 0 6px; font-size: 13px; color: var(--muted); }
+.mark::before { content: ">> "; color: var(--pink); }
+
+/* ---------- Contenu ---------- */
+main { min-width: 0; max-width: 700px; padding: 28px 0 96px; }
+h1 { margin: 0 0 12px; font-size: 1.8rem; line-height: 1.25; font-weight: 700; }
+h2 { margin: 0 0 10px; font-size: 1.15rem; line-height: 1.3; font-weight: 700; }
+h2::before { content: ">> "; color: var(--pink); }
+h3 { margin: 28px 0 6px; font-size: 1rem; font-weight: 700; }
+p { margin: 0 0 14px; color: var(--muted); }
+.lead { max-width: 60ch; margin-bottom: 18px; }
+.links { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0; font-size: 14px; }
+.links a::after { content: " →"; color: var(--pink); }
+.links a:hover { color: var(--pink); }
+section { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--line); }
+header + section { margin-top: 40px; }
+code { padding: 1px 5px; border: 1px solid var(--line-strong); background: var(--card); color: var(--text); font-size: 0.9em; }
+p a, li a { color: var(--text); text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 3px; }
+p a:hover, li a:hover { color: var(--pink); text-decoration-color: var(--pink); }
+strong { color: var(--text); }
+
+/* ---------- Tableaux et listes ---------- */
+.tblwrap { margin: 14px 0 16px; border: 1px solid var(--line-strong); overflow-x: auto; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tbl th, .tbl td { padding: 10px 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl th { font-size: 12px; font-weight: 400; color: var(--dim); background: var(--card); }
+.tbl td { color: var(--muted); }
+.tbl td:first-child { color: var(--text); }
+.bul { margin: 0 0 14px; padding: 0; list-style: none; }
+.bul li { position: relative; margin: 6px 0; padding-left: 20px; color: var(--muted); }
+.bul li::before { content: ">"; position: absolute; left: 4px; color: var(--pink); }
+ol.bul { counter-reset: n; }
+ol.bul li::before { counter-increment: n; content: counter(n) "."; }
+
+/* ---------- Blocs de code ---------- */
+.code { margin: 14px 0 16px; border: 1px solid var(--line-strong); overflow: hidden; background: var(--card); }
+.code pre { margin: 0; padding: 16px 18px; overflow-x: auto; font: 400 13px/1.75 var(--font); color: #cfcfcf; tab-size: 2; }
+.code code { padding: 0; border: 0; background: none; font: inherit; color: inherit; }
+.k-c { color: var(--dim); font-style: italic; }
+.k-k { color: #ff4d85; }
+
+/* ---------- Questions et réponses ---------- */
+.qa { margin: 0 0 14px; padding: 12px 16px; border: 1px solid var(--line-strong); background: var(--card); }
+.qa b { display: block; margin-bottom: 4px; color: var(--text); }
+.qa b::before { content: "? "; color: var(--pink); }
+.qa span { color: var(--muted); }
+
+/* ---------- Pied de page ---------- */
+.foot { display: flex; justify-content: space-between; gap: 12px; margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 12px; color: var(--dim); }
+.foot a:hover { color: var(--pink); }
+
+@media (max-width: 760px) {
+  .top, .shell { padding-left: 18px; padding-right: 18px; }
+  .shell { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .side { position: static; padding-top: 8px; }
+  h1 { font-size: 1.4rem; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="logo" href="documentation.html"><i></i>artemis · sae 301</a>
+</header>
+
+<div class="shell">
+  <aside class="side">
+    <nav>
+      <p class="mark">documents</p>
+      <a href="documentation.html">documentation</a>
+      <a href="explications.html" class="on">comprendre le code</a>
+    </nav>
+    <nav id="secNav">
+      <p class="mark">sur cette page</p>
+    </nav>
+  </aside>
+
+  <main>
+    <header>
+      <h1>Comprendre le code</h1>
+      <p class="lead">Un guide pour expliquer Artemis à l'oral : comment les fichiers s'organisent, ce que fait le jeu à chaque image, et les idées derrière les systèmes principaux. Les noms de fichiers et de fonctions sont donnés pour les retrouver dans le code.</p>
+      <p class="links"><a href="documentation.html">documentation de l'équipe</a></p>
+    </header>
+
+    <section id="fichiers" data-name="les fichiers">
+      <h2>les fichiers</h2>
+      <p>Chaque fichier a une seule responsabilité. Les chiffres réglables (vitesses, dégâts, durées) sont des constantes en MAJUSCULES en haut du fichier.</p>
+      <div class="tblwrap">
+        <table class="tbl">
+          <thead><tr><th>fichier</th><th>rôle</th></tr></thead>
+          <tbody>
+            <tr><td>index.js</td><td>Point d'entrée : configuration de Phaser (1280x720, physique Arcade) et liste des scènes.</td></tr>
+            <tr><td>js/selection.js</td><td>Chargement : toutes les images, sons et animations, une seule fois. Puis ouvre le menu.</td></tr>
+            <tr><td>js/menu.js, infos.js, gameover.js</td><td>Menu, écrans Commandes et Crédits, écran de fin.</td></tr>
+            <tr><td>js/niveau1.js</td><td>La scène de jeu, utilisée pour tous les niveaux : on la relance avec un numéro de niveau.</td></tr>
+            <tr><td>js/generation.js</td><td>Fabrique le plan d'une grotte au hasard.</td></tr>
+            <tr><td>js/lumiere.js</td><td>Tout le système d'obscurité et de torche.</td></tr>
+            <tr><td>js/ennemis.js</td><td>Apparition, déplacement (pathfinding), tirs et dégâts des ennemis.</td></tr>
+            <tr><td>js/butin.js, pierres.js, bonus.js</td><td>Objets lâchés par les cailloux : pierres lunaires, potions.</td></tr>
+            <tr><td>js/cristaux.js, offrande.js, salle_safe.js</td><td>Cristaux, offrande à la statue, salle de repos (map faite sous Tiled).</td></tr>
+            <tr><td>js/fonctions.js</td><td>Outils partagés : touches des deux joueurs, barres de vie, bulles d'équipement, polices.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="phaser" data-name="phaser et scènes">
+      <h2>phaser et scènes</h2>
+      <p>Phaser est une bibliothèque de jeu 2D. Un jeu y est découpé en <strong>scènes</strong> : le menu, le niveau, le game over. Chaque scène a trois moments.</p>
+      <ul class="bul">
+        <li><code>preload()</code> : on charge les fichiers (images, sons). Fait une fois, dans <code>selection.js</code>.</li>
+        <li><code>create()</code> : on construit la scène (carte, joueurs, HUD). Appelé à chaque arrivée dans la scène.</li>
+        <li><code>update()</code> : appelé environ 60 fois par seconde. C'est la boucle du jeu : lire les touches, déplacer, vérifier les collisions.</li>
+      </ul>
+      <p>Enchaînement : <code>selection</code>, <code>menu</code>, <code>niveau1</code>, puis <code>gameover</code> et retour au menu. Descendre d'un niveau, c'est relancer <code>niveau1</code> avec le numéro suivant : <code>scene.restart({ niveau: 2 })</code>.</p>
+    </section>
+
+    <section id="image" data-name="une image du jeu">
+      <h2>une image du jeu</h2>
+      <p>Dans <code>update()</code> de <code>niveau1.js</code>, dans cet ordre :</p>
+      <ol class="bul">
+        <li>Si tous les joueurs sont à 0 PV : game over.</li>
+        <li>Pour chaque joueur (<code>majJoueur</code>) : lire les touches, calculer la vitesse, jouer l'animation, frapper ou tirer.</li>
+        <li>Les ennemis réfléchissent et bougent (<code>majEnnemis</code>), les objets au sol sont attirés (<code>majButin</code>).</li>
+        <li>La caméra suit le milieu des joueurs, et aucun joueur ne peut sortir de l'écran.</li>
+        <li>La lumière est redessinée (<code>majLumieres</code>).</li>
+        <li>Les joueurs sont-ils sur le trou (descente automatique) ou près de l'échelle (montée avec le bouton) ?</li>
+      </ol>
+      <p>Chaque joueur est un objet (<code>creerJoueur</code>) qui regroupe son sprite, ses touches, ses PV, sa stamina et son équipement. Le joueur 2 est un deuxième objet du même type : le code n'est pas dupliqué.</p>
+    </section>
+
+    <section id="physique" data-name="la physique">
+      <h2>la physique</h2>
+      <p>La physique <strong>Arcade</strong> de Phaser donne à chaque objet une boîte rectangulaire (<code>body</code>) et détecte quand deux boîtes se touchent. Pas de gravité : le jeu est vu de dessus.</p>
+      <div class="tblwrap">
+        <table class="tbl">
+          <thead><tr><th>outil</th><th>effet</th></tr></thead>
+          <tbody>
+            <tr><td>collider</td><td>Les deux objets se bloquent : joueur et mur, ennemi et caillou.</td></tr>
+            <tr><td>overlap</td><td>Ils se traversent, mais on est prévenu : ennemi et joueur (dégâts), laser et ennemi.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>La boîte du joueur est petite et placée <strong>aux pieds</strong> (<code>setSize(12, 6)</code>, <code>setOffset(10, 26)</code>) : en vue de dessus, seuls les pieds touchent le sol, on peut donc passer derrière le haut d'un rocher. Ces tailles viennent de la mesure des pixels réels de chaque sprite.</p>
+      <p>L'ordre d'affichage utilise <code>setDepth(y)</code> : plus un objet est bas à l'écran, plus il passe devant.</p>
+    </section>
+
+    <section id="generation" data-name="la génération">
+      <h2>la génération</h2>
+      <p>Chaque niveau est une grille de 50 x 34 cases de 32 px. <code>generation.js</code> fabrique la grotte avec un <strong>automate cellulaire</strong>.</p>
+      <ol class="bul">
+        <li>On remplit la grille au hasard : 45 % de murs, 55 % de sol.</li>
+        <li>On répète 5 fois un lissage : une case devient mur si la plupart de ses 8 voisines sont des murs. Le bruit devient des grottes arrondies.</li>
+        <li>On garde la plus grande zone de sol d'un seul tenant (parcours en largeur) : toute la grotte est accessible.</li>
+        <li>Chaque mur reçoit la bonne image selon l'endroit où se trouve le sol autour (<code>tuileMur</code>).</li>
+      </ol>
+      <p>Le niveau reçoit ensuite 14 cailloux au hasard, dont un cache le trou vers le niveau suivant, 5 cristaux contre les murs, et les ennemis.</p>
+    </section>
+
+    <section id="memoire" data-name="mémoire des niveaux">
+      <h2>mémoire des niveaux</h2>
+      <p>La scène est détruite puis recréée à chaque changement de niveau, mais on veut retrouver un niveau tel qu'on l'a laissé. Phaser fournit le <code>registry</code> : des données partagées par toutes les scènes.</p>
+      <ul class="bul">
+        <li>Pour chaque niveau visité : la grille, les cailloux restants et leurs coups, la position du trou, les cristaux.</li>
+        <li>Le nombre de pierres lunaires y est aussi, car il suit les joueurs partout.</li>
+      </ul>
+    </section>
+
+    <section id="lumiere" data-name="la lumière">
+      <h2>la lumière</h2>
+      <p>Le jeu est dans le noir. Le principe, dans <code>lumiere.js</code>, refait à chaque image :</p>
+      <ol class="bul">
+        <li>Une image noire couvre tout l'écran (<code>RenderTexture</code>, au-dessus du jeu et sous le HUD).</li>
+        <li>Sur un calque de gomme invisible, on dessine en blanc tout ce qui éclaire : un cercle autour du joueur, le cône de la torche, un halo autour des lasers, des cristaux, des potions.</li>
+        <li>On <strong>gomme</strong> ce calque dans le noir (<code>erase</code>) : là où on a dessiné, on voit le jeu.</li>
+      </ol>
+      <h3>Le cône et les murs</h3>
+      <p>Pour que les murs arrêtent la lumière, on lance 15 <strong>rayons</strong> en éventail devant le joueur. Chaque rayon avance par pas de 8 px jusqu'à toucher un mur ou atteindre la portée. Les 15 points d'arrivée forment un polygone : c'est le cône.</p>
+      <div class="code">
+<pre><code><span class="k-c">// un rayon : on avance tant qu'il n'y a pas de mur</span>
+<span class="k-k">let</span> distance = 0;
+<span class="k-k">while</span> (distance &lt; portee &amp;&amp; !murIci(x + cos(angle) * distance, y + sin(angle) * distance)) {
+  distance += 8;
+}</code></pre>
+      </div>
+      <p>Pour un dégradé, le polygone est dessiné 4 fois, de plus en plus court : le centre est éclairé 4 fois, le bout une seule fois, donc moins fort.</p>
+    </section>
+
+    <section id="ennemis" data-name="les ennemis">
+      <h2>les ennemis</h2>
+      <div class="tblwrap">
+        <table class="tbl">
+          <thead><tr><th>type</th><th>comportement</th></tr></thead>
+          <tbody>
+            <tr><td>slime</td><td>Fonce sur le joueur. Présent dès le niveau 1.</td></tr>
+            <tr><td>alien vert</td><td>Tire de loin et garde ses distances. Dès le niveau 2.</td></tr>
+            <tr><td>alien rouge</td><td>Plus rapide et plus résistant. Dès le niveau 3.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul class="bul">
+        <li><strong>Repérage</strong> : un ennemi voit un joueur à moins de 300 px, et le lâche au-delà de 450 px.</li>
+        <li><strong>Pathfinding</strong> : pour contourner les murs, il calcule un chemin par <em>parcours en largeur</em> sur la grille (<code>chercherChemin</code>). Il explore les cases voisines de proche en proche jusqu'au joueur et garde le chemin trouvé, recalculé toutes les 0,4 s. Murs, cailloux et cristaux sont des cases interdites.</li>
+        <li><strong>Dégâts</strong> : un contact ou un tir retire des PV, puis le joueur est invulnérable un instant (le sprite clignote) pour ne pas enchaîner les coups.</li>
+      </ul>
+    </section>
+
+    <section id="butin" data-name="pierres, potions, statue">
+      <h2>pierres, potions, statue</h2>
+      <ul class="bul">
+        <li>Un caillou cassé (3 coups de pioche) peut lâcher des pierres lunaires (30 %) ou une potion (12 %). Ces objets partagent un même mécanisme (<code>butin.js</code>) : ils sautent, flottent, puis le joueur proche les attire et les ramasse.</li>
+        <li>Les potions : soin immédiat, torche plus longue ou vitesse pendant quelques secondes.</li>
+        <li>La salle <strong>safe</strong> apparaît avec 10 % de chances : carte faite sous Tiled, sans ennemi, entièrement éclairée. La statue y échange des pierres contre des PV (5 par pierre) et la stamina.</li>
+      </ul>
+    </section>
+
+    <section id="questions" data-name="questions probables">
+      <h2>questions probables</h2>
+      <div class="qa"><b>Pourquoi un fichier par système ?</b><span>Un bug ou une idée se règle à un seul endroit, et chacun de l'équipe peut travailler sans écraser le travail des autres.</span></div>
+      <div class="qa"><b>Comment fonctionne la lumière ?</b><span>Un noir couvre l'écran, on dessine ce qui éclaire sur un calque de gomme, puis on gomme ce calque dans le noir. Les murs arrêtent le cône grâce à des rayons qui avancent jusqu'à toucher un mur.</span></div>
+      <div class="qa"><b>Pourquoi les niveaux changent-ils à chaque partie ?</b><span>Ils sont générés au hasard par un automate cellulaire : un remplissage aléatoire, lissé cinq fois, dont on garde la plus grande zone.</span></div>
+      <div class="qa"><b>Comment un ennemi trouve-t-il son chemin ?</b><span>Il explore la grille case par case depuis sa position (parcours en largeur) jusqu'au joueur, en évitant les murs, puis suit ce chemin.</span></div>
+      <div class="qa"><b>Quelle différence entre collider et overlap ?</b><span>Le collider empêche de traverser (mur, caillou). L'overlap laisse traverser mais déclenche une fonction (dégâts, ramassage).</span></div>
+      <div class="qa"><b>Comment le deuxième joueur est-il géré ?</b><span>Chaque joueur est un objet identique avec ses propres touches et ses propres PV. Le jeu boucle sur la liste des joueurs au lieu de dupliquer le code.</span></div>
+      <div class="qa"><b>Comment retrouve-t-on un niveau en remontant ?</b><span>L'état du niveau (cailloux, trou, cristaux) est sauvegardé dans le <code>registry</code> avant de quitter, puis relu à l'arrivée.</span></div>
+      <div class="qa"><b>Qu'avez-vous fait avec l'IA ?</b><span>À préparer avec l'équipe : ce qui a été généré, ce qui a été relu et compris, ce que chacun peut expliquer. Le plus fort est de dire ce qu'on sait expliquer et d'ouvrir le fichier correspondant.</span></div>
+    </section>
+
+    <footer class="foot">
+      <span>artemis · sae 301</span>
+      <a href="documentation.html">retour à la documentation</a>
+    </footer>
+  </main>
+</div>
+
+<script>
+/* « sur cette page » : un lien par section, celui de la section visible est souligné en rose */
+(function () {
+  var nav = document.getElementById("secNav");
+  var liens = [];
+  document.querySelectorAll("section[data-name]").forEach(function (s) {
+    var a = document.createElement("a");
+    a.href = "#" + s.id;
+    a.textContent = s.getAttribute("data-name");
+    nav.appendChild(a);
+    liens.push({ section: s, lien: a });
+  });
+  function maj() {
+    var courant = liens[0];
+    liens.forEach(function (l) { if (l.section.getBoundingClientRect().top < 120) courant = l; });
+    liens.forEach(function (l) { l.lien.classList.toggle("on", l === courant); });
+  }
+  addEventListener("scroll", maj, { passive: true });
+  maj();
+})();
+</script>
+</body>
+</html>
