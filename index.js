@@ -6,6 +6,8 @@ import gameover from "./js/gameover.js";
 import niveau1 from "./js/niveau1.js";
 import niveau2 from "./js/niveau2.js";
 import niveau3 from "./js/niveau3.js";
+import pause from "./js/pause.js";
+import synopsis from "./js/synopsis.js";
 
 // configuration générale du jeu
 var config = {
@@ -13,6 +15,7 @@ var config = {
   height: 720, // hauteur en pixels
    type: Phaser.AUTO,
   pixelArt: true, // pas de flou quand on agrandit les sprites
+  maxLights: 6, // lumières Light2D affichées en même temps (10 par défaut) : le shader fait toujours maxLights tours de boucle par pixel, même avec moins de lumières, donc chaque unité coûte cher sur la borne (cf. lumiere.js)
   scale: {
     mode: Phaser.Scale.FIT,
     parent: 'game-container',
@@ -30,7 +33,7 @@ var config = {
       debug: false // permet de voir les hitbox et les vecteurs d'acceleration quand mis à true
     }
   },
-  scene: [selection, menu, infos, gameover, niveau1, niveau2, niveau3],
+  scene: [selection, menu, infos, gameover, niveau1, niveau2, niveau3, pause, synopsis],
   baseURL: window.location.pathname.replace(/\/[^/]*$/, '')
 };
 

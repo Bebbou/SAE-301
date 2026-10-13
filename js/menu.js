@@ -86,12 +86,11 @@ export default class menu extends Phaser.Scene {
       return;
     }
 
-    /* >>>>> AJOUT SON <<<<< */ son_accueil.stop();
     // nouvelle partie : on oublie les niveaux visités (le jeu garde en mémoire l'état de chaque niveau pour pouvoir y revenir)
     this.registry.set("niveaux", {});
     this.registry.set("pierres_lunaires", 0);
     this.registry.set("nb_joueurs", option.nb_joueurs);
-    this.cameras.main.once("camerafadeoutcomplete", () => this.scene.start("niveau1", { niveau: 1 }));
+    this.cameras.main.once("camerafadeoutcomplete", () => this.scene.start("synopsis"));
   }
 
   update() {

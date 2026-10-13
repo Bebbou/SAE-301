@@ -4,7 +4,7 @@ import { STATUE } from "./salle_safe.js";
 
 /***********************************************************************/
 /** OFFRANDE : à la statue de la salle safe, on offre des pierres lunaires en échange de PV et de stamina
-/** une bulle au-dessus de la statue indique qu'on peut donner ; bouton "interagir avec un objet" (O ou T)
+/** une bulle au-dessus de la statue indique qu'on peut donner ; bouton "interagir" (O ou T)
 /***********************************************************************/
 
 const PIERRES_MAX = 5; // pierres données au maximum par appui (pour ne pas appuyer 20 fois) ; on n'en donne pas plus que nécessaire
@@ -47,7 +47,7 @@ function distanceStatue(x, y) {
   return Math.hypot(dx, dy);
 }
 
-// chaque image : affiche ou cache la bulle, et traite le bouton "objet" des joueurs proches
+// chaque image : affiche ou cache la bulle, et traite le bouton "interagir" des joueurs proches
 export function majOffrande(scene) {
   const o = scene.offrande;
   const proches = scene.joueurs.filter((j) => distanceStatue(j.sprite.body.center.x, j.sprite.body.center.y) <= PORTEE);
@@ -67,10 +67,10 @@ export function majOffrande(scene) {
   const prevu = Math.max(1, Math.min(PIERRES_MAX, ...proches.map((j) => scene.pierresPourSoigner(j))));
   o.cout.setText("x" + prevu);
   o.cout.setColor(possedees > 0 ? "#E8EBF0" : "#FF6B6B");
-  o.touches.setText(proches.map((j) => "[" + j.definition.touches.objet + "]").join(" "));
+  o.touches.setText(proches.map((j) => "[" + j.definition.touches.interagir + "]").join(" "));
 
   for (const j of proches) {
-    if (!Phaser.Input.Keyboard.JustDown(j.touches.objet)) continue;
+    if (!Phaser.Input.Keyboard.JustDown(j.touches.interagir)) continue;
     const necessaires = scene.pierresPourSoigner(j);
     const nombre = Math.min(PIERRES_MAX, necessaires, possedees);
     if (necessaires === 0) refuser(scene, j, "Déjà en forme !");

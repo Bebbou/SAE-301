@@ -16,9 +16,9 @@ export function doAlsoNothing() {
 
 // touches de la borne d'arcade : le joystick + 6 boutons par joueur, sur deux rangées de trois
 // les deux joueurs ont les mêmes actions, dans le même ordre :
-//   rangée du haut : interagir en face, interagir avec un objet, lampe
+//   rangée du haut : pause, interagir (échelle, statue), lampe
 //   rangée du bas  : frapper / tirer, sprint, changer d'équipement
-// les deux interactions (1er et 2e boutons du haut) seront ajoutées avec leurs mécaniques
+// "interagir" sert pour l'échelle de montée et pour la statue : les deux sont trop éloignées pour qu'on hésite
 
 // joueur 1 : joystick = les flèches ; boutons I O P (haut) et K L M (bas)
 export const TOUCHES_J1 = {
@@ -30,8 +30,8 @@ export const TOUCHES_J1 = {
     frapper_tirer: "K",
     sprint: "L",
     changer_equipement: "M",
-    interagir: "I", // interagir en face (échelle)
-    objet: "O" // interagir avec un objet (offrande à la statue)
+    pause: "I", // menu pause (cf. pause.js)
+    interagir: "O" // échelle de montée, offrande à la statue
 };
 
 // joueur 2 : joystick = ZQSD ; boutons R T Y (haut) et F G H (bas)
@@ -44,8 +44,8 @@ export const TOUCHES_J2 = {
     frapper_tirer: "F",
     sprint: "G",
     changer_equipement: "H",
-    interagir: "R",
-    objet: "T"
+    pause: "R",
+    interagir: "T"
 };
 
 // crée les objets Phaser.Key à partir d'une table de touches : { haut: Key, bas: Key, ... }
