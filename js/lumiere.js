@@ -362,12 +362,18 @@ function creerTextureDegrade(scene) {
   canvas.refresh();
 }
 
+// le noir est dessiné à cette part de la résolution de l'écran, puis agrandi (filtre doux) : le noir n'est qu'un dégradé flou,
+// donc on ne voit presque pas la différence, mais il y a 1/ECHELLE_NOIR² fois moins de pixels à remplir et à gommer (1 : pleine résolution)
+const ECHELLE_NOIR = 0.5;
+
 function creerDegrade(scene) {
   creerTextureDegrade(scene);
-  scene.obscurite = scene.etat.safe ? null : scene.add.renderTexture(0, 0, scene.scale.width, scene.scale.height)
+  scene.obscurite = scene.etat.safe ? null : scene.add.renderTexture(0, 0, Math.ceil(scene.scale.width * ECHELLE_NOIR), Math.ceil(scene.scale.height * ECHELLE_NOIR))
     .setOrigin(0, 0)
+    .setScale(1 / ECHELLE_NOIR)
     .setScrollFactor(0) // il reste collé à l'écran quand la caméra bouge
     .setDepth(fct.PROFONDEUR.obscurite);
+  scene.obscurite?.texture.setFilter(Phaser.Textures.FilterMode.LINEAR); // sinon pixelArt l'agrandirait en gros carrés
   scene.pinceaux = []; // images réutilisées d'une image à l'autre : jamais affichées, seulement gommées dans le noir
   scene.teintes = []; // images colorées (mélange multiplicatif) posées dans le monde, juste sous le noir
   scene.nb_pinceaux = 0;
@@ -383,7 +389,8 @@ function pinceau(scene, x, y, rayon, force, couleur = 0xffffff, ajuster = true) 
     force *= REGLAGE_DEGRADE.force;
   }
   if (!scene.pinceaux[i]) scene.pinceaux[i] = scene.make.image({ key: "degrade_lumiere" }, false);
-  scene.pinceaux[i].setPosition(x - camera.scrollX, y - camera.scrollY).setDisplaySize(rayon * 2, rayon * 2).setAlpha(Math.min(force, 1));
+  // le noir est en ECHELLE_NOIR : le pinceau y est placé et dimensionné à la même échelle (les teintes, elles, restent à l'échelle du monde)
+  scene.pinceaux[i].setPosition((x - camera.scrollX) * ECHELLE_NOIR, (y - camera.scrollY) * ECHELLE_NOIR).setDisplaySize(rayon * 2 * ECHELLE_NOIR, rayon * 2 * ECHELLE_NOIR).setAlpha(Math.min(force, 1));
   if (!TEINTE_CHAUDE || !ajuster) {
     scene.teintes[i]?.setVisible(false); // cet indice a pu servir à une lumière teintée à l'image précédente
     return;

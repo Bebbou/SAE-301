@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Artemis : préparation de l'oral</title>
+<style>
+:root {
+  --bg: #ffffff; --bg2: #f5f5f5; --fg: #111111; --mut: #6a6a6a; --line: #e4e4e4; --line2: #cfcfcf;
+  --inv-bg: #111111; --inv-fg: #ffffff; --code-bg: #111111; --code-fg: #f1f1f1; --inline: #efefef;
+  --ease: cubic-bezier(.22, .61, .36, 1);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c0c0d; --bg2: #151516; --fg: #ececec; --mut: #9b9b9b; --line: #262628; --line2: #3a3a3d;
+    --inv-bg: #ececec; --inv-fg: #0c0c0d; --code-bg: #060607; --code-fg: #ececec; --inline: #1d1d1f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0c0c0d; --bg2: #151516; --fg: #ececec; --mut: #9b9b9b; --line: #262628; --line2: #3a3a3d;
+  --inv-bg: #ececec; --inv-fg: #0c0c0d; --code-bg: #060607; --code-fg: #ececec; --inline: #1d1d1f;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 28px; -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 18.5px/1.8 Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  transition: background .35s var(--ease), color .35s var(--ease);
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: var(--inv-bg); color: var(--inv-fg); }
+:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; border-radius: 4px; }
+.ui, nav, button, .demo, table, .haut { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+
+#barre { position: fixed; top: 0; left: 0; height: 2px; width: 0; background: var(--fg); z-index: 50; transition: width .15s linear; }
+
+/* ---------- mise en page ---------- */
+.mise { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 56px; max-width: 1140px; margin: 0 auto; padding: 0 28px; }
+nav { position: sticky; top: 0; align-self: start; max-height: 100vh; overflow-y: auto; overflow-x: hidden; padding: 40px 10px 28px; margin: 0 -10px; font-size: 14px; line-height: 1.4; scrollbar-width: thin; }
+.nav-titre { font-weight: 800; font-size: 17px; letter-spacing: -.01em; margin: 0; }
+.nav-sous { color: var(--mut); font-size: 13px; margin: 2px 0 18px; }
+.progres { height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; margin: 0 0 6px; }
+.progres i { display: block; height: 100%; width: 0; background: var(--fg); transition: width .5s var(--ease); }
+.nav-stat { color: var(--mut); font-size: 12.5px; margin: 0 0 14px; }
+.liens a { display: flex; gap: 10px; align-items: baseline; padding: 8px 10px; margin: 1px -10px; border-radius: 8px; color: var(--mut); text-decoration: none; transition: background .2s var(--ease), color .2s var(--ease); }
+.liens a:hover { background: var(--bg2); color: var(--fg); }
+.liens a.actif { background: var(--inv-bg); color: var(--inv-fg); }
+.liens .num { flex: none; width: 1.6em; font-variant-numeric: tabular-nums; opacity: .55; font-size: 12px; }
+.liens a.lue .tx { text-decoration: line-through; text-decoration-color: currentColor; text-decoration-thickness: 1px; opacity: .55; }
+.liens a.actif.lue .tx { opacity: .75; }
+.reprendre { display: none; margin: 0 0 14px; padding: 10px 12px; border: 1px dashed var(--line2); border-radius: 8px; font-size: 13px; color: var(--mut); }
+.reprendre a { display: block; color: var(--fg); font-weight: 600; margin-top: 2px; }
+.outils { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+
+main { min-width: 0; padding: 56px 0 140px; }
+.intro h1 { font: 800 2.7rem/1.1 system-ui, sans-serif; letter-spacing: -.03em; margin: 0 0 .5em; }
+.intro p { color: var(--mut); }
+.sec { padding-top: 12px; animation: monte .6s var(--ease) both; }
+@keyframes monte { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+h2 { font: 800 1.9rem/1.2 system-ui, sans-serif; letter-spacing: -.02em; margin: 2.8em 0 .7em; padding-top: 1.4em; border-top: 1px solid var(--line); }
+.intro + .sec h2 { margin-top: 1.6em; }
+h3 { font: 700 1.15rem/1.4 system-ui, sans-serif; margin: 2.2em 0 .4em; letter-spacing: -.005em; }
+h3::before { content: ""; display: inline-block; width: 18px; height: 2px; background: var(--fg); vertical-align: middle; margin-right: 10px; }
+h4 { font: 700 1rem system-ui, sans-serif; margin: 1.6em 0 .3em; }
+p, li { max-width: 66ch; }
+li { margin: .3em 0; }
+ul, ol { padding-left: 1.3em; }
+a { color: var(--fg); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2.4em 0; }
+strong { font-weight: 700; }
+em { font-style: italic; }
+code { font: .84em ui-monospace, "Cascadia Code", Consolas, monospace; background: var(--inline); padding: .12em .38em; border-radius: 5px; }
+pre { background: var(--code-bg); color: var(--code-fg); padding: 18px 20px; border-radius: 12px; overflow-x: auto; font-size: 13.5px; line-height: 1.6; margin: 1.4em 0; border: 1px solid var(--line); }
+pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+blockquote { margin: 1.4em 0; padding: .3em 1.2em; border-left: 3px solid var(--fg); background: var(--bg2); border-radius: 0 10px 10px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; line-height: 1.5; margin: 1.4em 0; display: block; overflow-x: auto; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--mut); border-bottom: 1px solid var(--fg); }
+tbody tr { transition: background .2s; }
+tbody tr:hover { background: var(--bg2); }
+
+/* ---------- boutons ---------- */
+.btn { font: 500 13px/1 system-ui, sans-serif; padding: 9px 14px; border: 1px solid var(--line2); background: transparent; color: var(--fg); border-radius: 999px; cursor: pointer; transition: background .2s var(--ease), color .2s var(--ease), border-color .2s var(--ease), transform .15s var(--ease); }
+.btn:hover { background: var(--inv-bg); color: var(--inv-fg); border-color: var(--inv-bg); }
+.btn:active { transform: scale(.97); }
+.btn.on { background: var(--inv-bg); color: var(--inv-fg); border-color: var(--inv-bg); }
+
+/* ---------- fin de section ---------- */
+.pied { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 3em 0 0; padding: 18px 0 0; border-top: 1px dashed var(--line2); }
+.pied .espace { flex: 1; }
+
+/* ---------- questions ---------- */
+.entrainement { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 0; margin: 1em 0; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); font-family: system-ui, sans-serif; }
+.entrainement .stat { color: var(--mut); font-size: 13px; margin-left: auto; }
+details.qa { border: 1px solid var(--line); border-radius: 12px; margin: .7em 0; background: var(--bg); transition: border-color .25s var(--ease), box-shadow .25s var(--ease); }
+details.qa:hover { border-color: var(--line2); }
+details.qa[open] { border-color: var(--fg); box-shadow: 0 6px 24px rgba(0, 0, 0, .07); }
+details.qa summary { cursor: pointer; padding: 14px 18px; font: 600 16px/1.45 system-ui, sans-serif; list-style: none; display: flex; gap: 12px; align-items: baseline; }
+details.qa summary::-webkit-details-marker { display: none; }
+details.qa summary::before { content: "+"; flex: none; width: 1em; font-weight: 400; transition: transform .3s var(--ease); display: inline-block; }
+details.qa[open] summary::before { transform: rotate(45deg); }
+details.qa .etiq { margin-left: auto; flex: none; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--mut); }
+details.qa[data-etat="ok"] .etiq::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--fg); margin-right: 6px; }
+details.qa[data-etat="revoir"] .etiq::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--fg); margin-right: 6px; }
+details.qa[data-etat="revoir"] { border-style: dashed; border-color: var(--line2); }
+details.qa .rep { padding: 2px 18px 16px 42px; border-top: 1px dashed var(--line2); animation: ouvre .35s var(--ease) both; }
+@keyframes ouvre { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+details.qa .rep p { margin: .8em 0; font-size: 17.5px; }
+.verdict { display: flex; gap: 8px; margin-top: 12px; }
+.flash { animation: flash 1.4s var(--ease); }
+@keyframes flash { 0%, 100% { box-shadow: 0 0 0 0 transparent; } 25% { box-shadow: 0 0 0 4px var(--fg); } }
+
+/* ---------- démos ---------- */
+.demo { margin: 2.2em 0; padding: 22px; background: var(--bg2); border: 1px solid var(--line); border-radius: 16px; font-size: 15px; line-height: 1.55; }
+.demo-t { font-weight: 800; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
+.demo-i { margin: .3em 0 1em; color: var(--mut); max-width: none; font-family: system-ui, sans-serif; }
+.demo-ctrl { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-bottom: 14px; }
+.demo-ctrl button { font: 500 13px/1 system-ui; padding: 9px 14px; border: 1px solid var(--line2); background: var(--bg); color: var(--fg); border-radius: 999px; cursor: pointer; transition: background .2s var(--ease), color .2s var(--ease), transform .15s var(--ease); }
+.demo-ctrl button:hover { background: var(--inv-bg); color: var(--inv-fg); }
+.demo-ctrl button:active { transform: scale(.97); }
+.demo-ctrl select { font: 13px system-ui; padding: 7px 10px; border: 1px solid var(--line2); background: var(--bg); color: var(--fg); border-radius: 8px; }
+.demo-coche, .demo-cur { font-size: 13px; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+.demo input[type=checkbox], .demo input[type=radio] { accent-color: var(--fg); width: 15px; height: 15px; }
+.demo input[type=range] { accent-color: var(--fg); }
+.demo-val { display: inline-block; min-width: 3.2em; font-weight: 700; }
+.demo canvas { display: block; width: 100%; height: auto; border-radius: 10px; background: #0b0b0b; border: 1px solid var(--line2); }
+.demo-courbe { max-width: 300px; margin-top: 12px; }
+.demo-lect { margin-top: 12px; font-size: 14px; max-width: none; font-family: system-ui, sans-serif; }
+.demo-note { margin-top: 14px; padding: 12px 14px; background: var(--bg); border: 1px solid var(--line); border-left: 3px solid var(--fg); border-radius: 8px; font-size: 14px; max-width: none; font-family: system-ui, sans-serif; }
+.demo-sous { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--line2); }
+.demo-t2 { font-weight: 700; margin-bottom: 8px; font-family: system-ui, sans-serif; }
+.demo-sous canvas { max-width: 480px; }
+.demo-barres { display: grid; gap: 10px; margin: 8px 0 12px; }
+.demo-ligne { display: grid; grid-template-columns: 100px 1fr; gap: 4px 12px; align-items: center; font-family: system-ui, sans-serif; }
+.demo-nom { font-weight: 600; }
+.demo-fond { position: relative; height: 16px; background: var(--bg); border: 1px solid var(--line2); border-radius: 4px; display: block; }
+.demo-barre { display: block; height: 100%; border-radius: 3px; transition: width .4s var(--ease); }
+.demo-mesure { position: absolute; top: -4px; bottom: -4px; width: 3px; background: var(--fg); border-radius: 2px; }
+.demo-pct { grid-column: 2; font-size: 12px; color: var(--mut); }
+.demo-pre { background: var(--code-bg); color: var(--code-fg); padding: 12px 14px; border-radius: 10px; font-size: 12.5px; min-height: 1em; margin: 0; }
+
+/* ---------- haut de page mobile et retour ---------- */
+.haut { display: none; }
+#retour { position: fixed; right: 22px; bottom: 22px; z-index: 40; opacity: 0; pointer-events: none; transform: translateY(8px); background: var(--bg); transition: opacity .3s var(--ease), transform .3s var(--ease), background .2s, color .2s; }
+#retour.visible { opacity: 1; pointer-events: auto; transform: none; }
+
+@media (max-width: 900px) {
+  body { font-size: 17.5px; }
+  .haut { display: flex; position: sticky; top: 0; z-index: 45; align-items: center; gap: 10px; padding: 10px 16px; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); font-size: 14px; font-weight: 700; }
+  .haut .espace { flex: 1; }
+  .mise { display: block; padding: 0 18px; }
+  nav { position: fixed; inset: 0 25% 0 0; margin: 0; max-height: none; z-index: 60; background: var(--bg); padding: 24px 20px; border-right: 1px solid var(--line2); transform: translateX(-102%); transition: transform .35s var(--ease); box-shadow: 0 0 60px rgba(0, 0, 0, .25); }
+  nav.ouvert { transform: none; }
+  main { padding-top: 24px; }
+  .intro h1 { font-size: 2.1rem; }
+  details.qa .rep { padding-left: 18px; }
+  .entrainement { top: 49px; }
+  .demo { padding: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
+@media print {
+  nav, #barre, .haut, #retour, .entrainement, .pied, .reprendre { display: none !important; }
+  .mise { display: block; padding: 0; }
+  details.qa .rep { display: block; }
+  .demo { display: none; }
+  body { background: #fff; color: #000; }
+}
+
+</style>
+</head>
+<body>
+<div id="barre"></div>
+<div class="haut">
+  <button class="btn js-menu" type="button">Sommaire</button>
+  <span class="espace">Artemis : oral</span>
+  <button class="btn js-theme" type="button">Thème</button>
+</div>
+<div class="mise">
+<nav id="nav" aria-label="Sommaire">
+  <p class="nav-titre">Artemis</p>
+  <p class="nav-sous">Préparation de l'oral</p>
+  <div class="reprendre"></div>
+  <div class="progres"><i></i></div>
+  <p class="nav-stat"></p>
+  <div class="liens">
+<a href="#0-comment-utiliser-ce-document" data-i="0"><span class="num">0</span><span class="tx">Comment utiliser ce document</span></a>
+<a href="#1-plan-de-l-39-oral-propose" data-i="1"><span class="num">1</span><span class="tx">Plan de l&#39;oral proposé</span></a>
+<a href="#2-vue-d-39-ensemble-de-l-39-architecture" data-i="2"><span class="num">2</span><span class="tx">Vue d&#39;ensemble de l&#39;architecture</span></a>
+<a href="#3-fonctionnalite-1-generation-procedurale-des-grottes" data-i="3"><span class="num">3</span><span class="tx">Fonctionnalité 1 : génération procédurale des grottes</span></a>
+<a href="#4-fonctionnalite-2-l-39-eclairage-et-l-39-optimisation-pour-la-borne" data-i="4"><span class="num">4</span><span class="tx">Fonctionnalité 2 : l&#39;éclairage et l&#39;optimisation pour la borne</span></a>
+<a href="#5-fonctionnalite-3-les-ennemis-pathfinding-et-machines-a-etats" data-i="5"><span class="num">5</span><span class="tx">Fonctionnalité 3 : les ennemis (pathfinding et machines à états)</span></a>
+<a href="#6-autres-mecaniques-a-pouvoir-expliquer-en-1-minute" data-i="6"><span class="num">6</span><span class="tx">Autres mécaniques à pouvoir expliquer en 1 minute</span></a>
+<a href="#7-questions-probables-avec-reponses" data-i="7"><span class="num">7</span><span class="tx">Questions probables, avec réponses</span></a>
+<a href="#8-points-faibles-du-code-a-connaitre-avant-le-jury" data-i="8"><span class="num">8</span><span class="tx">Points faibles du code (à connaître avant le jury)</span></a>
+<a href="#9-chiffres-et-constantes-a-connaitre-par-coeur" data-i="9"><span class="num">9</span><span class="tx">Chiffres et constantes à connaître par coeur</span></a>
+<a href="#10-dernieres-verifications-avant-vendredi" data-i="10"><span class="num">10</span><span class="tx">Dernières vérifications avant vendredi</span></a>
+  </div>
+  <div class="outils">
+    <button class="btn js-theme" type="button">Thème clair / sombre</button>
+  </div>
+</nav>
+<main>
+<header class="intro"><h1 id="preparation-de-l-39-oral-artemis">Préparation de l&#39;oral : Artemis</h1>
+<p>Source analysée : branche <code>jeu-Artemis</code>, dossier <code>games/2026/artemis/</code> du dépôt <code>arcade</code>.
+Les chemins de fichiers ci-dessous sont relatifs à ce dossier. Les numéros de ligne correspondent à cette branche.</p>
+<p>Format de l&#39;oral : 30 min = 5 min de présentation du jeu + 10 min de fonctionnalités techniques + 10 à 15 min de questions.
+Chaque membre est noté individuellement : il faut pouvoir répondre seul, sans renvoyer la question à un camarade.</p>
+<hr>
+</header>
+<section class="sec" data-i="0"><h2 id="0-comment-utiliser-ce-document">0. Comment utiliser ce document</h2>
+<ol>
+<li>Lis la section 1 (plan de l&#39;oral) et la section 2 (vue d&#39;ensemble) d&#39;abord.</li>
+<li>Pour chaque fonctionnalité des sections 3 à 5, vérifie que tu sais : le problème, la solution, le code, pourquoi pas l&#39;alternative.</li>
+<li>Les sections 6 et 7 sont l&#39;entraînement aux questions. Cache la réponse, réponds à voix haute, compare.</li>
+<li>La section 8 liste les points faibles du code. Mieux vaut les connaître et les dire que se les voir poser.</li>
+</ol>
+<p>Règle d&#39;or pour les questions du jury : une réponse en trois temps. Ce que ça fait, comment c&#39;est codé (nomme le fichier et la fonction), pourquoi ce choix.</p>
+<hr>
+</section>
+<section class="sec" data-i="1"><h2 id="1-plan-de-l-39-oral-propose">1. Plan de l&#39;oral proposé</h2>
+<h3 id="5-min-le-jeu">5 min : le jeu</h3>
+<ul>
+<li>Artemis : jeu d&#39;exploration en vue de dessus, sur la Lune, 1 ou 2 joueurs, conçu pour la borne d&#39;arcade (joystick + 6 boutons par joueur).</li>
+<li>But : descendre de niveau en niveau. Le trou vers le niveau suivant est caché sous l&#39;un des cailloux. On casse des cailloux à la pioche pour trouver des pierres lunaires et des potions.</li>
+<li>Dans le noir : seule la torche et quelques sources de lumière (cristaux, lasers) éclairent.</li>
+<li>Ennemis : slime, aliens (un tire), cristal flottant (traverse les murs, tire un rayon).</li>
+<li>Tous les 5 niveaux : une salle sûre (map Tiled), avec une statue à qui on offre des pierres contre des PV. Le décor change de biome (gris, bleu, vert, violet).</li>
+<li>Tutoriel intégré.</li>
+</ul>
+<h3 id="10-min-trois-fonctionnalites-techniques-environ-3-min-chacune">10 min : trois fonctionnalités techniques (environ 3 min chacune)</h3>
+<ol>
+<li><strong>Génération procédurale des niveaux</strong> (<code>generation.js</code>) : automate cellulaire + parcours en largeur. Original, visuel, facile à expliquer avec un schéma.</li>
+<li><strong>Éclairage optimisé pour la borne</strong> (<code>lumiere.js</code>) : c&#39;est le morceau le plus original. On a testé Light2D de Phaser (10 FPS sur la borne), puis réécrit un système en &quot;noir gommé&quot; avec un pinceau en dégradé (50 FPS). C&#39;est une vraie démarche d&#39;ingénieur : mesure, hypothèse, remplacement.</li>
+<li><strong>Ennemis : pathfinding et machine à états</strong> (<code>ennemis.js</code>) : recherche de chemin en largeur sur la grille, détection avec hystérésis, rayon du cristal en trois états.</li>
+</ol>
+<p>Si le temps le permet ou si le jury creuse : mémoire des niveaux (<code>registry</code>), butin, offrande.</p>
+<p>Conseil : prépare un schéma ou un écran de jeu pour chacune. Le jury a deux étudiants de MMI3 : ils aiment voir un résultat avant le code.</p>
+<hr>
+</section>
+<section class="sec" data-i="2"><h2 id="2-vue-d-39-ensemble-de-l-39-architecture">2. Vue d&#39;ensemble de l&#39;architecture</h2>
+<h3 id="2-1-phaser-et-les-scenes">2.1 Phaser et les scènes</h3>
+<p>Phaser est un moteur de jeu 2D en JavaScript. Un jeu est découpé en <strong>scènes</strong> (<code>Phaser.Scene</code>), chacune avec un cycle de vie :</p>
+<ul>
+<li><code>preload()</code> : charger les images, sons, cartes.</li>
+<li><code>create()</code> : construire la scène une fois.</li>
+<li><code>update(time, delta)</code> : appelée à chaque image (60 fois par seconde visées).</li>
+</ul>
+<p>Dans <code>index.js</code>, on déclare toutes les scènes : <code>selection, menu, infos, gameover, niveau1, niveau2, niveau3, pause, synopsis, choix_mode</code>. <code>selection</code> charge tous les assets et crée toutes les animations une fois pour tout le jeu (<code>selection.js</code>, <code>this.load.spritesheet</code>, <code>this.anims.create</code>), puis lance le menu.</p>
+<p>Attention : <code>niveau2.js</code> et <code>niveau3.js</code> sont des restes du gabarit fourni par l&#39;enseignant (plateformes, <code>img_perso</code>). Ils ne servent pas au jeu réel. Voir section 8.</p>
+<h3 id="2-2-une-seule-scene-de-jeu-pour-tous-les-niveaux">2.2 Une seule scène de jeu pour tous les niveaux</h3>
+<p>Il n&#39;y a pas un fichier par niveau. <code>niveau1.js</code> est <strong>relancé</strong> à chaque changement de niveau avec <code>this.scene.restart({ niveau, arrivee, joueurs })</code>. Dans <code>init(data)</code> (ligne 87), on lit ces paramètres. C&#39;est la scène qui se reconstruit selon le numéro de niveau.</p>
+<p>Pourquoi : les niveaux sont générés, donc aucun n&#39;a besoin de son propre fichier. Un seul code, une infinité de niveaux.</p>
+<h3 id="2-3-le-probleme-qui-en-decoule-garder-la-memoire-des-niveaux">2.3 Le problème qui en découle : garder la mémoire des niveaux</h3>
+<p><code>scene.restart</code> détruit tout. Pour retrouver un niveau tel qu&#39;on l&#39;a laissé (cailloux cassés, trou révélé), on stocke un objet &quot;état&quot; par niveau dans <code>this.registry</code> (stockage global de Phaser, partagé entre scènes) :</p>
+<pre><code class="language-js">// niveau1.js, create()
+const niveaux = this.registry.get(&quot;niveaux&quot;);
+const nouveau = !niveaux[this.niveau];
+if (nouveau) {
+  niveaux[this.niveau] = safe ? { safe: true, ... } : {
+    safe: false,
+    grille: generation.genererGrille(LARGEUR_NIVEAU, HAUTEUR_NIVEAU),
+    cailloux: null, trou: null, trou_revele: false, montee: null
+  };
+}
+this.etat = niveaux[this.niveau];
+</code></pre>
+<p>Et avant de quitter : <code>sauvegarderEtat()</code> (ligne 627) recopie les cailloux restants, leurs coups restants, le trou révélé et l&#39;état des cristaux dans <code>this.etat</code>.</p>
+<p>Logique : <code>niveaux[n]</code> existe -&gt; on reconstruit à l&#39;identique ; sinon on génère. La grille est un tableau de booléens, donc légère à stocker : pas besoin de sauvegarder les images.</p>
+<p>Point à retenir : les joueurs (PV, stamina, équipement, effets) sont passés via le paramètre <code>joueurs</code> de <code>restart</code>, pas via le registry. Les pierres lunaires sont, elles, dans le registry (<code>pierres_lunaires</code>), car elles sont partagées par l&#39;équipe.</p>
+<h3 id="2-4-biome-une-fonction-pure">2.4 Biome : une fonction pure</h3>
+<p><code>biomes.js</code> :</p>
+<pre><code class="language-js">export function biomeDuNiveau(niveau) {
+  const rang = Math.floor((Math.max(niveau, 1) - 1) / NIVEAUX_PAR_BIOME);
+  return BIOMES[rang % BIOMES.length];
+}
+</code></pre>
+<p>Niveaux 1 à 5 : gris, 6 à 10 : bleu, etc., puis on recommence (<code>% BIOMES.length</code>). Comme le biome ne dépend que du numéro du niveau, on ne le sauvegarde pas : on le recalcule. C&#39;est un choix de simplicité (moins d&#39;état à garder = moins de bugs).</p>
+<h3 id="2-5-fichiers-et-responsabilites">2.5 Fichiers et responsabilités</h3>
+<table>
+<thead>
+<tr>
+<th>Fichier</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>niveau1.js</code></td>
+<td>Scène de jeu : joueurs, caméra, pioche, laser, passages, update</td>
+</tr>
+<tr>
+<td><code>generation.js</code></td>
+<td>Génération de la grille de grotte et choix des tuiles de mur</td>
+</tr>
+<tr>
+<td><code>lumiere.js</code></td>
+<td>Obscurité et lumières (4 modes, &quot;degrade&quot; actif)</td>
+</tr>
+<tr>
+<td><code>ennemis.js</code></td>
+<td>Types, apparition, pathfinding, tirs, rayon du cristal</td>
+</tr>
+<tr>
+<td><code>cristaux.js</code>, <code>pierres.js</code>, <code>bonus.js</code>, <code>butin.js</code></td>
+<td>Objets du monde</td>
+</tr>
+<tr>
+<td><code>salle_safe.js</code>, <code>offrande.js</code></td>
+<td>Salle de temple Tiled, statue</td>
+</tr>
+<tr>
+<td><code>biomes.js</code></td>
+<td>Décor selon le niveau</td>
+</tr>
+<tr>
+<td><code>fonctions.js</code></td>
+<td>Touches, joueurs, profondeurs, HUD, polices</td>
+</tr>
+</tbody></table>
+<p>Un principe visible partout : les modules exportent des <strong>fonctions qui reçoivent <code>scene</code></strong>, plutôt que des classes. <code>import * as ennemis from &quot;./ennemis.js&quot;</code> puis <code>ennemis.majEnnemis(this)</code>. Ça découpe le fichier énorme <code>niveau1.js</code> sans compliquer l&#39;architecture.</p>
+<h3 id="2-6-notions-phaser-a-maitriser-pour-les-questions-simples">2.6 Notions Phaser à maîtriser pour les questions simples</h3>
+<ul>
+<li><strong>Arcade Physics</strong> : hitbox rectangulaires (AABB), pas de rotation, rapide. Choisi car vue de dessus, gravité à 0 (<code>index.js</code>).</li>
+<li><strong><code>collider</code> vs <code>overlap</code></strong> : collider = les deux objets se bloquent ; overlap = on détecte le chevauchement sans blocage (ex. un ennemi qui touche un joueur lui inflige des dégâts, mais ne le pousse pas).</li>
+<li><strong>Groupe statique</strong> (<code>staticGroup</code>) : objets qui ne bougent pas (cailloux, cristaux), moins coûteux pour la physique.</li>
+<li><strong><code>delta</code></strong> : temps écoulé depuis la dernière image en ms. On calcule <code>secondes = delta / 1000</code> et on multiplie les consommations par <code>secondes</code> (ex. <code>STAMINA_CONSO * secondes</code>). Ainsi le comportement ne dépend pas du nombre d&#39;images par seconde : sur une machine lente, la stamina baisse à la même vitesse réelle.</li>
+<li><strong>Tweens</strong> : animations de valeurs (position, alpha, échelle) gérées par Phaser, ex. le tremblement d&#39;un caillou touché.</li>
+<li><strong>Profondeur = y</strong> : <code>setDepth(sprite.y)</code>. En vue de dessus, ce qui est plus bas à l&#39;écran passe devant. D&#39;où le fait que HUD, projectiles, obscurité aient des profondeurs bien plus grandes (<code>PROFONDEUR</code> dans <code>fonctions.js</code>).</li>
+<li><strong><code>JustDown</code></strong> : vrai une seule fois à l&#39;appui, contrairement à <code>isDown</code> qui reste vrai tant que la touche est tenue. Utilisé pour les actions ponctuelles (frapper, changer d&#39;équipement).</li>
+<li><strong>Touches</strong> : <code>TOUCHES_J1</code> / <code>TOUCHES_J2</code> dans <code>fonctions.js</code>. Les touches clavier correspondent aux boutons de la borne ; à l&#39;écran on affiche la lettre inscrite sur le bouton (<code>ETIQUETTES</code>), pas la touche du clavier.</li>
+<li><strong>Deux caméras</strong> : le zoom grossit tout ce que filme la caméra principale, HUD compris. On crée donc une seconde caméra sans zoom qui ne filme que le HUD (<code>creerCameraHud</code>, ligne 284). Chaque objet est assigné à une seule caméra avec <code>camera.ignore</code>.</li>
+</ul>
+<hr>
+</section>
+<section class="sec" data-i="3"><h2 id="3-fonctionnalite-1-generation-procedurale-des-grottes">3. Fonctionnalité 1 : génération procédurale des grottes</h2>
+<p>Fichier : <code>generation.js</code>. Fonction d&#39;entrée : <code>genererGrille(largeur, hauteur)</code>, ligne 36.</p>
+<h3 id="3-1-le-probleme">3.1 Le problème</h3>
+<p>Faire des niveaux différents à chaque partie, qui ressemblent à des grottes (formes arrondies, pas des rectangles), et <strong>dont tout est accessible</strong> : un niveau avec une zone isolée où se trouve le trou serait injouable.</p>
+<h3 id="3-2-la-solution-en-trois-etapes">3.2 La solution en trois étapes</h3>
+<p><strong>Étape 1 : bruit aléatoire.</strong> Chaque case est un mur avec 45 % de chances.</p>
+<pre><code class="language-js">function remplirAuHasard(largeur, hauteur) {
+    return creerGrille(largeur, hauteur, (x, y) =&gt; Math.random() &lt; PROBA_MUR);
+}
+</code></pre>
+<p><strong>Étape 2 : lissage (automate cellulaire).</strong> 5 passes. À chaque passe, on regarde les 8 voisines de chaque case :</p>
+<pre><code class="language-js">function lisser(grille) {
+    return creerGrille(grille[0].length, grille.length, (x, y) =&gt; {
+        if (estBordure(grille, x, y)) return true;
+        let murs_voisins = 0;
+        for (let dy = -1; dy &lt;= 1; dy++) {
+            for (let dx = -1; dx &lt;= 1; dx++) {
+                if ((dx !== 0 || dy !== 0) &amp;&amp; !estSol(grille, x + dx, y + dy)) murs_voisins++;
+            }
+        }
+        return murs_voisins &gt; 4 || (murs_voisins === 4 &amp;&amp; grille[y][x]);
+    });
+}
+</code></pre>
+<p>Règle : plus de 4 voisines murs -&gt; la case devient mur ; moins de 4 -&gt; sol ; exactement 4 -&gt; elle ne change pas. Effet : les cases isolées disparaissent, les amas se soudent, on obtient des cavernes. C&#39;est le principe du &quot;jeu de la vie&quot; appliqué à des grottes (c&#39;est une technique classique de génération de donjons).</p>
+<p>Détails à connaître :</p>
+<ul>
+<li><code>lisser</code> construit une <strong>nouvelle</strong> grille au lieu de modifier l&#39;ancienne. Si on modifiait en place, les cases déjà lissées influenceraient les suivantes dans la même passe, et le résultat dépendrait de l&#39;ordre de parcours.</li>
+<li><code>estSol</code> renvoie <code>false</code> hors de la grille : hors limites, on considère qu&#39;il y a du mur. Ça évite d&#39;avoir à tester les bords partout.</li>
+<li><code>BORDURE = 3</code> : les 3 cases du pourtour sont toujours des murs (3 = hauteur d&#39;un mur nord complet à l&#39;écran).</li>
+</ul>
+<p><strong>Étape 3 : ne garder que la plus grande zone.</strong> Après lissage, il peut rester plusieurs poches de sol séparées. Un <strong>parcours en largeur</strong> (BFS) identifie chaque zone ; on garde la plus grande et on remplit le reste en mur.</p>
+<pre><code class="language-js">function plusGrandeZone(grille) {
+    const vue = creerGrille(grille[0].length, grille.length, () =&gt; false);
+    let plus_grande = [];
+    grille.forEach((ligne, y) =&gt; ligne.forEach((mur, x) =&gt; {
+        if (mur || vue[y][x]) return;
+        const zone = [];
+        const file = [[x, y]];
+        vue[y][x] = true;
+        while (file.length &gt; 0) {
+            const [cx, cy] = file.shift();
+            zone.push([cx, cy]);
+            [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) =&gt; {
+                const nx = cx + dx, ny = cy + dy;
+                if (estSol(grille, nx, ny) &amp;&amp; !vue[ny][nx]) {
+                    vue[ny][nx] = true;
+                    file.push([nx, ny]);
+                }
+            });
+        }
+        if (zone.length &gt; plus_grande.length) plus_grande = zone;
+    }));
+    return plus_grande;
+}
+</code></pre>
+<p>Explication du BFS : on part d&#39;une case de sol non visitée, on met ses voisins (haut, bas, gauche, droite) dans une file, on les traite dans l&#39;ordre d&#39;arrivée, et on marque les cases <code>vue</code> pour ne jamais les revisiter. Quand la file est vide, on a toute la zone connexe. On compare sa taille avec la meilleure trouvée.</p>
+<p>Garantie obtenue : toutes les cases de sol restantes sont reliées entre elles. Donc le trou et l&#39;échelle (placés ensuite sur des cases de sol) sont atteignables.</p>
+<div data-demo="generation"></div>
+<h3 id="3-3-la-boucle-de-securite">3.3 La boucle de sécurité</h3>
+<p><code>genererGrille</code> recommence jusqu&#39;à 20 fois (<code>NB_ESSAIS_MAX</code>) si la zone jouable fait moins de 35 % de la grille (<code>PART_SOL_MIN</code>). Si aucun essai n&#39;est assez bon, elle renvoie le moins mauvais. Sans ça, on pourrait tomber sur un niveau minuscule.</p>
+<h3 id="3-4-de-la-grille-aux-tuiles">3.4 De la grille aux tuiles</h3>
+<p><code>tuileMur(grille, x, y)</code> (ligne 54) choisit l&#39;image d&#39;une case de mur selon où se trouve le sol autour. Exemple : si le sol est à 1, 2 ou 3 cases au sud, c&#39;est un mur &quot;de face&quot; (briques) et la rangée (bas, haut, rebord) dépend de la distance. Sinon on regarde les côtés, puis les coins, sinon c&#39;est de la roche pleine (<code>TUILES.plein</code>).</p>
+<p>Dans <code>niveau1.js</code> (lignes 146-158), la grille est traduite en deux calques :</p>
+<pre><code class="language-js">grille.forEach((ligne, y) =&gt; ligne.forEach((mur, x) =&gt; {
+  if (mur) calque_murs.putTileAt(generation.tuileMur(grille, x, y), x, y);
+  else calque_sol.putTileAt(generation.TUILES.sol, x, y);
+}));
+calque_murs.setCollisionByExclusion([-1]); // toute tuile non vide est solide
+</code></pre>
+<p><code>setCollisionByExclusion([-1])</code> : toutes les tuiles sauf l&#39;index -1 (vide) sont solides. C&#39;est ce qui rend les murs infranchissables, sans coder chaque case.</p>
+<h3 id="3-5-optimisation-du-decor-figerdecor">3.5 Optimisation du décor : <code>figerDecor</code></h3>
+<p>(<code>niveau1.js</code>, ligne 276) Un niveau fait 50 x 34 cases. Phaser redessine chaque tuile visible à chaque image, en JavaScript, ce qui coûte cher sur la borne. Le décor ne change jamais, donc on le dessine <strong>une fois</strong> dans une <code>renderTexture</code> (une image), puis on cache les calques. Les calques restent dans la scène car on s&#39;en sert pour les collisions, la torche et le placement des objets : seul leur affichage est coupé.</p>
+<h3 id="3-6-pourquoi-ce-choix-plutot-qu-39-un-autre">3.6 Pourquoi ce choix plutôt qu&#39;un autre</h3>
+<ul>
+<li><strong>Niveaux dessinés à la main sous Tiled</strong> : bien plus de contrôle, mais un nombre fini de niveaux et beaucoup de travail. On l&#39;a fait seulement pour la salle sûre, qui est unique.</li>
+<li><strong>Bruit de Perlin</strong> : donne aussi des formes organiques, mais il ne garantit pas la connexité ; il faudrait quand même un BFS. L&#39;automate est plus simple (quelques lignes) et suffit.</li>
+<li><strong>Algorithme de labyrinthe</strong> (backtracker) : couloirs étroits, pas des cavernes.</li>
+</ul>
+<h3 id="3-7-limites-a-admettre-si-on-te-les-demande">3.7 Limites à admettre si on te les demande</h3>
+<ul>
+<li><code>file.shift()</code> est en O(n) sur un tableau JavaScript. Sur une grille de 1700 cases ça n&#39;a pas d&#39;impact visible, et la génération n&#39;a lieu qu&#39;une fois par niveau. Une vraie file (index de tête) serait plus propre.</li>
+<li>Aucune garantie sur la forme du niveau, seulement sur la connexité. Un niveau peut être assez &quot;couloir&quot;.</li>
+<li><code>Math.random()</code> n&#39;est pas seedé : on ne peut pas rejouer le même niveau à partir d&#39;une graine. Pour la mémoire, on stocke la grille entière.</li>
+</ul>
+<hr>
+</section>
+<section class="sec" data-i="4"><h2 id="4-fonctionnalite-2-l-39-eclairage-et-l-39-optimisation-pour-la-borne">4. Fonctionnalité 2 : l&#39;éclairage et l&#39;optimisation pour la borne</h2>
+<p>Fichier : <code>lumiere.js</code> (463 lignes). Mode actif choisi ligne 27 : <code>const MODE = &quot;degrade&quot;;</code>.</p>
+<h3 id="4-1-le-probleme">4.1 Le problème</h3>
+<p>Le jeu est dans le noir. Il faut : un halo autour des joueurs, un cône de torche qui s&#39;arrête aux murs, des lueurs pour les cristaux, lasers, potions, tirs d&#39;aliens et impacts. Et ça doit tourner sur la borne, un Raspberry Pi 4 (GPU V3D, faible).</p>
+<h3 id="4-2-les-trois-systemes-essayes-l-39-historique-est-un-argument">4.2 Les trois systèmes essayés (l&#39;historique est un argument)</h3>
+<ol>
+<li><strong>&quot;ancien&quot;</strong> : une image noire par-dessus l&#39;écran, et on y &quot;gomme&quot; des cercles concentriques d&#39;opacités différentes. Cercles par paliers, résultat peu joli.</li>
+<li><strong>&quot;light2d&quot;</strong> : le système de lumières de Phaser. Joli, mais lourd : le shader fait <code>maxLights</code> tours de boucle <strong>par pixel</strong>, même avec moins de lumières (commentaire dans <code>index.js</code>). Sur la borne : environ 10 FPS.</li>
+<li><strong>&quot;degrade&quot;</strong> (retenu) : même principe que l&#39;ancien (noir gommé), mais avec un pinceau en dégradé. Environ 50 FPS sur la borne.</li>
+</ol>
+<p>Les quatre modes coexistent dans le code via la constante <code>MODE</code>, ce qui a permis de <strong>comparer</strong> à nombre d&#39;images égal. Il existe aussi un mode &quot;aucune&quot; (aucune obscurité) pour mesurer le coût de la lumière en soi, et un banc d&#39;essai (<code>BENCH_AUTO</code>, <code>PHASES_BENCH</code> dans <code>niveau1.js</code>) qui coupe un poste à la fois (teintes, noir, torche, ennemis) et mesure la moyenne des FPS. C&#39;est de la démarche de mesure : on n&#39;optimise pas au hasard.</p>
+<p>À dire à l&#39;oral : &quot;nous avons mesuré sur la borne et pas sur PC, car le GPU du Pi n&#39;a rien à voir avec celui d&#39;un ordinateur.&quot;</p>
+<h3 id="4-3-principe-du-mode-quot-degrade-quot-les-trois-etapes-de-l-39-en-tete-du-fichier">4.3 Principe du mode &quot;degrade&quot; (les trois étapes de l&#39;en-tête du fichier)</h3>
+<ol>
+<li>Une grande image noire couvre l&#39;écran (<code>scene.obscurite</code>, une <code>RenderTexture</code>).</li>
+<li>Pour chaque source de lumière, on place une copie d&#39;une <strong>image de dégradé radial</strong> (un disque blanc qui s&#39;estompe vers le bord) à la bonne position, taille et opacité. Ce sont les &quot;pinceaux&quot;.</li>
+<li>On <strong>gomme</strong> (<code>erase</code>) tous les pinceaux dans le noir d&#39;un seul appel. Là où on a gommé, le jeu redevient visible.</li>
+</ol>
+<pre><code class="language-js">// majDegrade(), fin de la fonction (ligne 408 et suivantes)
+scene.obscurite.clear();
+scene.obscurite.fill(COULEUR_NOIR, OPACITE_NOIR);
+scene.obscurite.erase(scene.pinceaux.slice(0, scene.nb_pinceaux));
+</code></pre>
+<p>Il n&#39;y a <strong>aucun calcul de lumière par pixel</strong>. Tout le coût est : dessiner N images (N = nombre de lumières, une dizaine). C&#39;est ce qui explique le gain.</p>
+<div data-demo="lumiere"></div>
+<h3 id="4-4-l-39-image-du-pinceau-creee-une-fois-ligne-355">4.4 L&#39;image du pinceau, créée une fois (ligne 355)</h3>
+<pre><code class="language-js">function creerTextureDegrade(scene) {
+  if (scene.textures.exists(&quot;degrade_lumiere&quot;)) return;
+  const taille = 256;
+  const canvas = scene.textures.createCanvas(&quot;degrade_lumiere&quot;, taille, taille);
+  const ctx = canvas.getContext();
+  const degrade = ctx.createRadialGradient(taille/2, taille/2, 0, taille/2, taille/2, taille/2);
+  for (let i = 0; i &lt;= 10; i++) {
+    const t = i / 10;
+    degrade.addColorStop(t, &quot;rgba(255,255,255,&quot; + Math.pow(1 - t * t, 2).toFixed(3) + &quot;)&quot;);
+  }
+  ctx.fillStyle = degrade;
+  ctx.fillRect(0, 0, taille, taille);
+  canvas.refresh();
+}
+</code></pre>
+<ul>
+<li>Un <code>canvas</code> HTML5 dessiné en code : aucun fichier d&#39;image à charger.</li>
+<li>Opacité <code>(1 - t²)²</code> avec <code>t</code> de 0 (centre) à 1 (bord). Pourquoi cette courbe : elle est plus large au centre qu&#39;un simple <code>(1 - t)²</code>, donc les lumières de la torche se fondent en un faisceau continu au lieu de taches séparées.</li>
+<li><code>if (scene.textures.exists(...)) return</code> : la texture est partagée par tout le jeu, on ne la recrée pas à chaque niveau.</li>
+</ul>
+<h3 id="4-5-reutilisation-des-objets-pinceau-ligne-389">4.5 Réutilisation des objets : <code>pinceau()</code> (ligne 389)</h3>
+<pre><code class="language-js">if (!scene.pinceaux[i]) scene.pinceaux[i] = scene.make.image({ key: &quot;degrade_lumiere&quot; }, false);
+scene.pinceaux[i].setPosition(...).setDisplaySize(...).setAlpha(Math.min(force, 1));
+</code></pre>
+<p>Les images-pinceaux sont créées <strong>une fois</strong> puis réutilisées d&#39;une image à l&#39;autre (tableau <code>scene.pinceaux</code>, compteur <code>nb_pinceaux</code> remis à 0 à chaque image). Raison : créer et détruire des objets à 60 images par seconde déclenche le ramasse-miettes (garbage collector) du navigateur, qui provoque des saccades. <code>scene.make.image(..., false)</code> : le <code>false</code> signifie &quot;ne pas l&#39;ajouter à la scène&quot; : l&#39;image n&#39;est jamais affichée, elle sert seulement de gomme.</p>
+<h3 id="4-6-trois-astuces-de-performance">4.6 Trois astuces de performance</h3>
+<ol>
+<li><strong>Noir à demi-résolution</strong> (<code>ECHELLE_NOIR = 0.5</code>, ligne 372). Le noir est dessiné à 640x360 puis agrandi par <code>setScale(1 / ECHELLE_NOIR)</code> avec un filtre doux (<code>FilterMode.LINEAR</code>). Comme le noir n&#39;est qu&#39;un dégradé flou, on ne voit presque pas la différence, mais il y a 4 fois moins de pixels à remplir et à gommer. Le filtre <code>LINEAR</code> est nécessaire car <code>pixelArt: true</code> impose normalement <code>NEAREST</code>, qui donnerait de gros carrés.</li>
+<li><strong>Teintes à part.</strong> La gomme n&#39;a pas de couleur. Pour colorer la lumière (torche orangée, cristaux colorés), chaque lumière pose aussi une image colorée en mélange <code>MULTIPLY</code> juste sous le noir. Multiplier ne délave pas l&#39;image (contrairement à une lueur additive). Les teintes couvrent 70 % de la zone (<code>ECHELLE_TEINTE</code>) pour mélanger moins de pixels.</li>
+<li><strong>Un seul appel d&#39;<code>erase</code></strong> avec le tableau de tous les pinceaux, au lieu d&#39;un appel par lumière.</li>
+</ol>
+<h3 id="4-7-le-cone-de-la-torche-lancer-de-rayons">4.7 Le cône de la torche : lancer de rayons</h3>
+<p>Pour que la torche s&#39;arrête aux murs, <code>distanceMur</code> (ligne 100) avance pas à pas dans la direction du regard :</p>
+<pre><code class="language-js">function distanceMur(scene, joueur, portee) {
+  const x = joueur.sprite.body.center.x;
+  const y = joueur.sprite.body.center.y;
+  let distance = 0;
+  while (distance &lt; portee &amp;&amp; !scene.calque_murs.hasTileAtWorldXY(x + joueur.regard.x * distance, y + joueur.regard.y * distance)) {
+    distance += PAS_RAYON; // 8 px
+  }
+  return Math.max(distance, DISTANCE_MIN_TORCHE);
+}
+</code></pre>
+<p>C&#39;est du <strong>ray marching</strong> simplifié : on teste un point tous les 8 px jusqu&#39;à toucher une tuile de mur ou atteindre la portée. Pas de calcul géométrique d&#39;intersection : on interroge la grille de tuiles directement (<code>hasTileAtWorldXY</code>).</p>
+<p>Puis la torche est une <strong>chaîne de 3 pinceaux</strong> (<code>TORCHE_DEGRADE</code>) placés devant le joueur à 10 %, 30 % et 60 % de la distance au mur, de plus en plus larges et de plus en plus faibles. Le rayon grandit avec la distance, ce qui donne un faisceau qui s&#39;évase comme un cône. Les valeurs ont été calculées numériquement (commentaire du code) pour que la luminosité décroisse sans trou ni bosse jusqu&#39;à environ 260 px.</p>
+<p>L&#39;ancien système dessinait un vrai polygone de 15 rayons (<code>pointsDuCone</code>, <code>dessinerCone</code>). Plus fidèle géométriquement, mais plus coûteux, et on voit des paliers.</p>
+<h3 id="4-8-questions-d-39-honnetete">4.8 Questions d&#39;honnêteté</h3>
+<ul>
+<li>&quot;Pourquoi garder trois modes qui ne servent plus ?&quot; : pour comparer et mesurer. On peut basculer en changeant une constante. Mais admets que c&#39;est du code mort à nettoyer.</li>
+<li>&quot;Les chiffres 10 et 50 FPS viennent d&#39;où ?&quot; : mesures faites sur la borne avec le compteur de FPS intégré (<code>AFFICHER_FPS</code>) et le banc d&#39;essai automatique. Vérifie les chiffres exacts avant l&#39;oral, sur la borne ou avec ton propre relevé, pour ne pas en citer de faux.</li>
+<li>&quot;Pourquoi <code>maxLights: 6</code> dans <code>index.js</code> ?&quot; : avec Light2D, le shader boucle <code>maxLights</code> fois par pixel. 2 joueurs x (1 halo + 2 lumières de torche) = 6. Réduire de 10 à 6 réduit le coût. Ce réglage ne sert plus qu&#39;au mode <code>light2d</code>.</li>
+</ul>
+<hr>
+</section>
+<section class="sec" data-i="5"><h2 id="5-fonctionnalite-3-les-ennemis-pathfinding-et-machines-a-etats">5. Fonctionnalité 3 : les ennemis (pathfinding et machines à états)</h2>
+<p>Fichier : <code>ennemis.js</code>.</p>
+<h3 id="5-1-donnees-types-d-39-ennemis-en-table">5.1 Données : types d&#39;ennemis en table</h3>
+<p><code>TYPES</code> (ligne 20) décrit chaque ennemi par des <strong>données</strong> et non par du code spécifique : sprite, PV, vitesse, dégâts, hitbox, et une fonction <code>poids(niveau)</code> pour la probabilité d&#39;apparition.</p>
+<pre><code class="language-js">alien_rouge: { ..., pv: 5, vitesse: 95, degats: 20, poids: (niveau) =&gt; (niveau &gt;= 3 ? 35 : 0), ... },
+cristal: { ..., poids: (niveau) =&gt; (niveau &gt;= 4 ? 30 : 0), traverse: true, rayon: true, brille: true }
+</code></pre>
+<p>Pourquoi : ajouter un ennemi = ajouter une ligne, pas une classe. <code>poids</code> donne la <strong>difficulté progressive</strong> : le slime dès le niveau 1, l&#39;alien vert dès 2, le rouge dès 3, le cristal dès 4.</p>
+<p>Tirage pondéré (<code>tirerType</code>, ligne 297) : on additionne les poids, on tire un nombre au hasard dans cette somme, et on soustrait les poids un à un jusqu&#39;à passer sous zéro. Même technique pour les potions dans <code>bonus.js</code> (<code>tirerPotion</code>).</p>
+<pre><code class="language-js">let reste = Math.random() * noms.reduce((total, nom) =&gt; total + TYPES[nom].poids(niveau), 0);
+for (const nom of noms) {
+  reste -= TYPES[nom].poids(niveau);
+  if (reste &lt; 0) return nom;
+}
+</code></pre>
+<p>Difficulté croissante aussi : un ennemi de plus tous les 3 niveaux (jusqu&#39;à 7), +1 PV tous les 10 niveaux (<code>NIVEAUX_PAR_BONUS_PV</code>).</p>
+<div data-demo="tirage"></div>
+<h3 id="5-2-le-pathfinding-bfs-sur-la-grille">5.2 Le pathfinding : BFS sur la grille</h3>
+<p><code>chercherChemin(bloquees, largeur, hauteur, depart, arrivee)</code>, ligne 76.</p>
+<ul>
+<li>Le monde est vu comme une grille de cases de 32 px (<code>TAILLE_CASE</code>). <code>casesBloquees</code> (ligne 66) construit un <code>Set</code> de clés <code>&quot;x,y&quot;</code> : murs (depuis <code>etat.grille</code>), cailloux et cristaux.</li>
+<li>BFS à partir de la case de l&#39;ennemi. Pour chaque case, on explore 8 voisins. <code>precedent</code> est une <code>Map</code> qui sert <strong>à la fois</strong> de liste des cases visitées et de mémoire du parent de chaque case.</li>
+<li>À l&#39;arrivée, on reconstruit le chemin en remontant les parents (<code>precedent.get(...)</code>), avec <code>unshift</code> pour l&#39;avoir dans l&#39;ordre départ -&gt; arrivée.</li>
+<li><strong>Pas de coin coupé</strong> : en diagonale, les deux cases adjacentes doivent aussi être libres, sinon l&#39;ennemi frotterait un coin de mur et se bloquerait.</li>
+</ul>
+<pre><code class="language-js">if (dx !== 0 &amp;&amp; dy !== 0 &amp;&amp;
+   (bloquees.has(cle(courant.x + dx, courant.y)) || bloquees.has(cle(courant.x, courant.y + dy)))) continue;
+</code></pre>
+<p>Pourquoi BFS plutôt que A* ou Dijkstra : tous les déplacements ont le même coût, la grille est petite, et le BFS est simple et garanti de trouver un chemin s&#39;il existe. A* serait plus rapide sur de grandes cartes grâce à une heuristique (distance estimée au but), mais le gain serait invisible ici.</p>
+<p>Nuance honnête : le BFS minimise le <strong>nombre de cases</strong>, pas la distance réelle. Une diagonale compte autant qu&#39;un pas droit alors qu&#39;elle est 1,41 fois plus longue. Le chemin trouvé n&#39;est donc pas toujours le plus court en distance. Dijkstra/A* avec coût 1,41 en diagonale corrigerait ça.</p>
+<h3 id="5-3-boucle-de-comportement-majennemis-ligne-172">5.3 Boucle de comportement : <code>majEnnemis</code> (ligne 172)</h3>
+<p>Pour chaque ennemi, à chaque image :</p>
+<ol>
+<li>Trouver le joueur <strong>debout</strong> le plus proche (<code>joueursEnJeu()</code>, un joueur à terre n&#39;est plus une cible).</li>
+<li><strong>Alerte avec hystérésis</strong> : l&#39;ennemi repère à 300 px (<code>RAYON_DETECTION</code>) mais ne lâche qu&#39;à 450 px (<code>RAYON_ABANDON</code>).<pre><code class="language-js">if (distance &lt;= RAYON_DETECTION) ennemi.alerte = true;
+else if (distance &gt; RAYON_ABANDON) ennemi.alerte = false;
+</code></pre>
+Pourquoi deux seuils : avec un seul, un joueur qui se tient exactement à la limite ferait clignoter l&#39;état alerte/repos à chaque image. Les deux seuils créent une zone tampon (hystérésis).</li>
+<li>Recalcul du chemin <strong>toutes les 400 ms</strong> seulement (<code>DELAI_CHEMIN</code>), pas à chaque image : un BFS par ennemi et par image serait gaspillé, le joueur ne change pas assez vite de case.</li>
+<li>Suivi du chemin : on retire les points déjà atteints (distance &lt; 6 px), puis on se dirige vers le prochain. Dans la même case que le joueur, ou sans chemin, on fonce droit sur lui.</li>
+<li>Vitesse = direction normalisée x vitesse du type. <code>normalize()</code> évite d&#39;aller plus vite en diagonale.</li>
+</ol>
+<div data-demo="chemin"></div>
+<h3 id="5-4-le-tireur-alien-vert">5.4 Le tireur (alien vert)</h3>
+<p>Il tire s&#39;il est à portée (300 px) et en <strong>ligne de vue</strong> (<code>ligneDeVue</code>, ligne 308 : on teste un point tous les 16 px entre lui et le joueur, s&#39;il y a un mur il ne tire pas). Il s&#39;arrête à 190 px (<code>DISTANCE_TIR</code>) au lieu de venir au contact. Le tir part après une animation de visée de 450 ms, vers la position du joueur <strong>à ce moment-là</strong> (<code>viser</code>), donc un joueur qui bouge peut esquiver.</p>
+<h3 id="5-5-le-cristal-machine-a-etats">5.5 Le cristal : machine à états</h3>
+<p><code>majCristal</code> (ligne 236). Trois états dans <code>ennemi.etat_rayon</code> :</p>
+<ul>
+<li><code>&quot;repos&quot;</code> : il flotte vers le joueur (traverse les murs, <code>traverse: true</code>). Si le joueur est à moins de 320 px et que le délai est écoulé -&gt; <code>&quot;charge&quot;</code>.</li>
+<li><code>&quot;charge&quot;</code> (1 s) : immobile, une ligne fine clignote et suit le joueur. À la fin, la direction est <strong>verrouillée</strong>. Se déplacer pendant la charge suffit à esquiver.</li>
+<li><code>&quot;tir&quot;</code> (0,5 s) : le rayon part dans la direction verrouillée. Dégâts si la ligne coupe la hitbox du joueur (<code>Phaser.Geom.Intersects.LineToRectangle</code>).</li>
+</ul>
+<p>Retour à <code>&quot;repos&quot;</code> avec un délai de 4 s avant la prochaine charge. Un coup reçu pendant la charge l&#39;interrompt.</p>
+<p>Pourquoi une machine à états : le comportement dépend du moment présent dans un cycle. Un état explicite évite des enchaînements de booléens ingérables. Et le temps est géré par comparaison avec <code>scene.time.now</code> (<code>ennemi.fin_etat</code>) plutôt que par des <code>setTimeout</code>, ce qui reste cohérent quand le jeu est mis en pause.</p>
+<p>Le bout du rayon (<code>boutDuRayon</code>, ligne 285) avance de 8 px jusqu&#39;à une case bloquée. Subtilité : le cristal peut se trouver <strong>dans</strong> un mur (il les traverse), donc un obstacle ne compte qu&#39;une fois sorti du mur (variable <code>libre</code>).</p>
+<div data-demo="cristal"></div>
+<h3 id="5-6-degats-du-joueur-invulnerabilite">5.6 Dégâts du joueur : invulnérabilité</h3>
+<p><code>degatsJoueur</code> (ligne 375) : après un coup, 1 s d&#39;invulnérabilité (<code>INVULNERABILITE_JOUEUR</code>), le sprite clignote (tween alpha) et la caméra tremble (<code>cameras.main.shake</code>). Sans ça, un ennemi au contact enlèverait des PV à chaque image (60 fois par seconde) puisque l&#39;<code>overlap</code> se déclenche à chaque image.</p>
+<hr>
+</section>
+<section class="sec" data-i="6"><h2 id="6-autres-mecaniques-a-pouvoir-expliquer-en-1-minute">6. Autres mécaniques à pouvoir expliquer en 1 minute</h2>
+<h3 id="6-1-pioche-et-frappe-niveau1-js-commencerfrappe-ligne-538-frapper-ligne-551">6.1 Pioche et frappe (niveau1.js <code>commencerFrappe</code> ligne 538, <code>frapper</code> ligne 551)</h3>
+<ul>
+<li>Appui sur le bouton -&gt; animation de coup. Le dégât n&#39;est appliqué qu&#39;à la <strong>frame d&#39;impact</strong> (<code>FRAME_IMPACT_PIOCHE = 2</code>), pour que le coup soit synchronisé avec l&#39;animation. Dans <code>majJoueur</code> : <code>if (!j.frappe.touche &amp;&amp; j.sprite.anims.currentFrame.textureFrame &gt;= FRAME_IMPACT_PIOCHE)</code>.</li>
+<li><code>frappe.touche</code> évite de frapper plusieurs fois pendant la même animation.</li>
+<li>La zone de frappe est un petit rectangle (<code>Phaser.Geom.Rectangle</code>) devant les pieds du joueur, dans la direction du regard (figée au début du coup). On teste le chevauchement avec les hitbox des ennemis, cristaux et cailloux.</li>
+<li>Un caillou demande 3 coups (<code>COUPS_CAILLOU</code>), un cristal 5.</li>
+</ul>
+<h3 id="6-2-hitbox-reduite-aux-pieds">6.2 Hitbox réduite aux pieds</h3>
+<p><code>j.sprite.setSize(12, 6); setOffset(10, 26)</code> : la hitbox est limitée aux pieds. Pourquoi : en vue de dessus avec profondeur, le joueur peut passer &quot;derrière&quot; le haut d&#39;un caillou ; seule la base bloque. Pareil pour cailloux (<code>setSize(24, 15)</code>) et cristaux. Conséquence : la torche part du centre du sprite (<code>origineTorche</code>) mais la distance au mur se mesure depuis les pieds, comme les collisions.</p>
+<h3 id="6-3-camera-et-zoom-adaptatif-niveau1-js-lignes-467-503">6.3 Caméra et zoom adaptatif (niveau1.js lignes 467-503)</h3>
+<ul>
+<li>La caméra suit une <code>zone</code> invisible placée au milieu des joueurs (<code>placerCible</code>).</li>
+<li><code>zoomVoulu</code> : zoom maximal (1,5) tant que les joueurs tiennent à l&#39;écran avec une marge, sinon on dézoome jusqu&#39;à 0,7. <code>Phaser.Math.Clamp</code> borne le résultat.</li>
+<li><code>majZoom</code> : <code>Phaser.Math.Linear(camera.zoom, cible, 0.08)</code> rattrape 8 % de l&#39;écart à chaque image : transition douce (interpolation linéaire, effet d&#39;amorti).</li>
+<li><code>limiterAEcran</code> : filet de sécurité, aucun joueur ne sort de l&#39;écran en duo.</li>
+</ul>
+<h3 id="6-4-butin-butin-js">6.4 Butin (butin.js)</h3>
+<p>Un objet lâché saute vers un point voisin (qui n&#39;est pas dans un mur : 10 essais), rebondit (<code>ease: &quot;Bounce.easeOut&quot;</code>), flotte, puis est <strong>attiré</strong> par le joueur à moins de 56 px (<code>RAYON_AIMANT</code>) et ramassé à moins de 12 px. Chaque type d&#39;objet fournit sa fonction <code>ramasser(scene, joueur)</code> : le butin ne sait pas ce qu&#39;il contient (principe de délégation, pierre et potion utilisent le même code).</p>
+<h3 id="6-5-passages-et-cooperation-majpassages-ligne-801">6.5 Passages et coopération (majPassages, ligne 801)</h3>
+<p>Pour changer de niveau en duo, <strong>tous</strong> les joueurs debout doivent être près du passage, puis l&#39;un d&#39;eux appuie. Le texte affiche <code>descendre 1/2</code> tant que tout le monde n&#39;est pas là. Un joueur à terre ne bloque pas.</p>
+<h3 id="6-6-joueur-a-terre-et-statue">6.6 Joueur à terre et statue</h3>
+<p>Un joueur à 0 PV est &quot;à terre&quot; (<code>estMort</code>) : grisé, immobile, ignoré des ennemis. Seule l&#39;offrande à la statue le relève (<code>recevoirOffrande</code>). La partie est perdue quand tous sont à terre. Le prix de l&#39;offrande monte avec le niveau (<code>coutOffrande</code>, ligne 599) : 5 pierres pour 25 PV, +5 tous les 5 niveaux.</p>
+<h3 id="6-7-mode-2-joueurs-sans-duplication">6.7 Mode 2 joueurs sans duplication</h3>
+<p><code>fct.JOUEURS</code> est un tableau de définitions ; <code>niveau1.js</code> fait <code>fct.JOUEURS.slice(0, nb_joueurs).map(creerJoueur)</code>. Chaque joueur est un objet qui regroupe tout (sprite, touches, PV, torche, effets). Tout le code manipule <code>this.joueurs</code> avec des <code>forEach</code>, jamais &quot;joueur1&quot; ou &quot;joueur2&quot; en dur. Ajouter un 3e joueur reviendrait à ajouter une ligne dans le tableau.</p>
+<hr>
+</section>
+<section class="sec" data-i="7"><h2 id="7-questions-probables-avec-reponses">7. Questions probables, avec réponses</h2>
+<p>Classées du simple au difficile. Cache la réponse et essaie d&#39;abord.</p>
+<h3 id="niveau-simple">Niveau simple</h3>
+<details class="qa"><summary>Q1. C&#39;est quoi Phaser ? Pourquoi l&#39;avoir choisi ?</summary><div class="rep"><p>Un moteur de jeu 2D en JavaScript qui gère rendu, physique, animations, entrées et audio. Choisi car imposé par le cadre de la SAE (le dépôt <code>arcade</code> charge des jeux Phaser) et parce qu&#39;on connaît le JavaScript.</p></div></details>
+<details class="qa"><summary>Q2. Quelle est la différence entre <code>preload</code>, <code>create</code> et <code>update</code> ?</summary><div class="rep"><p><code>preload</code> charge les ressources avant le démarrage, <code>create</code> construit la scène une fois, <code>update</code> tourne à chaque image. Chez nous le chargement est centralisé dans la scène <code>selection</code>, et <code>niveau1.create</code> est rappelé à chaque changement de niveau.</p></div></details>
+<details class="qa"><summary>Q3. Pourquoi <code>gravity.y = 0</code> ?</summary><div class="rep"><p>Le jeu est en vue de dessus : pas de chute. Les déplacements sont donc des vitesses dans les 4/8 directions.</p></div></details>
+<details class="qa"><summary>Q4. C&#39;est quoi le <code>delta</code> dans <code>update(time, delta)</code> ?</summary><div class="rep"><p>Le temps écoulé depuis la dernière image, en ms. On l&#39;utilise pour des consommations continues (stamina, durée des effets) afin qu&#39;elles soient indépendantes du nombre d&#39;images par seconde.</p></div></details>
+<details class="qa"><summary>Q5. Comment sont gérées les touches des deux joueurs ?</summary><div class="rep"><p>Deux tables <code>TOUCHES_J1</code> et <code>TOUCHES_J2</code> dans <code>fonctions.js</code> associent une action (haut, torche, frapper_tirer...) à une touche clavier. <code>creerTouches</code> les convertit en objets <code>Phaser.Key</code> avec <code>addKeys</code>. Le code de jeu lit <code>j.touches.sprint.isDown</code>, sans savoir quelle touche c&#39;est : changer la configuration ne touche qu&#39;un fichier.</p></div></details>
+<details class="qa"><summary>Q6. Pourquoi une hitbox plus petite que le sprite ?</summary><div class="rep"><p>Pour l&#39;effet de profondeur en vue de dessus : on peut passer derrière le haut d&#39;un caillou, et seuls les pieds touchent les murs. Voir 6.2.</p></div></details>
+<details class="qa"><summary>Q7. Pourquoi <code>isDown</code> pour marcher et <code>JustDown</code> pour frapper ?</summary><div class="rep"><p>Marcher est continu tant que la touche est tenue. Frapper est ponctuel : un appui = un coup, sinon tenir la touche déclencherait un coup par image.</p></div></details>
+<h3 id="niveau-moyen">Niveau moyen</h3>
+<details class="qa"><summary>Q8. Explique ta génération de niveau.</summary><div class="rep"><p>Section 3 en trois phrases : bruit à 45 %, 5 lissages par automate cellulaire (une case devient mur si plus de 4 voisines sont des murs), puis BFS pour ne garder que la plus grande zone. Le BFS garantit que tout est accessible. Si la zone est trop petite (&lt; 35 %), on recommence jusqu&#39;à 20 fois.</p></div></details>
+<details class="qa"><summary>Q9. Pourquoi créer une nouvelle grille à chaque passe de <code>lisser</code> ?</summary><div class="rep"><p>Pour que toutes les cases soient calculées à partir du même état précédent. En place, une case déjà modifiée influencerait ses voisines dans la même passe, et le résultat dépendrait de l&#39;ordre de parcours.</p></div></details>
+<details class="qa"><summary>Q10. Comment garde-t-on l&#39;état d&#39;un niveau quand on remonte ?</summary><div class="rep"><p><code>this.registry</code> (stockage global Phaser) contient <code>niveaux[n]</code>. Avant de quitter, <code>sauvegarderEtat</code> y recopie cailloux, coups restants, trou révélé, cristaux. Au retour, <code>niveaux[n]</code> existe donc on reconstruit à partir de lui au lieu de regénérer. Voir 2.3.</p></div></details>
+<details class="qa"><summary>Q11. Quelle est la différence entre <code>collider</code> et <code>overlap</code> ? Un exemple chez vous.</summary><div class="rep"><p>Collider : les corps se bloquent (joueur / mur, joueur / caillou). Overlap : on détecte le chevauchement sans bloquer (ennemi / joueur : dégâts, laser / ennemi : dégâts et disparition du laser).</p></div></details>
+<details class="qa"><summary>Q12. Comment les ennemis trouvent-ils leur chemin ?</summary><div class="rep"><p>Section 5.2 : BFS sur la grille de cases de 32 px, 8 directions sans couper les coins, recalculé toutes les 400 ms. Les murs viennent de <code>etat.grille</code>, les cailloux et cristaux sont ajoutés aux cases bloquées.</p></div></details>
+<details class="qa"><summary>Q13. Pourquoi recalculer le chemin seulement toutes les 400 ms ?</summary><div class="rep"><p>Un BFS par ennemi et par image serait coûteux et inutile : le joueur change rarement de case en 400 ms. Compromis entre réactivité et performance. Le coût est surtout sensible sur la borne.</p></div></details>
+<details class="qa"><summary>Q14. À quoi sert <code>RAYON_ABANDON</code> supérieur à <code>RAYON_DETECTION</code> ?</summary><div class="rep"><p>Hystérésis : deux seuils différents pour entrer et sortir de l&#39;état alerte, afin que l&#39;état ne clignote pas quand le joueur est à la limite.</p></div></details>
+<details class="qa"><summary>Q15. Comment fonctionne le tirage d&#39;un type d&#39;ennemi ?</summary><div class="rep"><p>Tirage pondéré : somme des poids, nombre aléatoire dans cette somme, soustraction progressive. Les poids dépendent du niveau (fonction <code>poids(niveau)</code>), ce qui fait apparaître les types progressivement.</p></div></details>
+<details class="qa"><summary>Q16. Pourquoi deux caméras ?</summary><div class="rep"><p>Le zoom adaptatif grossit tout ce que filme la caméra principale, HUD compris. Une seconde caméra sans zoom ne filme que le HUD (objets avec <code>scrollFactor</code> 0). Chaque objet est ignoré par l&#39;une des deux caméras (<code>camera.ignore</code>).</p></div></details>
+<details class="qa"><summary>Q17. Qu&#39;est-ce qu&#39;un tween ? Donne un usage.</summary><div class="rep"><p>Une animation automatique d&#39;une propriété d&#39;un objet entre deux valeurs sur une durée, avec une courbe d&#39;accélération (<code>ease</code>). Exemples : le tremblement d&#39;un caillou touché, le rebond du butin, le clignotement du joueur blessé.</p></div></details>
+<details class="qa"><summary>Q18. Comment le décor est-il dessiné de façon performante ?</summary><div class="rep"><p><code>figerDecor</code> : on dessine les calques de tuiles une fois dans une <code>RenderTexture</code> (une seule image) et on cache les calques, qui restent utilisés pour les collisions. Voir 3.5.</p></div></details>
+<h3 id="niveau-difficile">Niveau difficile</h3>
+<details class="qa"><summary>Q19. Explique l&#39;éclairage de A à Z, et pourquoi pas Light2D.</summary><div class="rep"><p>Section 4. Light2D de Phaser : un shader qui boucle sur <code>maxLights</code> par pixel, trop lourd pour le GPU du Pi (environ 10 FPS mesurés). Notre solution : un noir sur tout l&#39;écran dans lequel on gomme des pinceaux en dégradé, en un seul appel. Aucun calcul par pixel. Ajouts : noir à demi-résolution, teintes en <code>MULTIPLY</code>, réutilisation des objets pinceaux.</p></div></details>
+<details class="qa"><summary>Q20. Pourquoi réutiliser les images-pinceaux plutôt que d&#39;en créer à chaque image ?</summary><div class="rep"><p>Créer et détruire des objets 60 fois par seconde produit des déchets que le ramasse-miettes doit nettoyer, avec des saccades. On les garde dans un tableau et on remet juste un compteur à 0.</p></div></details>
+<details class="qa"><summary>Q21. Comment la torche sait-elle où s&#39;arrêter ?</summary><div class="rep"><p><code>distanceMur</code> avance de 8 px dans la direction du regard jusqu&#39;à rencontrer une tuile du calque des murs (<code>hasTileAtWorldXY</code>) ou atteindre la portée. Les trois pinceaux de la torche sont répartis le long de cette distance. C&#39;est un lancer de rayon discret sur la grille.</p></div></details>
+<details class="qa"><summary>Q22. Comment gère-t-on la couleur d&#39;une lumière alors que la gomme n&#39;en a pas ?</summary><div class="rep"><p>En parallèle de chaque pinceau, on pose une image colorée (même dégradé, teinte <code>setTint</code>) en mode <code>MULTIPLY</code>, juste sous la couche de noir. Le mélange multiplicatif assombrit/teinte l&#39;image dessous sans la délaver.</p></div></details>
+<details class="qa"><summary>Q23. Votre BFS donne-t-il toujours le chemin le plus court ?</summary><div class="rep"><p>En nombre de cases, oui. En distance réelle, pas forcément, car une diagonale coûte autant qu&#39;un pas droit. Pour être exact, il faudrait Dijkstra ou A* avec un coût de 1,41 en diagonale. Ici l&#39;écart est invisible en jeu.</p></div></details>
+<details class="qa"><summary>Q24. Quelle est la complexité du BFS ?</summary><div class="rep"><p>O(V + E) avec V le nombre de cases (50 x 34 = 1700) et E environ 8 V. Mais <code>file.shift()</code> sur un tableau JS est en O(n), ce qui dégrade en pratique. Sur 1700 cases c&#39;est négligeable.</p></div></details>
+<details class="qa"><summary>Q25. <code>casesBloquees</code> est appelée à chaque image : ça pose un problème ?</summary><div class="rep"><p>Oui, c&#39;est une faiblesse que je connais : elle reconstruit un <code>Set</code> de toutes les cases-mur (environ 1700 cases à parcourir) à chaque image dans <code>majEnnemis</code>. Une optimisation simple serait de calculer les murs une fois par niveau et de ne mettre à jour que les cailloux et cristaux. Je ne l&#39;ai pas fait faute de temps, et le jeu tient les 50 FPS.</p></div></details>
+<details class="qa"><summary>Q26. Comment éviter qu&#39;un ennemi blesse le joueur à chaque image au contact ?</summary><div class="rep"><p><code>overlap</code> est déclenché à chaque image. <code>degatsJoueur</code> impose une invulnérabilité de 1 s après un coup (<code>invulnerable_jusqua</code>). L&#39;ennemi recule aussi un instant (<code>recul_jusqua</code>).</p></div></details>
+<details class="qa"><summary>Q27. Comment garantissez-vous que le trou est atteignable ?</summary><div class="rep"><p>Il est caché sous un caillou, et les cailloux sont posés sur des cases de sol (<code>calque_sol.filterTiles</code> sans mur). Comme la grille ne contient qu&#39;une seule zone de sol connexe (étape 3 de la génération), toute case de sol est atteignable depuis n&#39;importe quelle autre. Vérifie tout de même : un caillou peut en théorie bloquer un passage étroit (voir section 8).</p></div></details>
+<details class="qa"><summary>Q28. Comment fonctionne la caméra qui s&#39;adapte aux deux joueurs ?</summary><div class="rep"><p>Section 6.3. Cible = milieu des joueurs ; zoom voulu = rapport entre la taille de l&#39;écran et la boîte englobante des joueurs plus une marge, borné entre 0,7 et 1,5 ; interpolation linéaire à 8 % par image pour la douceur ; <code>limiterAEcran</code> empêche de sortir de l&#39;écran.</p></div></details>
+<details class="qa"><summary>Q29. Pourquoi les modules reçoivent <code>scene</code> en paramètre au lieu d&#39;être des classes ?</summary><div class="rep"><p>Choix de simplicité : <code>niveau1.js</code> était déjà long, on a extrait des blocs cohérents (ennemis, lumière, butin) en fonctions qui lisent et écrivent sur la scène (<code>scene.ennemis</code>, <code>scene.cristaux</code>). Inconvénient : couplage fort et dépendances implicites sur les propriétés de la scène. Une version propre utiliserait des classes avec leur propre état.</p></div></details>
+<details class="qa"><summary>Q30. Qu&#39;est-ce que vous feriez différemment ?</summary><div class="rep"><p>Réponse prête, honnête : factoriser le code des modes de lumière inutilisés, calculer les cases bloquées une fois par niveau, passer à A* si les niveaux grandissent, ajouter des tests sur la génération (vérifier la connexité sur 1000 grilles), supprimer les scènes <code>niveau2</code>/<code>niveau3</code> héritées du gabarit.</p></div></details>
+<h3 id="questions-sur-l-39-usage-de-l-39-ia">Questions sur l&#39;usage de l&#39;IA</h3>
+<p>Le jury sait que vous avez utilisé l&#39;IA. Ne le nie pas, présente-le comme un outil dont tu maîtrises le résultat :</p>
+<ul>
+<li>&quot;J&#39;ai utilisé l&#39;IA comme assistant, mais je peux expliquer chaque choix.&quot; Et le prouver en nommant fonction et ligne.</li>
+<li>Sois précis sur ce que tu as conçu (l&#39;idée, les règles de jeu, les valeurs d&#39;équilibrage) et sur ce que l&#39;IA a aidé à écrire (implémentation, optimisation). Ne revendique pas ce qui est faux : le jury creusera.</li>
+<li>Pour une valeur magique du code, sois capable de dire d&#39;où elle vient (mesure, essai, calcul) ou d&#39;admettre que c&#39;est un réglage empirique.</li>
+</ul>
+<hr>
+</section>
+<section class="sec" data-i="8"><h2 id="8-points-faibles-du-code-a-connaitre-avant-le-jury">8. Points faibles du code (à connaître avant le jury)</h2>
+<p>Ce sont des choses vues en lisant, pas des jugements définitifs. Tu peux les mentionner toi-même pour montrer du recul.</p>
+<ol>
+<li><strong><code>niveau2.js</code> et <code>niveau3.js</code></strong> : restes du gabarit fourni (plateformes, <code>img_perso</code>, <code>img_ciel</code>), déclarés dans <code>index.js</code> mais jamais utilisés par le jeu. À supprimer ou expliquer.</li>
+<li><strong><code>fonctions.js</code></strong> commence par <code>doNothing</code> et <code>doAlsoNothing</code>, exemples du gabarit.</li>
+<li><strong><code>index.html</code></strong> : <code>&lt;title&gt;Mon premier jeu en Phaser 3&lt;/title&gt;</code>. À renommer en &quot;Artemis&quot;.</li>
+<li><strong><code>readme.md</code></strong> : contient &quot;Peut être qu&#39;il faudrait update le readme ?&quot;. Un jury peut le lire. Remplace-le par un vrai README court (description, commandes, auteurs).</li>
+<li><strong><code>game.json</code></strong> : le champ <code>authors</code> est un tableau avec une seule chaîne contenant les trois noms, et la description se termine par &quot;pierre lunaire pour ?&quot;. À corriger.</li>
+<li><strong>Code mort de lumière</strong> : les modes <code>light2d</code>, <code>ancien</code>, <code>aucune</code> et les constantes <code>ECLAIRER_*</code>. Utiles pour comparer, mais à expliquer comme tels.</li>
+<li><strong>Marqueurs <code>/* &gt;&gt;&gt;&gt;&gt; AJOUT SON &lt;&lt;&lt;&lt;&lt; */</code></strong> partout dans le code : commentaires de coordination avec la personne qui a ajouté le son. Fonctionnels, mais bruyants.</li>
+<li><strong>Instruments de debug laissés dans le code</strong> : <code>AFFICHER_FPS</code>, <code>BENCH_AUTO</code>, <code>DIAG</code>. Tous à <code>false</code>/inactifs par défaut, donc sans effet en jeu.</li>
+<li><strong>Performance</strong> : <code>casesBloquees</code> recalculée à chaque image (voir Q25), <code>file.shift()</code> dans les BFS.</li>
+<li><strong>Cas limite possible</strong> : un caillou peut en théorie boucher un couloir d&#39;une case de large. On le résout en le cassant (3 coups), mais le trou ne peut pas être bloqué définitivement car les cailloux sont cassables. À vérifier si on te pose la question.</li>
+<li><strong>Tests automatiques</strong> : il n&#39;y en a pas. Si on te demande comment vous avez vérifié, réponds : tests manuels, compteur de FPS sur la borne, banc d&#39;essai pour la lumière.</li>
+</ol>
+<p>Ces points sont peut-être déjà corrigés ou à corriger avant le rendu de vendredi 12h30. Vérifie avec tes coéquipiers.</p>
+<hr>
+</section>
+<section class="sec" data-i="9"><h2 id="9-chiffres-et-constantes-a-connaitre-par-coeur">9. Chiffres et constantes à connaître par coeur</h2>
+<table>
+<thead>
+<tr>
+<th>Élément</th>
+<th>Valeur</th>
+<th>Où</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Écran</td>
+<td>1280 x 720</td>
+<td><code>index.js</code></td>
+</tr>
+<tr>
+<td>Taille d&#39;un niveau</td>
+<td>50 x 34 cases de 32 px</td>
+<td><code>niveau1.js</code></td>
+</tr>
+<tr>
+<td>Mur au départ</td>
+<td>45 % ; 5 lissages ; bordure 3</td>
+<td><code>generation.js</code></td>
+</tr>
+<tr>
+<td>Zone de sol minimale</td>
+<td>35 % ; 20 essais</td>
+<td><code>generation.js</code></td>
+</tr>
+<tr>
+<td>Biome</td>
+<td>change tous les 5 niveaux ; salle sûre au niveau 5, 10, 15</td>
+<td><code>biomes.js</code></td>
+</tr>
+<tr>
+<td>Vitesse joueur</td>
+<td>160 px/s ; sprint 260</td>
+<td><code>niveau1.js</code></td>
+</tr>
+<tr>
+<td>PV et stamina</td>
+<td>100 chacun ; sprint coûte 35/s, recharge 20/s</td>
+<td><code>niveau1.js</code></td>
+</tr>
+<tr>
+<td>Caillou</td>
+<td>3 coups ; cristal 5</td>
+<td><code>niveau1.js</code>, <code>cristaux.js</code></td>
+</tr>
+<tr>
+<td>Pierres lâchées</td>
+<td>30 % de chance, 1 à 3 ; cristal : 2 à 4 à coup sûr</td>
+<td><code>pierres.js</code>, <code>cristaux.js</code></td>
+</tr>
+<tr>
+<td>Potion</td>
+<td>12 % de chance</td>
+<td><code>bonus.js</code></td>
+</tr>
+<tr>
+<td>Ennemis</td>
+<td>4 au niveau 1, +1 tous les 3 niveaux, max 7</td>
+<td><code>ennemis.js</code></td>
+</tr>
+<tr>
+<td>Détection</td>
+<td>300 px ; abandon 450 px ; chemin recalculé toutes les 400 ms</td>
+<td><code>ennemis.js</code></td>
+</tr>
+<tr>
+<td>Rayon du cristal</td>
+<td>charge 1 s, tir 0,5 s, pause 4 s ; 40 dégâts</td>
+<td><code>ennemis.js</code></td>
+</tr>
+<tr>
+<td>Invulnérabilité après coup</td>
+<td>1 s</td>
+<td><code>ennemis.js</code></td>
+</tr>
+<tr>
+<td>Zoom caméra</td>
+<td>0,7 à 1,5 ; 8 % de rattrapage par image</td>
+<td><code>niveau1.js</code></td>
+</tr>
+<tr>
+<td>Offrande</td>
+<td>5 pierres = 25 PV, prix +5 tous les 5 niveaux</td>
+<td><code>niveau1.js</code></td>
+</tr>
+<tr>
+<td>Lumière</td>
+<td>noir à 0,5 de résolution ; 3 pinceaux de torche ; portée 260 px</td>
+<td><code>lumiere.js</code></td>
+</tr>
+</tbody></table>
+<hr>
+</section>
+<section class="sec" data-i="10"><h2 id="10-dernieres-verifications-avant-vendredi">10. Dernières vérifications avant vendredi</h2>
+<ul>
+<li>Relance le jeu en entier une fois (menu, tutoriel, niveaux 1 à 6, salle sûre au niveau 5, mode duo) pour t&#39;assurer que ce que tu présentes marche.</li>
+<li>Prépare une démonstration courte (la vidéo <code>demo.mp4</code> du dépôt peut servir de secours si la démo en direct échoue).</li>
+<li>Répartis-vous les fonctionnalités avec Inas et Liku pour les 10 min, et décidez qui répond à quoi. Le jury note chacun individuellement : tu ne peux pas laisser un camarade répondre à ta place.</li>
+<li>Relis le code que tu présentes à voix haute, ligne par ligne, une fois. Si tu butes sur une ligne, c&#39;est celle-là qu&#39;il faut retravailler.</li>
+<li>Pour s&#39;entraîner : demande-moi de t&#39;interroger sur une section, une question à la fois, en jouant le jury.</li>
+</ul>
+</section>
+</main>
+</div>
+<button id="retour" class="btn" type="button" aria-label="Retour en haut de page">Haut</button>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- utilitaires ---------- */
+  function h(tag, props) {
+    const e = document.createElement(tag);
+    if (props) Object.assign(e, props);
+    for (let i = 2; i < arguments.length; i++) [].concat(arguments[i]).forEach((k) => k != null && e.append(k));
+    return e;
+  }
+  const bouton = (txt, fn) => h("button", { textContent: txt, onclick: fn, type: "button" });
+  function coche(txt, val, fn) {
+    const i = h("input", { type: "checkbox", checked: val });
+    i.onchange = () => fn(i.checked);
+    return h("label", { className: "demo-coche" }, i, " " + txt);
+  }
+  function curseur(txt, min, max, step, val, fn, fmt) {
+    const o = h("span", { className: "demo-val" });
+    const i = h("input", { type: "range", min, max, step, value: val });
+    const maj = () => { o.textContent = fmt ? fmt(+i.value) : i.value; fn(+i.value); };
+    i.oninput = maj;
+    o.textContent = fmt ? fmt(val) : val;
+    return h("label", { className: "demo-cur" }, txt + " ", i, " ", o);
+  }
+  function carte(host, titre, intro) {
+    host.className = "demo";
+    host.innerHTML = "";
+    const ctrl = h("div", { className: "demo-ctrl" });
+    const vue = h("div", { className: "demo-vue" });
+    const lect = h("div", { className: "demo-lect" });
+    const note = h("div", { className: "demo-note" });
+    host.append(h("div", { className: "demo-t", textContent: "Démo interactive : " + titre }), h("p", { className: "demo-i", innerHTML: intro }), ctrl, vue, lect, note);
+    return { ctrl, vue, lect, note };
+  }
+  function pointeur(canvas, cb) {
+    const f = (type) => (e) => {
+      const r = canvas.getBoundingClientRect();
+      cb((e.clientX - r.left) * canvas.width / r.width, (e.clientY - r.top) * canvas.height / r.height, type, e);
+    };
+    canvas.addEventListener("pointerdown", (e) => { canvas.setPointerCapture(e.pointerId); f("down")(e); });
+    canvas.addEventListener("pointermove", f("move"));
+    canvas.addEventListener("pointerup", f("up"));
+    canvas.addEventListener("pointerleave", f("leave"));
+    canvas.style.touchAction = "none";
+  }
+  const hex = (n) => "#" + n.toString(16).padStart(6, "0");
+
+  /* ---------- code du jeu (generation.js), repris à l'identique ---------- */
+  const PROBA_MUR = 0.45, NB_LISSAGES = 5, BORDURE = 3, PART_SOL_MIN = 0.35, NB_ESSAIS_MAX = 20;
+  const creerGrille = (l, hh, v) => Array.from({ length: hh }, (_, y) => Array.from({ length: l }, (_, x) => v(x, y)));
+  const estSol = (g, x, y) => y >= 0 && y < g.length && x >= 0 && x < g[0].length && !g[y][x];
+  const estBordure = (g, x, y) => x < BORDURE || y < BORDURE || x >= g[0].length - BORDURE || y >= g.length - BORDURE;
+  const remplir = (l, hh, p) => creerGrille(l, hh, () => Math.random() < p);
+  function mursVoisins(g, x, y) {
+    let n = 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if ((dx || dy) && !estSol(g, x + dx, y + dy)) n++;
+    return n;
+  }
+  const lisser = (g) => creerGrille(g[0].length, g.length, (x, y) => {
+    if (estBordure(g, x, y)) return true;
+    const n = mursVoisins(g, x, y);
+    return n > 4 || (n === 4 && g[y][x]);
+  });
+  function toutesLesZones(g) {
+    const vue = creerGrille(g[0].length, g.length, () => false);
+    const zones = [];
+    g.forEach((ligne, y) => ligne.forEach((mur, x) => {
+      if (mur || vue[y][x]) return;
+      const zone = [], file = [[x, y]];
+      vue[y][x] = true;
+      while (file.length) {
+        const [cx, cy] = file.shift();
+        zone.push([cx, cy]);
+        [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
+          const nx = cx + dx, ny = cy + dy;
+          if (estSol(g, nx, ny) && !vue[ny][nx]) { vue[ny][nx] = true; file.push([nx, ny]); }
+        });
+      }
+      zones.push(zone);
+    }));
+    return zones.sort((a, b) => b.length - a.length);
+  }
+  function genererJeu(l, hh) {
+    let meilleure = null, essais = 0;
+    for (let e = 0; e < NB_ESSAIS_MAX; e++) {
+      essais++;
+      let g = remplir(l, hh, PROBA_MUR);
+      for (let i = 0; i < NB_LISSAGES; i++) g = lisser(g);
+      const zone = (toutesLesZones(g)[0]) || [];
+      const res = creerGrille(l, hh, () => true);
+      zone.forEach(([x, y]) => (res[y][x] = false));
+      if (zone.length >= l * hh * PART_SOL_MIN) return { grille: res, essais, part: zone.length / (l * hh) };
+      if (!meilleure || zone.length > meilleure.taille) meilleure = { grille: res, taille: zone.length };
+    }
+    return { grille: meilleure.grille, essais, part: meilleure.taille / (l * hh) };
+  }
+
+  /* =====================================================================
+     DEMO 1 : génération pas à pas
+     ===================================================================== */
+  function demoGeneration(host) {
+    const L = 50, HH = 34, C = 12, REL = 8;
+    const { ctrl, vue, lect, note } = carte(host, "la grotte, étape par étape",
+      "Chaque bouton exécute une étape de <code>generation.js</code>. Passe la souris sur une case : tu vois <em>exactement</em> le calcul que fait <code>lisser()</code> pour elle.");
+    const cv = h("canvas", { width: L * C, height: HH * C + REL });
+    vue.append(cv);
+    const g = cv.getContext("2d");
+    let proba = PROBA_MUR, grille, etape, phase, zones = [], survol = null, relief = true, essaisTxt = "";
+
+    const nouveau = () => { grille = remplir(L, HH, proba); etape = 0; phase = "bruit"; zones = []; essaisTxt = ""; maj(); };
+    const lisserUn = () => {
+      if (phase === "zones" || phase === "final") return;
+      grille = lisser(grille); etape++; phase = "lisse"; maj();
+    };
+    const trouverZones = () => { if (phase === "final") return; zones = toutesLesZones(grille); phase = "zones"; maj(); };
+    const garder = () => {
+      if (phase === "final") return;
+      if (phase !== "zones") zones = toutesLesZones(grille);
+      const res = creerGrille(L, HH, () => true);
+      (zones[0] || []).forEach(([x, y]) => (res[y][x] = false));
+      grille = res; phase = "final"; maj();
+    };
+    const toutEnchainer = () => {
+      nouveau();
+      while (etape < NB_LISSAGES) { grille = lisser(grille); etape++; }
+      phase = "lisse"; trouverZones();
+    };
+    const commeLeJeu = () => {
+      const r = genererJeu(L, HH);
+      grille = r.grille; etape = NB_LISSAGES; phase = "final"; zones = [];
+      essaisTxt = "Comme dans le jeu : " + r.essais + " essai(s) sur " + NB_ESSAIS_MAX + " max, zone jouable = " + Math.round(r.part * 100) + " % de la grille (seuil " + PART_SOL_MIN * 100 + " %).";
+      maj();
+    };
+
+    ctrl.append(
+      bouton("1. Nouveau bruit", nouveau),
+      bouton("2. Lisser (+1 passe)", lisserUn),
+      bouton("3. Chercher les zones (BFS)", trouverZones),
+      bouton("4. Garder la plus grande", garder),
+      bouton("Tout enchaîner", toutEnchainer),
+      bouton("Générer comme le jeu", commeLeJeu),
+      curseur("Mur au départ :", 0.3, 0.6, 0.01, proba, (v) => { proba = v; nouveau(); }, (v) => Math.round(v * 100) + " %"),
+      coche("Relief (vue oblique)", true, (v) => { relief = v; dessiner(); })
+    );
+
+    const couleurs = { mur: "#1a1a1a", murHaut: "#444444", sol: "#d9d9d9", vert: "#ffffff", orange: "#7a7a7a", surv: "#ffffff" };
+    function dessiner() {
+      g.fillStyle = "#0b0b0b"; g.fillRect(0, 0, cv.width, cv.height);
+      const R = relief ? REL : 0;
+      for (let y = 0; y < HH; y++) for (let x = 0; x < L; x++) {
+        if (grille[y][x]) continue;
+        let c = couleurs.sol;
+        if (phase === "zones") c = zones[0] && zones[0].some(([zx, zy]) => zx === x && zy === y) ? couleurs.vert : couleurs.orange;
+        g.fillStyle = c; g.fillRect(x * C, REL + y * C, C, C);
+      }
+      for (let y = 0; y < HH; y++) for (let x = 0; x < L; x++) {
+        if (!grille[y][x]) continue;
+        g.fillStyle = couleurs.mur; g.fillRect(x * C, REL + y * C, C, C);
+        if (relief) { g.fillStyle = couleurs.murHaut; g.fillRect(x * C, REL + y * C - R, C, C); }
+      }
+      if (survol) {
+        const cadre = (x, y, w, hh) => { g.lineWidth = 4; g.strokeStyle = "#000"; g.strokeRect(x, y, w, hh); g.lineWidth = 2; g.strokeStyle = "#fff"; g.strokeRect(x, y, w, hh); };
+        cadre((survol.x - 1) * C + 1, REL + (survol.y - 1) * C + 1, 3 * C - 2, 3 * C - 2);
+        cadre(survol.x * C + 3, REL + survol.y * C + 3, C - 6, C - 6);
+      }
+    }
+    function maj() {
+      const murs = grille.flat().filter(Boolean).length;
+      const sols = L * HH - murs;
+      const z = toutesLesZones(grille).length;
+      const etat = { bruit: "bruit aléatoire", lisse: "après " + etape + " passe(s) de lissage", zones: "zones détectées (blanc = gardée, gris foncé = sera remplie de mur)", final: "grille finale" }[phase];
+      let ligne = "<b>" + etat + "</b> : " + Math.round(murs / (L * HH) * 100) + " % de murs, " + sols + " cases de sol, " + z + " zone(s) de sol séparée(s).";
+      if (phase === "zones" && zones.length) ligne += " Plus grande : " + zones[0].length + " cases (" + Math.round(zones[0].length / sols * 100) + " % du sol).";
+      if (essaisTxt) ligne += "<br>" + essaisTxt;
+      lect.innerHTML = ligne + '<br><span class="demo-surv">' + survolTxt() + "</span>";
+      dessiner();
+    }
+    function survolTxt() {
+      if (!survol) return "Survole une case pour voir le calcul de <code>lisser()</code>.";
+      const { x, y } = survol;
+      if (estBordure(grille, x, y)) return "Case (" + x + "," + y + ") : dans la bordure de " + BORDURE + " cases, toujours un mur.";
+      const n = mursVoisins(grille, x, y);
+      const cur = grille[y][x] ? "mur" : "sol";
+      const suiv = n > 4 ? "mur" : n < 4 ? "sol" : cur + " (inchangée : exactement 4)";
+      return "Case (" + x + "," + y + ") est " + cur + ", <b>" + n + " voisine(s) sur 8 sont des murs</b> : <code>" + n + " &gt; 4 || (" + n + " === 4 &amp;&amp; mur)</code> donne " + suiv + " à la prochaine passe.";
+    }
+    pointeur(cv, (px, py, type) => {
+      if (type === "leave") survol = null;
+      else {
+        const x = Math.floor(px / C), y = Math.floor((py - REL) / C);
+        survol = x >= 0 && x < L && y >= 0 && y < HH ? { x, y } : null;
+      }
+      lect.querySelector(".demo-surv").innerHTML = survolTxt();
+      dessiner();
+    });
+    note.innerHTML = "<b>À retenir :</b> le lissage rend les cavernes (règle des voisines), le BFS garantit la connexité (une seule zone), et la boucle des 20 essais évite une grotte trop petite. Monte « Mur au départ » à 55 % : trop de murs, la zone jouable devient minuscule et le jeu doit recommencer.";
+    nouveau();
+  }
+
+  /* =====================================================================
+     DEMO 2 : la lumière (pinceau en dégradé)
+     ===================================================================== */
+  function demoLumiere(host) {
+    const W = 640, HC = 368, E = 0.5, CELL = 16;
+    const { ctrl, vue, lect, note } = carte(host, "l'éclairage de la borne",
+      "Clique pour poser le joueur, bouge la souris pour orienter la torche. Les constantes sont celles de <code>lumiere.js</code> (rayon 53 + 1,29 px par px, 3 pinceaux, portée 260 px). 1 px de démo = 2 px de jeu.");
+    const cv = h("canvas", { width: W, height: HC });
+    vue.append(cv);
+    const g = cv.getContext("2d");
+    const cave = genererJeu(40, 23).grille;
+    const libres = [];
+    cave.forEach((l, y) => l.forEach((m, x) => { if (!m) libres.push([x, y]); }));
+    const estMur = (gx, gy) => { const tx = Math.floor(gx / 32), ty = Math.floor(gy / 32); return !(ty >= 0 && ty < 23 && tx >= 0 && tx < 40) || cave[ty][tx]; };
+    const centre = (c) => ({ x: c[0] * 32 + 16, y: c[1] * 32 + 16 });
+    const j = { ...centre(libres[Math.floor(libres.length / 2)]), rx: 1, ry: 0 };
+    const cristaux = [];
+    for (let k = 0; k < 3 && libres.length; k++) cristaux.push(centre(libres[Math.floor(Math.random() * libres.length)]));
+
+    // décor éclairé (dessiné une fois)
+    const monde = h("canvas", { width: W, height: HC });
+    const m = monde.getContext("2d");
+    cave.forEach((l, y) => l.forEach((mur, x) => {
+      const v = ((x * 7 + y * 13) % 5) * 3;
+      m.fillStyle = mur ? "#262626" : "rgb(" + (150 + v) + "," + (150 + v) + "," + (150 + v) + ")";
+      m.fillRect(x * CELL, y * CELL, CELL, CELL);
+      if (mur && y + 1 < 23 && !cave[y + 1][x]) { m.fillStyle = "#4a4a4a"; m.fillRect(x * CELL, y * CELL + CELL - 4, CELL, 4); }
+    }));
+
+    // le pinceau : un disque blanc d'opacité (1 - t²)²
+    const pinceauImg = h("canvas", { width: 256, height: 256 });
+    { const c = pinceauImg.getContext("2d"); const d = c.createRadialGradient(128, 128, 0, 128, 128, 128);
+      for (let i = 0; i <= 10; i++) { const t = i / 10; d.addColorStop(t, "rgba(255,255,255," + Math.pow(1 - t * t, 2).toFixed(3) + ")"); }
+      c.fillStyle = d; c.fillRect(0, 0, 256, 256); }
+    const cache = {};
+    const teinteImg = (couleur) => cache[couleur] || (cache[couleur] = (() => {
+      const cnv = h("canvas", { width: 256, height: 256 }), c = cnv.getContext("2d");
+      c.fillStyle = couleur; c.fillRect(0, 0, 256, 256);
+      c.globalCompositeOperation = "destination-in"; c.drawImage(pinceauImg, 0, 0);
+      return cnv;
+    })());
+
+    let mode = "degrade", demi = true, doux = true, teintes = true, torche = true, vision = false, debug = false, cristauxOn = true;
+    const noir = h("canvas");
+
+    const PORTEE = 260;
+    function distanceMur(portee) {
+      let d = 0;
+      while (d < portee && !estMur(j.x + j.rx * d, j.y + j.ry * d)) d += 8;
+      return Math.max(d, 24);
+    }
+    { // au départ, le joueur regarde dans la direction la plus dégagée
+      let meilleur = -1;
+      for (let k = 0; k < 8; k++) {
+        j.rx = Math.cos(k * Math.PI / 4); j.ry = Math.sin(k * Math.PI / 4);
+        const d = distanceMur(PORTEE);
+        if (d > meilleur) { meilleur = d; var br = [j.rx, j.ry]; }
+      }
+      j.rx = br[0]; j.ry = br[1];
+    }
+    function pinceaux() {
+      const b = [];
+      const add = (x, y, r, f, c, aj = true) => { if (aj) r *= 0.88; b.push({ x, y, r, f: Math.min(f, 1), c, aj }); };
+      add(j.x, j.y, 84, 0.6, "#ffffff");
+      add(j.x, j.y, 26, 1, "#ffffff", false);
+      let info = null;
+      if (torche) {
+        const portee = PORTEE * (vision ? 1.5 : 1), dist = distanceMur(portee);
+        const ox = j.x + j.rx * 6, oy = j.y + j.ry * 6;
+        [{ p: 0.1, i: 0.38 }, { p: 0.3, i: 0.31 }, { p: 0.6, i: 0.19 }].forEach(({ p, i }) => {
+          const d = dist * p, r = (53 + d * 1.29) * (0.5 + 0.5 * dist / portee);
+          add(ox + j.rx * d, oy + j.ry * d, r, i, "#ffffff");
+        });
+        info = { dist, portee };
+      }
+      if (cristauxOn) cristaux.forEach((c) => add(c.x, c.y, 110, 0.9, "#ffffff"));
+      b.info = info;
+      return b;
+    }
+    // ancien système : cercles par paliers + cône de 15 rayons
+    function ancien(nc, sN) {
+      const cerc = (x, y, r, f) => { nc.fillStyle = "rgba(255,255,255," + f + ")"; nc.beginPath(); nc.arc(x * E * sN, y * E * sN, r * E * sN, 0, 7); nc.fill(); };
+      [[28, 0.2], [14, 1]].forEach(([r, f]) => cerc(j.x, j.y, r, f));
+      if (torche) {
+        const portee = PORTEE * (vision ? 1.5 : 1), demi = Math.PI / 6, pts = [[j.x, j.y]];
+        const a0 = Math.atan2(j.ry, j.rx);
+        for (let i = 0; i < 15; i++) {
+          const a = a0 - demi + (i / 14) * 2 * demi; let d = 0;
+          while (d < portee && !estMur(j.x + Math.cos(a) * d, j.y + Math.sin(a) * d)) d += 8;
+          pts.push([j.x + Math.cos(a) * d, j.y + Math.sin(a) * d]);
+        }
+        [1, 0.75, 0.5, 0.25].forEach((e) => {
+          nc.fillStyle = "rgba(255,255,255,0.3)"; nc.beginPath();
+          pts.forEach(([x, y], i) => { const px = j.x + (x - j.x) * e, py = j.y + (y - j.y) * e; i ? nc.lineTo(px * E * sN, py * E * sN) : nc.moveTo(px * E * sN, py * E * sN); });
+          nc.closePath(); nc.fill();
+        });
+      }
+      if (cristauxOn) cristaux.forEach((c) => [[100, 0.1], [68, 0.16], [40, 0.28], [20, 0.55]].forEach(([r, f]) => cerc(c.x, c.y, r, f)));
+    }
+    function rendre() {
+      const bs = mode === "degrade" ? pinceaux() : [];
+      g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
+      g.drawImage(monde, 0, 0);
+      if (mode === "degrade" && teintes) {
+        g.save(); g.globalCompositeOperation = "multiply";
+        bs.forEach((b) => { if (!b.aj) return; const s = b.r * 2 * 0.7 * E; g.globalAlpha = Math.min(b.f * 0.7, 1); g.drawImage(teinteImg(b.c), b.x * E - s / 2, b.y * E - s / 2, s, s); });
+        g.restore();
+      }
+      g.globalAlpha = 1;
+      cristaux.forEach((c) => { if (!cristauxOn) return; g.fillStyle = "#ffffff"; g.beginPath(); g.moveTo(c.x * E, c.y * E - 9); g.lineTo(c.x * E + 5, c.y * E); g.lineTo(c.x * E, c.y * E + 5); g.lineTo(c.x * E - 5, c.y * E); g.fill(); });
+      g.fillStyle = "#ffffff"; g.beginPath(); g.arc(j.x * E, j.y * E, 6, 0, 7); g.fill();
+      g.fillStyle = "#000"; g.beginPath(); g.arc(j.x * E + j.rx * 3, j.y * E + j.ry * 3, 2, 0, 7); g.fill();
+      let pixels = "";
+      if (mode !== "aucune") {
+        const sN = mode === "degrade" && demi ? 0.5 : 1;
+        noir.width = Math.ceil(W * sN); noir.height = Math.ceil(HC * sN);
+        const nc = noir.getContext("2d");
+        nc.globalCompositeOperation = "source-over"; nc.globalAlpha = 1;
+        nc.fillStyle = mode === "degrade" ? "rgba(2,3,10,0.96)" : "rgba(0,0,0,1)";
+        nc.fillRect(0, 0, noir.width, noir.height);
+        nc.globalCompositeOperation = "destination-out";
+        if (mode === "degrade") {
+          bs.forEach((b) => { nc.globalAlpha = b.f; const s = b.r * 2 * E * sN; nc.drawImage(pinceauImg, b.x * E * sN - s / 2, b.y * E * sN - s / 2, s, s); });
+        } else { nc.globalAlpha = 1; ancien(nc, sN); }
+        g.imageSmoothingEnabled = mode === "degrade" ? doux : false;
+        g.drawImage(noir, 0, 0, W, HC);
+        g.imageSmoothingEnabled = true;
+        const px = Math.round(1280 * sN * 720 * sN);
+        pixels = "Noir dessiné sur " + px.toLocaleString("fr-FR") + " pixels (à la résolution du jeu : 1280 x 720 = 921 600 pixels x " + (sN * sN) + ").";
+      }
+      if (debug && mode === "degrade") {
+        g.strokeStyle = "rgba(255,255,255,.75)"; g.lineWidth = 1;
+        bs.forEach((b) => { g.beginPath(); g.arc(b.x * E, b.y * E, b.r * E, 0, 7); g.stroke(); });
+        if (bs.info) { g.strokeStyle = "#ffffff"; g.beginPath(); g.moveTo(j.x * E, j.y * E); g.lineTo((j.x + j.rx * bs.info.dist) * E, (j.y + j.ry * bs.info.dist) * E); g.stroke(); }
+      }
+      const nb = mode === "degrade" ? bs.length : 0;
+      lect.innerHTML = "<b>Mode « " + mode + " »</b>. " + (mode === "degrade" ? nb + " pinceaux gommés en un seul appel" + (bs.info ? ", torche arrêtée à " + Math.round(bs.info.dist) + " px du joueur (le premier mur)" : "") + ". " : mode === "ancien" ? "Cercles par paliers et cône de 15 rayons : on voit les marches, et le cône est dessiné 4 fois. " : "Aucune obscurité : sert à mesurer la vitesse du jeu sans lumière. ") + pixels +
+        "<br>Estimation du travail par image (pas une mesure) : <b>Light2D</b> évalue le shader sur 921 600 pixels x 6 lumières max = 5 529 600 calculs ; le mode <b>degrade</b> n'a aucun calcul de lumière par pixel, seulement " + (mode === "degrade" ? nb : "N") + " images à dessiner.";
+    }
+    let sale = true;
+    const planifier = () => { if (sale) return; sale = true; requestAnimationFrame(() => { sale = false; rendre(); }); };
+    sale = false;
+    const maj = () => { sale = false; planifier(); };
+
+    ctrl.append(
+      h("label", { className: "demo-coche" }, "Système : ", (() => {
+        const s = h("select"); [["degrade", "degrade (retenu)"], ["ancien", "ancien (cercles)"], ["aucune", "aucune obscurité"]].forEach(([v, t]) => s.append(h("option", { value: v, textContent: t })));
+        s.onchange = () => { mode = s.value; maj(); }; return s; })()),
+      coche("Torche", true, (v) => { torche = v; maj(); }),
+      coche("Potion de vision (portée x1,5)", false, (v) => { vision = v; maj(); }),
+      coche("Cristaux", true, (v) => { cristauxOn = v; maj(); }),
+      coche("Teintes (MULTIPLY, orangées dans le jeu)", true, (v) => { teintes = v; maj(); }),
+      coche("Demi-résolution du noir", true, (v) => { demi = v; maj(); }),
+      coche("Filtre doux à l'agrandissement", true, (v) => { doux = v; maj(); }),
+      coche("Voir pinceaux et rayon", false, (v) => { debug = v; maj(); })
+    );
+    pointeur(cv, (px, py, type) => {
+      if (type === "leave") return;
+      const gx = px / E, gy = py / E;
+      if (type === "down" && !estMur(gx, gy)) { j.x = gx; j.y = gy; }
+      const dx = gx - j.x, dy = gy - j.y, n = Math.hypot(dx, dy);
+      if (n > 4) { j.rx = dx / n; j.ry = dy / n; }
+      maj();
+    });
+
+    // courbe d'atténuation
+    const courbe = h("canvas", { width: 300, height: 110, className: "demo-courbe" });
+    const cc = courbe.getContext("2d");
+    cc.fillStyle = "#0b0b0b"; cc.fillRect(0, 0, 300, 110);
+    const trace = (fn, col) => { cc.strokeStyle = col; cc.lineWidth = 2; cc.beginPath(); for (let i = 0; i <= 100; i++) { const t = i / 100, x = 10 + t * 280, y = 100 - fn(t) * 85; i ? cc.lineTo(x, y) : cc.moveTo(x, y); } cc.stroke(); };
+    trace((t) => Math.pow(1 - t, 2), "#777777");
+    trace((t) => Math.pow(1 - t * t, 2), "#ffffff");
+    cc.fillStyle = "#cccccc"; cc.font = "11px system-ui"; cc.fillText("opacité du pinceau selon t (0 = centre, 1 = bord)", 10, 12);
+    cc.fillStyle = "#ffffff"; cc.fillText("(1 - t²)²  : choisi, large au centre", 10, 104 - 0);
+    cc.fillStyle = "#999999"; cc.fillText("(1 - t)²", 215, 60);
+    vue.append(courbe);
+    note.innerHTML = "<b>À retenir :</b> une image de dégradé unique sert de gomme pour toutes les lumières, et le noir est dessiné à demi-résolution puis agrandi avec un filtre doux (4 fois moins de pixels). Décoche « Filtre doux » avec « Demi-résolution » : tu vois les gros carrés que <code>pixelArt: true</code> provoquerait sans <code>setFilter(LINEAR)</code>.";
+    maj();
+  }
+
+  /* =====================================================================
+     DEMO 3 : tirage pondéré des ennemis
+     ===================================================================== */
+  function demoTirage(host) {
+    const { ctrl, vue, lect, note } = carte(host, "quel ennemi apparaît selon le niveau",
+      "Les fonctions <code>poids(niveau)</code> sont celles de <code>TYPES</code> dans <code>ennemis.js</code>. « Tirer 1000 » refait 1000 fois <code>tirerType()</code>.");
+    const TYPES = {
+      slime: { poids: () => 100, c: "var(--texte)" }, alien_vert: { poids: (n) => (n >= 2 ? 40 : 0), c: "var(--texte)" },
+      alien_rouge: { poids: (n) => (n >= 3 ? 35 : 0), c: "var(--texte)" }, cristal: { poids: (n) => (n >= 4 ? 30 : 0), c: "var(--texte)" }
+    };
+    let niveau = 1;
+    const noms = Object.keys(TYPES);
+    function tirerType(n, trace) {
+      const total = noms.reduce((t, k) => t + TYPES[k].poids(n), 0);
+      let reste = Math.random() * total;
+      const etapes = ["reste = " + reste.toFixed(1) + " (tiré dans 0 à " + total + ")"];
+      for (const k of noms) {
+        reste -= TYPES[k].poids(n);
+        etapes.push("- poids " + k + " (" + TYPES[k].poids(n) + ") : reste = " + reste.toFixed(1) + (reste < 0 ? "  < 0 : c'est " + k : ""));
+        if (reste < 0) return trace ? { k, etapes } : k;
+      }
+      return trace ? { k: "slime", etapes } : "slime";
+    }
+    const barres = h("div", { className: "demo-barres" });
+    const trace = h("pre", { className: "demo-pre" });
+    function maj(comptes) {
+      const total = noms.reduce((t, k) => t + TYPES[k].poids(niveau), 0);
+      barres.innerHTML = "";
+      noms.forEach((k) => {
+        const p = TYPES[k].poids(niveau), th = p / total * 100, pr = comptes ? comptes[k] / 10 : null;
+        barres.append(h("div", { className: "demo-ligne" }, h("span", { className: "demo-nom", textContent: k }),
+          h("span", { className: "demo-fond" }, h("span", { className: "demo-barre", style: "width:" + th + "%;background:" + TYPES[k].c + ";opacity:" + [0.9, 0.62, 0.42, 0.26][noms.indexOf(k)] }), pr != null ? h("span", { className: "demo-mesure", style: "left:" + pr + "%" }) : ""),
+          h("span", { className: "demo-pct", textContent: "poids " + p + " : " + th.toFixed(1) + " %" + (pr != null ? "  (mesuré " + pr.toFixed(1) + " %)" : "") })));
+      });
+      lect.textContent = "Niveau " + niveau + " : nombre d'ennemis par niveau = min(4 + floor((niveau - 1) / 3), 7) = " + Math.min(4 + Math.floor((niveau - 1) / 3), 7) + ", PV bonus = " + Math.floor(niveau / 10) + ".";
+    }
+    ctrl.append(
+      curseur("Niveau :", 1, 12, 1, 1, (v) => { niveau = v; trace.textContent = ""; maj(); }),
+      bouton("Tirer 1 ennemi (voir le calcul)", () => { const r = tirerType(niveau, true); trace.textContent = r.etapes.join("\n"); }),
+      bouton("Tirer 1000", () => { const c = {}; noms.forEach((k) => (c[k] = 0)); for (let i = 0; i < 1000; i++) c[tirerType(niveau)]++; maj(c); })
+    );
+    vue.append(barres, trace);
+    note.innerHTML = "<b>À retenir :</b> on tire un nombre dans la somme des poids, puis on soustrait les poids un par un jusqu'à passer sous zéro. Un poids à 0 (type pas encore débloqué) n'est jamais choisi : c'est ce qui crée la difficulté progressive.";
+    maj();
+  }
+
+  /* =====================================================================
+     DEMO 4 : pathfinding BFS + hystérésis
+     ===================================================================== */
+  function demoChemin(host) {
+    const L = 25, HH = 15, C = 24;
+    const { ctrl, vue, lect, note } = carte(host, "le chemin d'un ennemi (BFS)",
+      "Même algorithme que <code>chercherChemin()</code> dans <code>ennemis.js</code> (avec en plus l'enregistrement de l'ordre de visite pour l'animer). Dessine des murs, déplace l'ennemi (E) et le joueur (J).");
+    const cv = h("canvas", { width: L * C, height: HH * C });
+    vue.append(cv);
+    const g = cv.getContext("2d");
+    const bloq = new Set();
+    for (let y = 2; y < 13; y++) if (y !== 6) bloq.add("12," + y);
+    for (let x = 4; x < 10; x++) bloq.add(x + ",4");
+    let E = { x: 3, y: 7 }, P = { x: 21, y: 7 }, outil = "mur", coins = true, diag = true, montre = 1e9, res = null, mode = null, vitesse = 6;
+
+    function bfs() {
+      const cle = (x, y) => x + "," + y, prec = new Map([[cle(E.x, E.y), null]]), file = [E], ordre = [];
+      const V = diag ? [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]] : [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      while (file.length > 0) {
+        const c = file.shift();
+        ordre.push(c);
+        if (c.x === P.x && c.y === P.y) {
+          const chemin = [];
+          for (let k = c; prec.get(cle(k.x, k.y)) !== null; k = prec.get(cle(k.x, k.y))) chemin.unshift(k);
+          return { chemin, ordre, trouve: true };
+        }
+        for (const [dx, dy] of V) {
+          const nx = c.x + dx, ny = c.y + dy;
+          if (prec.has(cle(nx, ny)) || bloq.has(cle(nx, ny))) continue;
+          if (coins && dx !== 0 && dy !== 0 && (bloq.has(cle(c.x + dx, c.y)) || bloq.has(cle(c.x, c.y + dy)))) continue;
+          if (nx < 0 || ny < 0 || nx >= L || ny >= HH) continue;
+          prec.set(cle(nx, ny), c); file.push({ x: nx, y: ny });
+        }
+      }
+      return { chemin: [], ordre, trouve: false };
+    }
+    function calc(anim) { res = bfs(); montre = anim ? 0 : 1e9; if (anim) boucle(); dessiner(); }
+    function boucle() {
+      if (montre >= res.ordre.length + 10) return;
+      montre += vitesse; dessiner(); requestAnimationFrame(boucle);
+    }
+    function dessiner() {
+      g.fillStyle = "#0b0b0b"; g.fillRect(0, 0, cv.width, cv.height);
+      const n = res.ordre.length;
+      res.ordre.forEach((c, i) => {
+        if (i >= montre) return;
+        g.fillStyle = "hsl(0,0%," + (14 + 34 * (1 - i / Math.max(n, 1))) + "%)"; g.fillRect(c.x * C, c.y * C, C, C);
+      });
+      bloq.forEach((k) => { const [x, y] = k.split(",").map(Number); g.fillStyle = "#e8e8e8"; g.fillRect(x * C, y * C, C, C); });
+      g.strokeStyle = "rgba(255,255,255,.08)";
+      for (let x = 0; x <= L; x++) { g.beginPath(); g.moveTo(x * C, 0); g.lineTo(x * C, HH * C); g.stroke(); }
+      for (let y = 0; y <= HH; y++) { g.beginPath(); g.moveTo(0, y * C); g.lineTo(L * C, y * C); g.stroke(); }
+      if (res.trouve && montre >= res.ordre.length) {
+        [[6, "#000"], [3, "#fff"]].forEach(([w, col]) => { g.strokeStyle = col; g.lineWidth = w; g.beginPath(); g.moveTo(E.x * C + C / 2, E.y * C + C / 2);
+          res.chemin.forEach((c) => g.lineTo(c.x * C + C / 2, c.y * C + C / 2)); g.stroke(); }); g.lineWidth = 1;
+      }
+      const tag = (p, t, col) => { g.fillStyle = col; g.beginPath(); g.arc(p.x * C + C / 2, p.y * C + C / 2, C / 2 - 2, 0, 7); g.fill(); g.strokeStyle = "#888"; g.lineWidth = 2; g.stroke(); g.lineWidth = 1; g.fillStyle = col === "#ffffff" ? "#000" : "#fff"; g.font = "bold 13px system-ui"; g.textAlign = "center"; g.fillText(t, p.x * C + C / 2, p.y * C + C / 2 + 5); };
+      tag(E, "E", "#ffffff"); tag(P, "J", "#444444");
+      const libres = L * HH - bloq.size;
+      let dist = 0, prev = E;
+      res.chemin.forEach((c) => { dist += c.x !== prev.x && c.y !== prev.y ? Math.SQRT2 : 1; prev = c; });
+      lect.innerHTML = res.trouve
+        ? "<b>Chemin : " + res.chemin.length + " cases</b>, distance réelle " + dist.toFixed(1) + " cases (une diagonale vaut 1,41 mais compte 1 pour le BFS). Cases explorées : " + Math.min(Math.floor(montre), res.ordre.length) + " / " + libres + " libres."
+        : "<b>Aucun chemin</b> : la fonction renvoie <code>[]</code> et l'ennemi fonce droit vers le joueur (cf. <code>majEnnemis</code>). Cases explorées : " + res.ordre.length + ".";
+    }
+    let peint = null;
+    pointeur(cv, (px, py, type) => {
+      const x = Math.floor(px / C), y = Math.floor(py / C);
+      if (type === "up" || type === "leave") { peint = null; return; }
+      if (x < 0 || y < 0 || x >= L || y >= HH) return;
+      if (type === "down") peint = bloq.has(x + "," + y) ? "efface" : "pose"; else if (!peint) return;
+      const k = x + "," + y;
+      if (outil === "mur") {
+        if ((x === E.x && y === E.y) || (x === P.x && y === P.y)) return;
+        peint === "pose" ? bloq.add(k) : bloq.delete(k);
+      } else if (!bloq.has(k)) { (outil === "ennemi" ? E : P).x = x; (outil === "ennemi" ? E : P).y = y; }
+      calc(false);
+    });
+    const radios = h("span", { className: "demo-coche" }, "Outil : ");
+    [["mur", "murs"], ["ennemi", "placer E"], ["joueur", "placer J"]].forEach(([v, t]) => {
+      const i = h("input", { type: "radio", name: "outil-chemin-" + Math.random(), checked: v === "mur" });
+      i.onchange = () => { outil = v; };
+      radios.append(h("label", {}, i, " " + t + "  "));
+    });
+    // même nom pour les trois radios
+    const nom = "outil-chemin-" + Math.floor(Math.random() * 1e6); radios.querySelectorAll("input").forEach((i) => (i.name = nom));
+    ctrl.append(radios,
+      bouton("Animer l'exploration", () => calc(true)),
+      bouton("Effacer les murs", () => { bloq.clear(); calc(false); }),
+      bouton("Murs au hasard", () => { bloq.clear(); for (let y = 0; y < HH; y++) for (let x = 0; x < L; x++) if (Math.random() < 0.28 && !(x === E.x && y === E.y) && !(x === P.x && y === P.y)) bloq.add(x + "," + y); calc(false); }),
+      coche("Ne pas couper les coins (règle du jeu)", true, (v) => { coins = v; calc(false); }),
+      coche("8 directions (sinon 4)", true, (v) => { diag = v; calc(false); }),
+      curseur("Vitesse d'animation :", 1, 30, 1, 6, (v) => { vitesse = v; })
+    );
+
+    /* hystérésis */
+    const hys = h("div", { className: "demo-sous" });
+    const cv2 = h("canvas", { width: 480, height: 260 });
+    const lect2 = h("div", { className: "demo-lect" });
+    hys.append(h("div", { className: "demo-t2", textContent: "Détection avec deux seuils (RAYON_DETECTION 300, RAYON_ABANDON 450)" }), cv2, lect2, bouton("Remettre les compteurs à zéro", () => { a2 = 0; a1 = 0; alerte = false; mono = false; dessiner2(); }));
+    vue.append(hys);
+    const g2 = cv2.getContext("2d"), S = 0.4, EN = { x: 240, y: 130 };
+    let alerte = false, mono = false, a2 = 0, a1 = 0, JP = { x: 240 + 330 * S * 0 + 120, y: 130 };
+    function maj2(px, py) {
+      JP = { x: px, y: py };
+      const d = Math.hypot(px - EN.x, py - EN.y) / S;
+      const avant = alerte, avantMono = mono;
+      if (d <= 300) alerte = true; else if (d > 450) alerte = false;
+      mono = d <= 300;
+      if (alerte !== avant) a2++;
+      if (mono !== avantMono) a1++;
+      dessiner2();
+    }
+    function dessiner2() {
+      g2.fillStyle = "#0b0b0b"; g2.fillRect(0, 0, 480, 260);
+      g2.strokeStyle = "#ffffff"; g2.setLineDash([]); g2.beginPath(); g2.arc(EN.x, EN.y, 300 * S, 0, 7); g2.stroke();
+      g2.strokeStyle = "#8a8a8a"; g2.setLineDash([5, 4]); g2.beginPath(); g2.arc(EN.x, EN.y, 450 * S, 0, 7); g2.stroke(); g2.setLineDash([]);
+      g2.fillStyle = alerte ? "#ffffff" : "#4a4a4a"; g2.beginPath(); g2.arc(EN.x, EN.y, 9, 0, 7); g2.fill(); g2.strokeStyle = "#fff"; g2.stroke();
+      g2.strokeStyle = "#fff"; g2.lineWidth = 2; g2.beginPath(); g2.arc(JP.x, JP.y, 7, 0, 7); g2.stroke(); g2.lineWidth = 1;
+      g2.fillStyle = "#cccccc"; g2.font = "12px system-ui"; g2.fillText("détecte à 300 px", EN.x - 38, EN.y - 300 * S - 6); g2.fillText("lâche au-delà de 450 px", EN.x - 55, EN.y - 450 * S - 6 + 0);
+      lect2.innerHTML = "État : <b>" + (alerte ? "ALERTE (il poursuit)" : "repos") + "</b>. Changements d'état en bougeant : <b>" + a2 + "</b> avec deux seuils, <b>" + a1 + "</b> avec un seul seuil à 300. Fais osciller le point autour du cercle plein.";
+    }
+    pointeur(cv2, (px, py, type) => { if (type !== "leave") maj2(px, py); });
+    dessiner2();
+    note.innerHTML = "<b>À retenir :</b> le BFS explore en cercles concentriques (la couleur va du bleu au rouge selon l'ordre de visite) et s'arrête dès qu'il atteint le joueur ; il minimise le nombre de cases, pas la distance réelle. Décoche « Ne pas couper les coins » : le chemin frôle les angles de murs. Le chemin n'est recalculé que toutes les 400 ms (<code>DELAI_CHEMIN</code>).";
+    calc(false);
+  }
+
+  /* =====================================================================
+     DEMO 5 : le cristal (machine à états)
+     ===================================================================== */
+  function demoCristal(host) {
+    const S = 0.6, W = 600, HC = 300;
+    const { ctrl, vue, lect, note } = carte(host, "le rayon du cristal",
+      "Bouge la souris : tu es le joueur. Constantes de <code>ennemis.js</code> : charge 1000 ms, tir 500 ms, pause 4000 ms, 40 dégâts, invulnérabilité 1000 ms. Esquive en bougeant pendant la charge.");
+    const cv = h("canvas", { width: W, height: HC });
+    vue.append(cv);
+    const g = cv.getContext("2d");
+    const C = { x: 250, y: 250, etat: "repos", fin: 0, prochain: 0, dir: { x: 1, y: 0 }, alerte: false };
+    const J = { x: 700, y: 250, pv: 100, inv: 0, touche: false };
+    let dernier = performance.now(), degatsTxt = "";
+    cv.addEventListener("pointermove", (e) => { const r = cv.getBoundingClientRect(); J.x = (e.clientX - r.left) * W / r.width / S; J.y = (e.clientY - r.top) * HC / r.height / S; });
+    cv.addEventListener("pointerdown", (e) => { cv.setPointerCapture(e.pointerId); const r = cv.getBoundingClientRect(); J.x = (e.clientX - r.left) * W / r.width / S; J.y = (e.clientY - r.top) * HC / r.height / S; });
+    cv.style.touchAction = "none";
+    function distSeg(px, py, x1, y1, x2, y2) {
+      const dx = x2 - x1, dy = y2 - y1, l2 = dx * dx + dy * dy;
+      const t = l2 ? Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / l2)) : 0;
+      return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+    }
+    function pas(now) {
+      const dt = Math.min((now - dernier) / 1000, 0.1); dernier = now;
+      const d = Math.hypot(J.x - C.x, J.y - C.y);
+      if (d <= 300) C.alerte = true; else if (d > 450) C.alerte = false;
+      let bout = null;
+      if (!C.alerte) { C.etat = "repos"; }
+      else {
+        if (C.etat === "repos" && d <= 320 && now >= C.prochain) { C.etat = "charge"; C.fin = now + 1000; }
+        if (C.etat === "repos") { const n = Math.max(d, 1); C.x += (J.x - C.x) / n * 40 * dt; C.y += (J.y - C.y) / n * 40 * dt; }
+        else {
+          if (C.etat === "charge") {
+            const n = Math.max(d, 1); C.dir = { x: (J.x - C.x) / n, y: (J.y - C.y) / n };
+            if (now >= C.fin) { C.etat = "tir"; C.fin = now + 500; }
+          } else if (now >= C.fin) { C.etat = "repos"; C.prochain = now + 4000; }
+          if (C.etat !== "repos") bout = { x: C.x + C.dir.x * 420, y: C.y + C.dir.y * 420 };
+        }
+      }
+      if (C.etat === "tir" && bout && distSeg(J.x, J.y, C.x, C.y, bout.x, bout.y) <= 5 + 8 && now >= J.inv) {
+        J.pv = Math.max(J.pv - 40, 0); J.inv = now + 1000; degatsTxt = "Touché : -40 PV (puis 1 s d'invulnérabilité)";
+        if (J.pv === 0) { J.pv = 100; degatsTxt += " ; PV remis à 100 pour la démo"; }
+      }
+      // dessin
+      g.fillStyle = "#0b0b0b"; g.fillRect(0, 0, W, HC);
+      g.strokeStyle = "rgba(255,255,255,.4)"; g.beginPath(); g.arc(C.x * S, C.y * S, 300 * S, 0, 7); g.stroke();
+      g.strokeStyle = "rgba(255,255,255,.3)"; g.setLineDash([4, 4]); g.beginPath(); g.arc(C.x * S, C.y * S, 320 * S, 0, 7); g.stroke(); g.setLineDash([]);
+      if (bout) {
+        if (C.etat === "tir") { g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = 10 * S; g.beginPath(); g.moveTo(C.x * S, C.y * S); g.lineTo(bout.x * S, bout.y * S); g.stroke(); g.strokeStyle = "#fff"; g.lineWidth = 3; g.beginPath(); g.moveTo(C.x * S, C.y * S); g.lineTo(bout.x * S, bout.y * S); g.stroke(); }
+        else { g.strokeStyle = "rgba(255,255,255," + (0.3 + 0.35 * Math.sin(now / 60)) + ")"; g.lineWidth = 2; g.beginPath(); g.moveTo(C.x * S, C.y * S); g.lineTo(bout.x * S, bout.y * S); g.stroke(); }
+        g.lineWidth = 1;
+      }
+      g.fillStyle = C.etat === "charge" ? "#dddddd" : C.etat === "tir" ? "#ffffff" : "#8c8c8c";
+      g.beginPath(); g.moveTo(C.x * S, C.y * S - 14); g.lineTo(C.x * S + 9, C.y * S); g.lineTo(C.x * S, C.y * S + 14); g.lineTo(C.x * S - 9, C.y * S); g.fill();
+      g.globalAlpha = now < J.inv ? 0.4 : 1; g.fillStyle = "#ffffff"; g.beginPath(); g.arc(J.x * S, J.y * S, 6, 0, 7); g.fill(); g.globalAlpha = 1;
+      const rest = C.etat === "repos" ? Math.max(0, C.prochain - now) : Math.max(0, C.fin - now);
+      lect.innerHTML = "État : <b>" + C.etat + "</b>" + (C.alerte ? "" : " (pas alerté : joueur à plus de 300 px)") + " | " + (C.etat === "repos" ? "prochaine charge dans " + (rest > 0 ? (rest / 1000).toFixed(1) + " s" : "maintenant") : "fin de l'état dans " + (rest / 1000).toFixed(1) + " s" + (C.etat === "charge" ? " (la direction se verrouille à la fin)" : "")) + " | PV : <b>" + J.pv + "</b><br>" + degatsTxt;
+      requestAnimationFrame(pas);
+    }
+    ctrl.append(bouton("Remettre à zéro", () => { C.x = 250; C.y = 250; C.etat = "repos"; C.prochain = 0; C.alerte = false; J.pv = 100; degatsTxt = ""; }));
+    note.innerHTML = "<b>À retenir :</b> trois états (<code>repos</code>, <code>charge</code>, <code>tir</code>) pilotés par des comparaisons avec l'heure (<code>fin_etat</code>), pas par des <code>setTimeout</code>. Pendant la charge il te suit, à la fin la direction est verrouillée : un joueur qui bouge à ce moment-là esquive.";
+    requestAnimationFrame(pas);
+  }
+
+  const demos = { generation: demoGeneration, lumiere: demoLumiere, tirage: demoTirage, chemin: demoChemin, cristal: demoCristal };
+  document.querySelectorAll("[data-demo]").forEach((host) => {
+    const f = demos[host.dataset.demo];
+    if (f) try { f(host); } catch (e) { host.textContent = "Démo indisponible : " + e.message; console.error(e); }
+  });
+})();
+
+</script>
+<script>
+(function () {
+  "use strict";
+  const lire = (k, def) => { try { const v = localStorage.getItem(k); return v === null ? def : JSON.parse(v); } catch (e) { return def; } };
+  const ecrire = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => [].slice.call((r || document).querySelectorAll(s));
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt) e.textContent = txt; return e; };
+
+  const sections = $$(".sec");
+  const liens = $$("nav .liens a");
+  const lues = new Set(lire("oral-lues", []));
+  const etats = lire("oral-questions", {}); // { "q3": "ok" | "revoir" }
+
+  /* ---------- thème ---------- */
+  const racine = document.documentElement;
+  const saved = lire("oral-theme", null);
+  if (saved) racine.dataset.theme = saved;
+  const estSombre = () => getComputedStyle(racine).colorScheme === "dark";
+  $$(".js-theme").forEach((b) => b.addEventListener("click", () => {
+    const t = estSombre() ? "light" : "dark";
+    racine.dataset.theme = t; ecrire("oral-theme", t);
+  }));
+
+  /* ---------- menu mobile ---------- */
+  const nav = $("#nav");
+  $$(".js-menu").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); nav.classList.toggle("ouvert"); }));
+  document.addEventListener("click", (e) => { if (!nav.contains(e.target)) nav.classList.remove("ouvert"); });
+  liens.forEach((a) => a.addEventListener("click", () => nav.classList.remove("ouvert")));
+
+  /* ---------- sections lues ---------- */
+  const progres = $(".progres i"), stat = $(".nav-stat");
+  function majLues() {
+    sections.forEach((s, i) => {
+      const lue = lues.has(i);
+      liens[i].classList.toggle("lue", lue);
+      const b = $(".js-lue", s);
+      if (b) { b.textContent = lue ? "Lue : annuler" : "Marquer comme lue"; b.classList.toggle("on", lue); }
+    });
+    progres.style.width = (lues.size / sections.length * 100) + "%";
+    majStat();
+    ecrire("oral-lues", [...lues]);
+  }
+  sections.forEach((s, i) => {
+    const pied = el("div", "pied");
+    const b = el("button", "btn js-lue", "Marquer comme lue");
+    b.type = "button";
+    b.onclick = () => { lues.has(i) ? lues.delete(i) : lues.add(i); majLues(); };
+    pied.append(b, el("span", "espace"));
+    if (sections[i + 1]) {
+      const n = el("a", "btn", "Section suivante");
+      n.href = "#" + $("h2", sections[i + 1]).id;
+      pied.append(n);
+    }
+    s.append(pied);
+  });
+
+  /* ---------- questions ---------- */
+  const qas = $$("details.qa");
+  qas.forEach((d, i) => {
+    d.id = "q" + (i + 1);
+    d.dataset.etat = etats[d.id] || "";
+    const etiq = el("span", "etiq");
+    $("summary", d).append(etiq);
+    const v = el("div", "verdict");
+    [["ok", "Je savais"], ["revoir", "À revoir"]].forEach(([val, txt]) => {
+      const b = el("button", "btn", txt);
+      b.type = "button";
+      b.onclick = () => { setEtat(d, d.dataset.etat === val ? "" : val); };
+      v.append(b);
+    });
+    $(".rep", d).append(v);
+    majEtiq(d);
+  });
+  function majEtiq(d) {
+    $(".etiq", d).textContent = { ok: "su", revoir: "à revoir", "": "" }[d.dataset.etat];
+    $$(".verdict .btn", d).forEach((b, k) => b.classList.toggle("on", d.dataset.etat === ["ok", "revoir"][k]));
+  }
+  function setEtat(d, val) {
+    d.dataset.etat = val;
+    if (val) etats[d.id] = val; else delete etats[d.id];
+    ecrire("oral-questions", etats);
+    majEtiq(d); majStat(); appliquerFiltre();
+  }
+  function majStat() {
+    const ok = qas.filter((d) => d.dataset.etat === "ok").length;
+    const rev = qas.filter((d) => d.dataset.etat === "revoir").length;
+    const txt = lues.size + " / " + sections.length + " sections lues. Questions : " + ok + " sues, " + rev + " à revoir, " + (qas.length - ok - rev) + " non vues.";
+    stat.textContent = txt;
+    const s2 = $(".entrainement .stat");
+    if (s2) s2.textContent = ok + " sues | " + rev + " à revoir | " + (qas.length - ok - rev) + " non vues";
+  }
+
+  // barre d'entraînement, placée avant la première question
+  let filtre = "tout";
+  if (qas.length) {
+    const barre = el("div", "entrainement");
+    const b1 = el("button", "btn", "Question au hasard");
+    const b2 = el("button", "btn", "Tout replier");
+    const sel = [["tout", "Toutes"], ["revoir", "À revoir"], ["neuves", "Non vues"]].map(([val, txt]) => {
+      const b = el("button", "btn", txt); b.dataset.f = val; b.type = "button";
+      b.onclick = () => { filtre = val; appliquerFiltre(); };
+      return b;
+    });
+    [b1, b2].forEach((b) => (b.type = "button"));
+    b1.onclick = () => {
+      let pool = qas.filter((d) => d.dataset.etat === "revoir");
+      if (!pool.length) pool = qas.filter((d) => !d.dataset.etat);
+      if (!pool.length) pool = qas;
+      pool = pool.filter((d) => d.style.display !== "none");
+      if (!pool.length) return;
+      const d = pool[Math.floor(Math.random() * pool.length)];
+      qas.forEach((q) => (q.open = false));
+      d.scrollIntoView({ behavior: "smooth", block: "center" });
+      d.classList.remove("flash"); void d.offsetWidth; d.classList.add("flash");
+    };
+    b2.onclick = () => qas.forEach((q) => (q.open = false));
+    barre.append(b1, b2, ...sel, el("span", "stat"));
+    qas[0].parentNode.insertBefore(barre, qas[0]);
+    window.appliquerFiltre = appliquerFiltre;
+  }
+  function appliquerFiltre() {
+    qas.forEach((d) => {
+      const e = d.dataset.etat;
+      d.style.display = filtre === "tout" || (filtre === "revoir" && e === "revoir") || (filtre === "neuves" && !e) ? "" : "none";
+    });
+    $$(".entrainement [data-f]").forEach((b) => b.classList.toggle("on", b.dataset.f === filtre));
+  }
+  appliquerFiltre();
+
+  /* ---------- défilement : progression, section active, reprise, retour ---------- */
+  const barreProg = $("#barre"), retour = $("#retour");
+  let courant = 0;
+  function surScroll() {
+    const h = document.documentElement;
+    barreProg.style.width = (h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight) * 100) + "%";
+    let c = 0;
+    sections.forEach((s, i) => { if (s.getBoundingClientRect().top < 160) c = i; });
+    if (c !== courant || !liens[c].classList.contains("actif")) {
+      courant = c;
+      liens.forEach((a, i) => a.classList.toggle("actif", i === c));
+      ecrire("oral-section", c);
+      const a = liens[c];
+      if (a.getBoundingClientRect().bottom > innerHeight || a.getBoundingClientRect().top < 0) a.scrollIntoView({ block: "nearest" });
+    }
+    retour.classList.toggle("visible", h.scrollTop > 900);
+  }
+  addEventListener("scroll", surScroll, { passive: true });
+  retour.addEventListener("click", () => scrollTo({ top: 0, behavior: "smooth" }));
+  const derniere = lire("oral-section", null);
+  if (derniere !== null && sections[derniere] && derniere > 0 && scrollY < 200) {
+    const r = $(".reprendre");
+    r.style.display = "block";
+    r.innerHTML = "Tu étais ici :";
+    const a = el("a", "", $("h2", sections[derniere]).textContent);
+    a.href = "#" + $("h2", sections[derniere]).id;
+    r.append(a);
+  }
+
+  majLues();
+  surScroll();
+})();
+
+</script>
+</body>
+</html>
